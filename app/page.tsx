@@ -23,7 +23,6 @@ import {
   Lock,
   AlertCircle,
   ChevronRight,
-  ChevronDown,
   Send,
   Zap,
   HelpCircle,
@@ -32,7 +31,11 @@ import {
   XCircle,
   FileCheck,
   Calculator,
-  Laptop
+  Store,
+  Eye,
+  CheckCircle,
+  X,
+  Sparkle
 } from 'lucide-react';
 import { useAppStore } from '@/lib/state/store';
 import { formatFCFA } from '@/lib/utils/money';
@@ -41,21 +44,20 @@ export default function LandingPage() {
   const router = useRouter();
   const isAuthenticated = useAppStore((state) => state.isAuthenticated);
 
-  // Interactive Live Simulator State inside Hero Mockup
+  // Live Simulator state in Hero
   const [simQuantity, setSimQuantity] = useState(5000);
   const [simUnitPrice, setSimUnitPrice] = useState(60);
-  const [activeTab, setActiveTab] = useState<'devis' | 'bat' | 'facture'>('devis');
-  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
+  const [heroTab, setHeroTab] = useState<'devis' | 'bat' | 'facture'>('devis');
 
-  // FAQ Accordion State
-  const [openFaq, setOpenFaq] = useState<number | null>(0);
+  // Interactive Breathtaking Feature Tab State
+  const [selectedFeature, setSelectedFeature] = useState<number>(0);
 
-  // Calculations for live simulator
+  // Live Devis calculations
   const simSubtotal = simQuantity * simUnitPrice;
   const simVat = Math.round(simSubtotal * 0.18);
   const simTotal = simSubtotal + simVat;
 
-  // Animation on scroll observer effect
+  // IntersectionObserver fade-in-up effect
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -69,103 +71,169 @@ export default function LandingPage() {
       { threshold: 0.1 }
     );
 
-    document.querySelectorAll('.animate-on-scroll').forEach((el) => observer.observe(el));
+    document.querySelectorAll('.fade-in-up').forEach((el) => observer.observe(el));
     return () => observer.disconnect();
   }, []);
 
-  const faqs = [
+  const features = [
     {
-      q: "Est-ce que PrintFlow est adapté à la TVA 18% en vigueur en Afrique francophone ?",
-      a: "Oui, à 100%. PrintFlow intègre le calcul automatique de la TVA 18% sur l'ensemble de vos devis et factures. Vous pouvez également ajuster les taux de taxe selon les exonérations ou spécificités de votre pays."
+      id: 0,
+      title: "Devis & Facturation FCFA (TVA 18% Intégrée)",
+      badge: "TVA 18% Automatique",
+      icon: Calculator,
+      color: "from-emerald-500 to-teal-600",
+      description: "Créez des devis complexes en quelques secondes : choix du papier, grammage, formats additionnels et finitions. Calcul automatique du montant HT, TVA 18% et TTC avec export PDF A4 instantané.",
+      previewTitle: "Générateur de Devis Corporate A4",
+      previewContent: {
+        item: "Flyers A5 R/V Couché Brillant 135g",
+        qty: "5 000 ex.",
+        price: "60 FCFA",
+        totalHt: "300 000 FCFA",
+        vat18: "54 000 FCFA",
+        totalTtc: "354 000 FCFA"
+      }
     },
     {
-      q: "Puis-je exporter mes documents au format PDF A4 officiel ?",
-      a: "Absolument. En un clic, vous pouvez visualiser, imprimer et télécharger directement vos Devis, Factures, Bons de Commande d'Atelier et Bons de Livraison au format A4 avec le logo et les coordonnées de votre imprimerie."
+      id: 1,
+      title: "Validation Bon à Tirer (BAT .ZIP 500 Mo)",
+      badge: "Protection Anti-Erreur",
+      icon: ShieldCheck,
+      color: "from-cyan-500 to-blue-600",
+      description: "Téléversez les épreuves d'impression HD. Votre client consulte et valide son BAT en ligne avec horodatage, commentaire et verrouillage automatique de la commande avant tirage.",
+      previewTitle: "Épreuve BAT Verrouillée & Conforme",
+      previewContent: {
+        file: "Catalogue_Orange_v2_HD.zip (45 Mo)",
+        status: "BAT Validé par le Client",
+        date: "Horodaté au 22/07/2026 10:15",
+        verdict: "Commande verrouillée : Transmission directe aux presses Offset."
+      }
     },
     {
-      q: "Comment fonctionne la validation des Bon à Tirer (BAT) ?",
-      a: "Vous pouvez importer les fichiers d'impression de vos clients (jusqu'à 500 Mo en archive .ZIP). Votre client consulte le BAT en ligne et valide. Une fois validé, la commande est verrouillée et transmise à l'atelier."
+      id: 2,
+      title: "Fiches d'Atelier Confidentielles",
+      badge: "Confidentialité Prix",
+      icon: Layers,
+      color: "from-amber-500 to-orange-600",
+      description: "Transmettez les instructions techniques aux techniciens de machines (Offset, Numérique, Sérigraphie, Massicot) sans divulguer vos prix de vente et vos marges commerciales.",
+      previewTitle: "Fiche d'Instruction de Tirage Atelier",
+      previewContent: {
+        machine: "Heidelberg Speedmaster 5 Couleurs",
+        paper: "Couché Brillant 135g • Format 50x70 cm",
+        finishing: "Massicotage + Piquage 2 points métal",
+        confidentiality: "⚠️ Prix et marges masqués pour l'équipe technique"
+      }
     },
     {
-      q: "Quelles devises sont prises en compte ?",
-      a: "Par défaut, PrintFlow est configuré en FCFA (XOF / XAF). Vous pouvez également basculer instantanément l'affichage en Euro (€), Dollar ($), Dirham Marocain (MAD) ou Franc Guinéen (GNF)."
+      id: 3,
+      title: "Boutique en Ligne & Catalogue Public 24/7",
+      badge: "Génération de Leads",
+      icon: Store,
+      color: "from-purple-500 to-indigo-600",
+      description: "Offrez à votre imprimerie une vitrine web sur-mesure. Vos clients parcourent vos formats de papier, choisissent leurs quantités et vous envoient leurs demandes directement convertibles en devis.",
+      previewTitle: "Storefront Web Public Imprimerie",
+      previewContent: {
+        url: "printflow.app/catalogue/org-sud-print",
+        lead: "Nouvelle commande web : 10 000 Depliants A4 3 volets",
+        action: "1-Clic: Convertir en Devis Officiel"
+      }
+    }
+  ];
+
+  const testimonials = [
+    {
+      initials: "MN",
+      name: "Mamadou Ndiaye",
+      role: "Directeur, Sud Print",
+      location: "Dakar, Sénégal 🇸🇳",
+      text: "PrintFlow a totalement réinventé la gestion de notre atelier à Dakar. Nos devis sont validés 2x plus vite et le calcul automatique de la TVA 18% nous fait gagner un temps précieux lors des bilans.",
+      color: "bg-emerald-600"
     },
     {
-      q: "Y a-t-il un engagement de durée ?",
-      a: "Aucun engagement. Vous pouvez utiliser le plan gratuit pendant 7 jours sans carte bancaire, puis choisir de vous abonner au plan Pro mensuellement ou annuellement avec une réduction de 20%."
+      initials: "KK",
+      name: "Kouassi Konan",
+      role: "Fondateur, Ivoire Impression",
+      location: "Abidjan, C.I. 🇨🇮",
+      text: "Le verrouillage électronique des BAT nous a épargné plusieurs ré-impressions coûteuses à Abidjan. Les fiches d'atelier sont claires et nos clients apprécient le rendu des factures A4.",
+      color: "bg-blue-600"
+    },
+    {
+      initials: "SO",
+      name: "Stéphanie Ondo",
+      role: "Gérante, Libreville Graphique",
+      location: "Libreville, Gabon 🇬🇦",
+      text: "Grâce au catalogue public inclus dans le plan Pro, nous recevons régulièrement des demandes de devis d'entreprises locales à Libreville. C'est le SaaS idéal !",
+      color: "bg-purple-600"
+    },
+    {
+      initials: "OK",
+      name: "Ousmane Keita",
+      role: "Gérant, Sahel Graphique",
+      location: "Bamako, Mali 🇲🇱",
+      text: "La rapidité de création des devis FCFA avec les paliers de prix par quantité a transformé la rentabilité de notre imprimerie. Un outil indispensable !",
+      color: "bg-amber-600"
+    },
+    {
+      initials: "EB",
+      name: "Emmanuel Biya",
+      role: "Directeur, Douala Print",
+      location: "Douala, Cameroun 🇨🇲",
+      text: "Le suivi automatique des livraisons et des paiements par acompte nous évite tout oubli de facturation. Le support WhatsApp local est ultra réactif.",
+      color: "bg-teal-600"
     }
   ];
 
   return (
-    <div className="min-h-screen bg-[#070A10] text-slate-100 font-sans selection:bg-brand-primary/20 selection:text-brand-primary overflow-x-hidden relative">
+    <div className="min-h-screen bg-[#060A10] text-[#E2E2E6] font-sans selection:bg-[#00B060]/30 selection:text-[#00B060] overflow-x-hidden relative">
       
-      {/* BACKGROUND CINEMATIC LIGHTING MESH GLOWS (UI/UX Pro Max) */}
+      {/* GLOWING AMBIENT BACKGROUND LIGHTING */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
         <div 
-          className="absolute -top-[15%] left-1/2 -translate-x-1/2 w-[1200px] h-[700px] opacity-40 blur-[140px]"
-          style={{
-            background: 'radial-gradient(circle, rgba(0, 176, 96, 0.35) 0%, rgba(99, 102, 241, 0.18) 45%, transparent 70%)'
-          }}
+          className="absolute -top-[20%] left-1/2 -translate-x-1/2 w-[1200px] h-[700px] opacity-35 blur-[150px]"
+          style={{ background: 'radial-gradient(circle, rgba(1, 38, 31, 0.9) 0%, rgba(0, 176, 96, 0.25) 45%, transparent 70%)' }}
         />
         <div 
-          className="absolute top-[45%] right-[-15%] w-[700px] h-[700px] opacity-25 blur-[160px]"
-          style={{
-            background: 'radial-gradient(circle, rgba(14, 165, 233, 0.3) 0%, rgba(0, 176, 96, 0.2) 50%, transparent 70%)'
-          }}
-        />
-        <div 
-          className="absolute bottom-[-10%] left-[-10%] w-[600px] h-[600px] opacity-20 blur-[150px]"
-          style={{
-            background: 'radial-gradient(circle, rgba(245, 158, 11, 0.2) 0%, transparent 70%)'
-          }}
+          className="absolute top-[40%] right-[-10%] w-[600px] h-[600px] opacity-25 blur-[160px]"
+          style={{ background: 'radial-gradient(circle, rgba(73, 100, 85, 0.4) 0%, rgba(1, 38, 31, 0.3) 50%, transparent 70%)' }}
         />
       </div>
 
-      {/* HEADER / NAVIGATION BAR */}
-      <header className="sticky top-0 z-50 bg-[#090D16]/85 backdrop-blur-xl border-b border-slate-800/80 transition-all">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+      {/* TOP NAVIGATION BAR */}
+      <nav className="bg-[#060A10]/85 backdrop-blur-xl sticky top-0 w-full border-b border-slate-800/80 z-50 transition-all duration-300">
+        <div className="flex justify-between items-center h-20 px-4 sm:px-8 max-w-7xl mx-auto">
           
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3 group">
             <img src="/Favicon_PrintFlow.png" alt="Print_Flow" className="w-9 h-9 object-contain rounded-xl shadow-lg group-hover:scale-105 transition" />
             <span className="text-xl font-black tracking-tight text-white">
-              Print<span className="text-brand-primary">_Flow</span>
+              Print<span className="text-[#00B060]">_Flow</span>
             </span>
           </Link>
 
-          {/* Navigation Links */}
-          <nav className="hidden md:flex items-center gap-8 text-xs font-bold text-slate-300">
-            <a href="#problemes" className="hover:text-brand-primary transition">Problèmes</a>
-            <a href="#bento-features" className="hover:text-brand-primary transition">Fonctionnalités</a>
-            <a href="#comparatif" className="hover:text-brand-primary transition">Comparatif</a>
-            <a href="#comment-ca-marche" className="hover:text-brand-primary transition">Comment ça marche</a>
-            <a href="#temoignages" className="hover:text-brand-primary transition">Témoignages</a>
-            <a href="#tarification" className="hover:text-brand-primary transition">Tarification</a>
-            <a href="#faq" className="hover:text-brand-primary transition">FAQ</a>
-          </nav>
+          {/* Links */}
+          <ul className="hidden md:flex gap-8 text-xs font-bold text-slate-300">
+            <li><a className="hover:text-[#00B060] transition-colors" href="#problemes">Problèmes</a></li>
+            <li><a className="hover:text-[#00B060] transition-colors" href="#fonctionnalites">Fonctionnalités</a></li>
+            <li><a className="hover:text-[#00B060] transition-colors" href="#comment-ca-marche">Comment ça marche</a></li>
+            <li><a className="hover:text-[#00B060] transition-colors" href="#temoignages">Témoignages</a></li>
+            <li><a className="hover:text-[#00B060] transition-colors" href="#tarification">Tarification</a></li>
+          </ul>
 
-          {/* CTA Buttons */}
+          {/* Actions */}
           <div className="flex items-center gap-3">
             {isAuthenticated ? (
               <Link
                 href="/dashboard"
-                className="px-5 py-2.5 rounded-full bg-brand-primary hover:bg-brand-primary-hover text-white text-xs font-bold shadow-lg shadow-emerald-600/30 transition hover:scale-105 flex items-center gap-2 cursor-pointer"
+                className="bg-[#00B060] hover:bg-[#009652] text-white text-xs font-bold px-6 py-3 rounded-full shadow-lg shadow-[#00B060]/20 transition magnetic-btn flex items-center gap-2"
               >
-                <span>Accéder au Dashboard</span>
+                <span>Dashboard</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>
             ) : (
               <>
-                <Link
-                  href="/login"
-                  className="hidden sm:inline-flex px-4 py-2 rounded-full border border-slate-700 text-slate-200 hover:bg-slate-800 text-xs font-bold transition cursor-pointer"
-                >
+                <Link className="text-slate-300 hover:text-white text-xs font-bold hidden md:block px-3 py-2" href="/login">
                   Se connecter
                 </Link>
-                <Link
-                  href="/login"
-                  className="px-5 py-2.5 rounded-full bg-brand-primary hover:bg-brand-primary-hover text-white text-xs font-bold shadow-lg shadow-emerald-600/30 transition hover:scale-105 flex items-center gap-2 cursor-pointer"
-                >
+                <Link className="bg-[#00B060] hover:bg-[#009652] text-white text-xs font-bold px-6 py-3 rounded-full shadow-lg shadow-[#00B060]/20 transition magnetic-btn flex items-center gap-2" href="/login">
                   <span>Commencer gratuitement</span>
                   <ArrowRight className="w-4 h-4" />
                 </Link>
@@ -174,767 +242,506 @@ export default function LandingPage() {
           </div>
 
         </div>
-      </header>
+      </nav>
 
-      {/* HERO SECTION */}
-      <section className="relative pt-14 pb-20 lg:pt-24 lg:pb-32 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-8">
+      <main className="relative z-10">
+
+        {/* HERO SECTION */}
+        <section className="py-16 sm:py-24 px-4 sm:px-8 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10 items-center min-h-[85vh]">
           
-          {/* Top Pill Badge */}
-          <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-brand-primary text-xs font-bold shadow-lg shadow-emerald-950/50 backdrop-blur-md animate-fade-in">
-            <span className="w-2 h-2 rounded-full bg-brand-primary animate-pulse" />
-            <Sparkles className="w-3.5 h-3.5 text-brand-primary" />
-            <span>SaaS N°1 de Facturation & Atelier d'Imprimerie en Afrique francophone</span>
-          </div>
-
-          {/* Main Headline */}
-          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black text-white tracking-tight leading-[1.1] max-w-5xl mx-auto">
-            Gérez vos Devis, BAT & Factures FCFA <br className="hidden sm:inline" />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-emerald-300 to-cyan-400">
-              avec la précision d'une grande imprimerie.
-            </span>
-          </h1>
-
-          {/* Subtitle */}
-          <p className="text-base sm:text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed font-normal">
-            Conçu spécialement pour les imprimeries du Sénégal, Côte d'Ivoire, Gabon et d'Afrique francophone. Calcul automatique de la TVA 18%, validation des BAT et fiches d'atelier en 1 clic.
-          </p>
-
-          {/* Hero CTAs */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-            <Link
-              href="/login"
-              className="w-full sm:w-auto px-8 py-4 rounded-full bg-brand-primary hover:bg-brand-primary-hover text-white text-sm font-bold shadow-xl shadow-emerald-500/25 transition-all duration-300 hover:scale-[1.03] active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <span>Démarrer l'Essai Gratuit (7 jours)</span>
-              <ArrowRight className="w-4.5 h-4.5" />
-            </Link>
-            <a
-              href="#live-simulator"
-              className="w-full sm:w-auto px-7 py-4 rounded-full bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 text-white hover:text-brand-primary text-sm font-bold transition-all duration-300 flex items-center justify-center gap-2 shadow-sm cursor-pointer backdrop-blur-md"
-            >
-              <Play className="w-4 h-4 text-brand-primary fill-brand-primary" />
-              <span>Tester le Simulateur en Direct</span>
-            </a>
-          </div>
-
-          {/* Guarantee Badges */}
-          <div className="flex flex-wrap items-center justify-center gap-6 pt-4 text-xs font-semibold text-slate-400">
-            <span className="flex items-center gap-2 bg-slate-900/60 px-3 py-1.5 rounded-full border border-slate-800">
-              <CheckCircle2 className="w-4 h-4 text-brand-primary" /> Aucun engagement bancaire
-            </span>
-            <span className="flex items-center gap-2 bg-slate-900/60 px-3 py-1.5 rounded-full border border-slate-800">
-              <CheckCircle2 className="w-4 h-4 text-brand-primary" /> Configuration en 60 secondes
-            </span>
-            <span className="flex items-center gap-2 bg-slate-900/60 px-3 py-1.5 rounded-full border border-slate-800">
-              <CheckCircle2 className="w-4 h-4 text-brand-primary" /> Support local WhatsApp 7j/7
-            </span>
-          </div>
-
-          {/* INTERACTIVE LIVE APP SIMULATOR MOCKUP (TailAdmin / UI UX Pro Max) */}
-          <div id="live-simulator" className="pt-10 max-w-5xl mx-auto">
-            <div className="rounded-3xl bg-[#101726]/90 border border-slate-800 shadow-2xl p-5 sm:p-8 space-y-6 text-left relative overflow-hidden backdrop-blur-xl">
-              
-              {/* Top App Chrome Bar */}
-              <div className="flex flex-wrap items-center justify-between border-b border-slate-800 pb-4 gap-3">
-                <div className="flex items-center gap-3">
-                  <div className="flex gap-1.5">
-                    <span className="w-3 h-3 rounded-full bg-rose-500 inline-block" />
-                    <span className="w-3 h-3 rounded-full bg-amber-500 inline-block" />
-                    <span className="w-3 h-3 rounded-full bg-emerald-500 inline-block" />
-                  </div>
-                  <span className="text-xs font-mono text-slate-400 pl-2">app.printflow.io/devis-simulator</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="px-3 py-1 rounded-full bg-emerald-500/10 text-brand-primary text-[11px] font-bold border border-emerald-500/20 flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-brand-primary animate-ping" />
-                    Mode Interactif • Afrique Francophone FCFA
-                  </span>
-                </div>
-              </div>
-
-              {/* KPI Strip */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-1">
-                  <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Chiffre d'Affaires Mensuel</p>
-                  <p className="text-2xl font-black text-white">{formatFCFA(18450000)}</p>
-                  <p className="text-[11px] font-bold text-emerald-400 flex items-center gap-1 pt-1">
-                    <TrendingUp className="w-3.5 h-3.5" /> +28% vs mois précédent
-                  </p>
-                </div>
-                <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-1">
-                  <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Devis Validés ce mois</p>
-                  <p className="text-2xl font-black text-brand-primary">48 Devis</p>
-                  <p className="text-[11px] font-semibold text-slate-400 pt-1">TVA 18% : {formatFCFA(3321000)}</p>
-                </div>
-                <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-1">
-                  <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Taux de Conformation BAT</p>
-                  <p className="text-2xl font-black text-cyan-400">99.2%</p>
-                  <p className="text-[11px] font-semibold text-slate-400 pt-1">Zéro tirage gâché en atelier</p>
-                </div>
-              </div>
-
-              {/* Interactive Tabs */}
-              <div className="space-y-4">
-                <div className="flex flex-wrap gap-2 border-b border-slate-800 pb-3 text-xs font-bold">
-                  <button
-                    onClick={() => setActiveTab('devis')}
-                    className={`px-4 py-2.5 rounded-xl transition flex items-center gap-2 cursor-pointer ${activeTab === 'devis' ? 'bg-brand-primary text-white shadow-md' : 'text-slate-400 hover:bg-slate-800'}`}
-                  >
-                    <Calculator className="w-4 h-4" />
-                    <span>1. Simuler un Devis FCFA en Direct</span>
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('bat')}
-                    className={`px-4 py-2.5 rounded-xl transition flex items-center gap-2 cursor-pointer ${activeTab === 'bat' ? 'bg-brand-primary text-white shadow-md' : 'text-slate-400 hover:bg-slate-800'}`}
-                  >
-                    <ShieldCheck className="w-4 h-4" />
-                    <span>2. Validation BAT Fichier (.ZIP)</span>
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('facture')}
-                    className={`px-4 py-2.5 rounded-xl transition flex items-center gap-2 cursor-pointer ${activeTab === 'facture' ? 'bg-brand-primary text-white shadow-md' : 'text-slate-400 hover:bg-slate-800'}`}
-                  >
-                    <FileCheck className="w-4 h-4" />
-                    <span>3. Facturation A4 & Reçu Acompte</span>
-                  </button>
-                </div>
-
-                {/* Tab Content 1: Live Interactive Devis Simulator */}
-                {activeTab === 'devis' && (
-                  <div className="p-5 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-4 text-xs">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 font-bold border-b border-slate-800 pb-3">
-                      <span className="text-white text-sm">Devis Interactif N° DEV-2026-099 • Client: ORANGE SÉNÉGAL</span>
-                      <span className="px-3 py-1 rounded-full bg-emerald-500/10 text-brand-primary border border-emerald-500/20 text-[11px] w-fit">
-                        TVA 18% Calculée en Temps Réel
-                      </span>
-                    </div>
-
-                    {/* Quantity & Unit price sliders */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-xl bg-[#080C14] border border-slate-800">
-                      <div className="space-y-2">
-                        <label className="text-slate-400 font-bold flex justify-between">
-                          <span>Quantité de Flyers A5 (Exemplaires) :</span>
-                          <span className="text-brand-primary font-black text-sm">{simQuantity.toLocaleString()} ex.</span>
-                        </label>
-                        <input
-                          type="range"
-                          min={1000}
-                          max={50000}
-                          step={1000}
-                          value={simQuantity}
-                          onChange={(e) => setSimQuantity(Number(e.target.value))}
-                          className="w-full accent-brand-primary cursor-pointer"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-slate-400 font-bold flex justify-between">
-                          <span>Prix Unitaire HT par ex. :</span>
-                          <span className="text-brand-primary font-black text-sm">{simUnitPrice} FCFA</span>
-                        </label>
-                        <input
-                          type="range"
-                          min={20}
-                          max={200}
-                          step={5}
-                          value={simUnitPrice}
-                          onChange={(e) => setSimUnitPrice(Number(e.target.value))}
-                          className="w-full accent-brand-primary cursor-pointer"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Results table */}
-                    <div className="space-y-2 pt-2">
-                      <div className="flex justify-between py-2 border-b border-slate-800 text-slate-300">
-                        <span>Montant Total Hors Taxe (HT) :</span>
-                        <span className="font-bold text-white text-sm">{formatFCFA(simSubtotal)}</span>
-                      </div>
-                      <div className="flex justify-between py-2 border-b border-slate-800 text-slate-300">
-                        <span>Taxe sur la Valeur Ajoutée (TVA 18%) :</span>
-                        <span className="font-bold text-amber-400 text-sm">{formatFCFA(simVat)}</span>
-                      </div>
-                      <div className="flex justify-between py-3 font-black text-base text-white bg-brand-primary/10 p-3 rounded-xl border border-brand-primary/30">
-                        <span>TOTAL TOUTES TAXES COMPRISES (TTC) :</span>
-                        <span className="text-brand-primary">{formatFCFA(simTotal)}</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Tab Content 2: BAT */}
-                {activeTab === 'bat' && (
-                  <div className="p-5 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-4 text-xs">
-                    <div className="flex justify-between items-center font-bold border-b border-slate-800 pb-3">
-                      <span className="text-white text-sm">BAT Bon à Tirer • Fichier_Catalogue_2026_HD.zip (128 Mo)</span>
-                      <span className="px-3 py-1 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 text-[11px]">
-                        Verrouillé & Confirmé par Client
-                      </span>
-                    </div>
-                    <p className="text-slate-300 leading-relaxed bg-[#080C14] p-3 rounded-xl border border-slate-800">
-                      "BAT approuvé électroniquement par le Directeur Marketing. Bon pour tirage Offset 10 000 ex. Quadrichromie sur couche 170g."
-                    </p>
-                    <div className="flex items-center gap-2 text-xs font-semibold text-brand-primary">
-                      <ShieldCheck className="w-4 h-4" />
-                      <span>Sécurité Impression : Fichier verrouillé contre toute modification ultérieure.</span>
-                    </div>
-                  </div>
-                )}
-
-                {/* Tab Content 3: Facture */}
-                {activeTab === 'facture' && (
-                  <div className="p-5 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-4 text-xs">
-                    <div className="flex justify-between items-center font-bold border-b border-slate-800 pb-3">
-                      <span className="text-white text-sm">Facture N° FAC-2026-104 • SOCIÉTÉ GÉNÉRALE C.I.</span>
-                      <span className="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[11px]">
-                        Facture Solde • Payée par Virement
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4 text-slate-300 bg-[#080C14] p-3 rounded-xl border border-slate-800">
-                      <div>
-                        <p className="text-slate-500 uppercase font-bold text-[10px]">Acompte Perçu (50%)</p>
-                        <p className="font-bold text-white text-sm">{formatFCFA(simTotal / 2)}</p>
-                      </div>
-                      <div>
-                        <p className="text-slate-500 uppercase font-bold text-[10px]">Reste à Solde</p>
-                        <p className="font-bold text-emerald-400 text-sm">0 FCFA (Soldé)</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
+          <div className="lg:col-span-7 space-y-7 text-left">
+            <div className="inline-flex items-center gap-2 bg-[#1a3c34]/60 border border-[#00B060]/30 text-[#00B060] px-4 py-1.5 rounded-full text-[11px] font-bold tracking-wide uppercase shadow-lg shadow-[#00B060]/10 backdrop-blur-md">
+              <Sparkles className="w-3.5 h-3.5 text-[#00B060]" />
+              <span>SaaS N°1 de Facturation & Atelier d'Imprimerie en Afrique francophone</span>
             </div>
-          </div>
 
-        </div>
-      </section>
+            <h1 className="text-4xl sm:text-6xl font-black text-white leading-[1.1] tracking-tight">
+              Gérez vos Devis, BAT & Factures FCFA <br />
+              <span className="font-serif italic text-transparent bg-clip-text bg-gradient-to-r from-[#00B060] via-emerald-300 to-cyan-400">
+                avec la précision d'une grande imprimerie.
+              </span>
+            </h1>
 
-      {/* SECTION PROBLÈME vs SOLUTION (UI/UX Pro Max Comparison Matrix) */}
-      <section id="problemes" className="py-24 bg-[#090D16] border-y border-slate-800/80 z-10 relative">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-14">
-          
-          <div className="text-center max-w-3xl mx-auto space-y-4">
-            <span className="px-3 py-1 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-bold">
-              Le Défi des Imprimeries
-            </span>
-            <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight">
-              Pourquoi les méthodes traditionnelles freinent votre rentabilité ?
-            </h2>
-            <p className="text-base text-slate-400 leading-relaxed">
-              Découvrez la différence nette entre la gestion manuelle vulnérable aux erreurs et l'automatisation avec PrintFlow.
+            <p className="text-base sm:text-lg text-slate-300 max-w-xl leading-relaxed">
+              Conçu spécialement pour les imprimeries du Sénégal, Côte d'Ivoire, Gabon et d'Afrique francophone. Calcul automatique de la TVA 18%, validation des BAT et fiches d'atelier en 1 clic.
             </p>
+
+            <div className="flex flex-col sm:flex-row gap-4 pt-2">
+              <Link
+                href="/login"
+                className="bg-[#00B060] hover:bg-[#009652] text-white text-xs font-bold px-8 py-4 rounded-full magnetic-btn shadow-xl shadow-[#00B060]/30 transition text-center flex items-center justify-center gap-2"
+              >
+                <span>Démarrer l'Essai Gratuit (7 jours)</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+              <a
+                href="#live-simulator"
+                className="bg-slate-900/80 text-white border border-slate-700 hover:border-[#00B060] text-xs font-bold px-8 py-4 rounded-full magnetic-btn transition text-center flex items-center justify-center gap-2 backdrop-blur-md"
+              >
+                <Play className="w-4 h-4 text-[#00B060] fill-[#00B060]" />
+                <span>Tester le Simulateur en Direct</span>
+              </a>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-6 text-xs text-slate-400 pt-2 opacity-90">
+              <span className="flex items-center gap-1.5"><Lock className="w-3.5 h-3.5 text-[#00B060]" /> Aucun engagement bancaire</span>
+              <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-[#00B060]" /> Config en 60s</span>
+              <span className="flex items-center gap-1.5"><Send className="w-3.5 h-3.5 text-[#00B060]" /> Support local WhatsApp 7j/7</span>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Hero Visual Mockup Card */}
+          <div className="lg:col-span-5 relative flex justify-center">
+            <div className="w-full rounded-3xl bg-[#101726]/90 border border-slate-800 shadow-2xl p-6 space-y-5 text-left relative overflow-hidden backdrop-blur-xl hover:border-[#00B060]/40 transition duration-500">
+              
+              {/* App Mockup Bar */}
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-full bg-rose-500 inline-block" />
+                  <span className="w-3 h-3 rounded-full bg-amber-500 inline-block" />
+                  <span className="w-3 h-3 rounded-full bg-emerald-500 inline-block" />
+                  <span className="text-[11px] font-mono text-slate-400 pl-2">printflow.app/devis</span>
+                </div>
+                <span className="px-2.5 py-0.5 rounded-full bg-[#00B060]/10 text-[#00B060] border border-[#00B060]/20 text-[10px] font-bold">
+                  Sénégal • FCFA
+                </span>
+              </div>
+
+              {/* Stats Card */}
+              <div className="p-4 rounded-2xl bg-[#080C14] border border-slate-800 space-y-1">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Chiffre d'Affaires Mensuel</p>
+                <p className="text-2xl font-black text-white">{formatFCFA(18450000)}</p>
+                <p className="text-[11px] font-bold text-[#00B060] flex items-center gap-1">
+                  <TrendingUp className="w-3.5 h-3.5" /> +28% vs mois dernier
+                </p>
+              </div>
+
+              {/* Floating Badge */}
+              <div className="p-3 rounded-xl bg-[#1a3c34]/80 border border-[#00B060]/30 text-xs font-bold text-white flex items-center justify-between shadow-lg">
+                <span className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-[#00B060]" />
+                  <span>Taux de Conformation BAT</span>
+                </span>
+                <span className="text-sm font-black text-[#00B060]">99.2%</span>
+              </div>
+
+              {/* Quick Devis Preview */}
+              <div className="space-y-2 text-xs">
+                <div className="flex justify-between text-slate-400 font-bold border-b border-slate-800 pb-1">
+                  <span>Brochure A4 16p (1 000 ex.)</span>
+                  <span className="text-white font-black">{formatFCFA(950000)}</span>
+                </div>
+                <div className="flex justify-between text-slate-400 text-[11px]">
+                  <span>TVA 18% Automatique</span>
+                  <span className="text-amber-400 font-bold">{formatFCFA(171000)}</span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </section>
+
+        {/* PROBLEM SECTION */}
+        <section id="problemes" className="py-24 bg-[#080C14] border-y border-slate-800/80">
+          <div className="max-w-7xl mx-auto px-4 sm:px-8 space-y-12">
             
-            {/* Column 1: Without PrintFlow */}
-            <div className="p-8 rounded-3xl bg-slate-900/50 border border-rose-900/40 space-y-6">
-              <div className="flex items-center gap-3 border-b border-rose-900/40 pb-4">
-                <div className="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center font-bold">
-                  <XCircle className="w-5 h-5" />
-                </div>
-                <h3 className="text-lg font-bold text-white">Sans PrintFlow (Gestion Manuelle)</h3>
-              </div>
-
-              <ul className="space-y-4 text-xs sm:text-sm text-slate-400">
-                <li className="flex items-start gap-3">
-                  <XCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
-                  <span><strong>Factures Word/Excel non professionnelles</strong> qui dévalorisent l'image de votre imprimerie auprès des grandes entreprises.</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <XCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
-                  <span><strong>Erreurs de calcul sur la TVA 18%</strong> causant des redressements ou des décalages de trésorerie inattendus.</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <XCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
-                  <span><strong>Litiges sur les fichiers d'impression</strong> sans preuve formelle de validation du BAT par le client.</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <XCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
-                  <span><strong>Acomptes oubliés et imprayés</strong> car le suivi des règlements est dispersé sur des cahiers ou notes volantes.</span>
-                </li>
-              </ul>
+            <div className="text-center max-w-3xl mx-auto space-y-3">
+              <p className="text-[#00B060] text-xs font-bold uppercase tracking-wider">Le Défi des Imprimeries</p>
+              <h2 className="text-3xl sm:text-5xl font-black font-serif text-white">Pourquoi les méthodes traditionnelles freinent votre rentabilité ?</h2>
+              <p className="text-sm sm:text-base text-slate-400">Découvrez la différence nette entre la gestion manuelle vulnérable aux erreurs et l'automatisation avec PrintFlow.</p>
             </div>
 
-            {/* Column 2: With PrintFlow */}
-            <div className="p-8 rounded-3xl bg-gradient-to-br from-emerald-950/40 to-[#0A1220] border border-emerald-500/40 space-y-6 shadow-xl relative overflow-hidden">
-              <div className="flex items-center gap-3 border-b border-emerald-500/30 pb-4">
-                <div className="w-10 h-10 rounded-xl bg-brand-primary text-white flex items-center justify-center font-bold shadow-md">
-                  <CheckCircle2 className="w-5 h-5" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              
+              {/* Sans PrintFlow */}
+              <div className="bg-rose-950/20 border border-rose-900/40 p-8 sm:p-10 rounded-3xl space-y-6">
+                <div className="flex items-center gap-3 border-b border-rose-900/40 pb-4">
+                  <XCircle className="w-8 h-8 text-rose-500 shrink-0" />
+                  <h3 className="text-xl font-bold text-white">Sans PrintFlow (Gestion Manuelle)</h3>
                 </div>
-                <h3 className="text-lg font-bold text-white">Avec PrintFlow (Modernisation Totale)</h3>
+                <ul className="space-y-5 text-xs sm:text-sm text-slate-300">
+                  <li className="flex items-start gap-3">
+                    <X className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
+                    <span><strong className="text-white">Factures Word/Excel non professionnelles</strong> qui dévalorisent l'image de votre imprimerie auprès des grandes entreprises.</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <X className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
+                    <span><strong className="text-white">Erreurs de calcul sur la TVA 18%</strong> causant des redressements ou des décalages de trésorerie inattendus.</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <X className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
+                    <span><strong className="text-white">Litiges sur les fichiers d'impression</strong> sans preuve formelle de validation du BAT par le client.</span>
+                  </li>
+                </ul>
               </div>
 
-              <ul className="space-y-4 text-xs sm:text-sm text-emerald-100">
-                <li className="flex items-start gap-3">
-                  <CheckCircle2 className="w-4 h-4 text-brand-primary shrink-0 mt-0.5" />
-                  <span><strong>Documents A4 corporate en 1 clic</strong> (Devis, Factures, Bons de Livraison) personnalisés à vos couleurs et logo.</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <CheckCircle2 className="w-4 h-4 text-brand-primary shrink-0 mt-0.5" />
-                  <span><strong>TVA 18% exacte et automatique</strong> avec gestion multi-devises (FCFA, EUR, USD, MAD, GNF).</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <CheckCircle2 className="w-4 h-4 text-brand-primary shrink-0 mt-0.5" />
-                  <span><strong>BAT verrouillé électroniquement</strong> empêchant les erreurs coûteuses d'impression en atelier.</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <CheckCircle2 className="w-4 h-4 text-brand-primary shrink-0 mt-0.5" />
-                  <span><strong>Suivi rigoureux des encaisses & acomptes</strong> avec notifications automatiques et relances intégrées.</span>
-                </li>
-              </ul>
+              {/* Avec PrintFlow */}
+              <div className="bg-[#1a3c34]/20 border border-[#00B060]/40 p-8 sm:p-10 rounded-3xl space-y-6 shadow-xl relative overflow-hidden">
+                <div className="flex items-center gap-3 border-b border-[#00B060]/30 pb-4">
+                  <CheckCircle2 className="w-8 h-8 text-[#00B060] shrink-0" />
+                  <h3 className="text-xl font-bold text-white">Avec PrintFlow (Modernisation Totale)</h3>
+                </div>
+                <ul className="space-y-5 text-xs sm:text-sm text-emerald-100">
+                  <li className="flex items-start gap-3">
+                    <Check className="w-4 h-4 text-[#00B060] shrink-0 mt-0.5" />
+                    <span><strong className="text-white">Documents A4 corporate en 1 clic</strong> (Devis, Factures, Bons de Livraison) personnalisés à vos couleurs et logo.</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <Check className="w-4 h-4 text-[#00B060] shrink-0 mt-0.5" />
+                    <span><strong className="text-white">TVA 18% exacte et automatique</strong> avec gestion multi-devises (FCFA, EUR, USD, MAD, GNF).</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <Check className="w-4 h-4 text-[#00B060] shrink-0 mt-0.5" />
+                    <span><strong className="text-white">BAT verrouillé électroniquement</strong> empêchant les erreurs coûteuses d'impression en atelier.</span>
+                  </li>
+                </ul>
+              </div>
+
             </div>
 
           </div>
+        </section>
 
-        </div>
-      </section>
-
-      {/* BENTO BOX FEATURES SECTION (UI/UX Pro Max Bento Grid) */}
-      <section id="bento-features" className="py-24 z-10 relative">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-14">
+        {/* BREATHTAKING & IMPRESSIVE ANIMATED FEATURES SECTION */}
+        <section id="fonctionnalites" className="py-24 max-w-7xl mx-auto px-4 sm:px-8 space-y-16 relative">
           
           <div className="text-center max-w-3xl mx-auto space-y-4">
-            <span className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-brand-primary text-xs font-bold">
-              Architecture & Fonctionnalités
+            <span className="px-3 py-1 rounded-full bg-[#00B060]/10 border border-[#00B060]/20 text-[#00B060] text-xs font-bold uppercase tracking-wider">
+              Architecture & Fonctionnalités d'Élite
             </span>
-            <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight">
+            <h2 className="text-3xl sm:text-5xl font-black font-serif text-white">
               Une plateforme complète conçue pour l'atelier et la direction
             </h2>
-            <p className="text-base text-slate-400 leading-relaxed">
-              Découvrez les modules puissants qui simplifient chaque étape de la chaîne d'impression.
+            <p className="text-sm sm:text-base text-slate-400">
+              Cliquez sur chaque module pour découvrir l'expérience interactive en direct.
             </p>
           </div>
 
-          {/* Bento Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Interactive Feature Tabs */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             
-            {/* Bento Card 1 (Large - Span 2) */}
-            <div className="md:col-span-2 p-8 rounded-3xl bg-[#101726] border border-slate-800 space-y-6 shadow-xl hover:border-brand-primary/40 transition duration-300 relative overflow-hidden group">
-              <div className="w-12 h-12 rounded-2xl bg-brand-primary/10 border border-brand-primary/20 text-brand-primary flex items-center justify-center font-bold">
-                <FileText className="w-6 h-6" />
-              </div>
-              <div className="space-y-2">
-                <h3 className="text-xl font-black text-white">Devis & Facturation FCFA (TVA 18% Intégrée)</h3>
-                <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
-                  Créez des devis complexes en quelques secondes : choix du papier, grammage, formats additionnels et finitions. Calcul automatique du montant HT, TVA 18% et TTC avec export PDF A4 instantané.
-                </p>
-              </div>
-              <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 text-xs font-mono text-emerald-400 flex items-center justify-between">
-                <span>Calculateur HT + TVA 18% + TTC</span>
-                <span className="px-2 py-0.5 rounded bg-brand-primary/20 text-brand-primary font-bold">Export A4 Imprimable</span>
-              </div>
+            {/* Left Feature Selector List */}
+            <div className="lg:col-span-5 space-y-4">
+              {features.map((feat) => {
+                const IconComponent = feat.icon;
+                const isSelected = selectedFeature === feat.id;
+
+                return (
+                  <div
+                    key={feat.id}
+                    onClick={() => setSelectedFeature(feat.id)}
+                    className={`p-6 rounded-2xl border transition-all duration-300 cursor-pointer feature-card-glow ${
+                      isSelected
+                        ? 'bg-[#101726] border-[#00B060] shadow-xl shadow-[#00B060]/10 translate-x-2'
+                        : 'bg-[#080C14]/80 border-slate-800 hover:border-slate-700 opacity-80 hover:opacity-100'
+                    }`}
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 shadow-md ${
+                        isSelected ? 'bg-[#00B060] text-white' : 'bg-slate-800 text-slate-300'
+                      }`}>
+                        <IconComponent className="w-6 h-6" />
+                      </div>
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-base font-bold text-white">{feat.title}</h3>
+                        </div>
+                        <span className="inline-block px-2.5 py-0.5 rounded-full bg-[#00B060]/10 text-[#00B060] text-[10px] font-bold border border-[#00B060]/20">
+                          {feat.badge}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
 
-            {/* Bento Card 2 (Tall - Span 1) */}
-            <div className="p-8 rounded-3xl bg-[#101726] border border-slate-800 space-y-6 shadow-xl hover:border-cyan-500/40 transition duration-300 relative group">
-              <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center font-bold">
-                <ShieldCheck className="w-6 h-6" />
-              </div>
-              <div className="space-y-2">
-                <h3 className="text-xl font-black text-white">Validation BAT (.ZIP 500 Mo)</h3>
-                <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
-                  Téléversez les épreuves d'impression. Le client valide son Bon à Tirer directement en ligne avec horodatage et verrouillage sécurisé de la commande.
-                </p>
-              </div>
-              <div className="pt-2 text-xs font-bold text-cyan-400 flex items-center gap-1.5">
-                <CheckCircle2 className="w-4 h-4" /> <span>Protection anti-erreur d'impression</span>
-              </div>
-            </div>
-
-            {/* Bento Card 3 */}
-            <div className="p-8 rounded-3xl bg-[#101726] border border-slate-800 space-y-6 shadow-xl hover:border-amber-500/40 transition duration-300 relative group">
-              <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center font-bold">
-                <Layers className="w-6 h-6" />
-              </div>
-              <div className="space-y-2">
-                <h3 className="text-xl font-black text-white">Fiches d'Atelier Confidentielles</h3>
-                <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
-                  Transmettez les instructions de tirage aux techniciens de machines (Offset, Numérique, Sérigraphie) sans divulguer les tarifs commerciaux.
-                </p>
-              </div>
-            </div>
-
-            {/* Bento Card 4 (Large - Span 2) */}
-            <div className="md:col-span-2 p-8 rounded-3xl bg-[#101726] border border-slate-800 space-y-6 shadow-xl hover:border-emerald-500/40 transition duration-300 relative overflow-hidden group">
-              <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-brand-primary flex items-center justify-center font-bold">
-                <Globe className="w-6 h-6" />
-              </div>
-              <div className="space-y-2">
-                <h3 className="text-xl font-black text-white">Boutique en Ligne & Catalogue Public 24/7</h3>
-                <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
-                  Offrez à votre imprimerie une vitrine web sur-mesure. Vos clients parcourent vos formats de papier, choisisent leurs quantités et vous envoient leurs demandes directement convertibles en devis.
-                </p>
-              </div>
-              <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 text-xs font-mono text-slate-300 flex items-center justify-between">
-                <span>URL publique dédiée : printflow.app/catalogue/votre-imprimerie</span>
-                <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-brand-primary font-bold">Convertible en Devis</span>
-              </div>
-            </div>
-
-          </div>
-
-        </div>
-      </section>
-
-      {/* SECTION COMMENT ÇA MARCHE */}
-      <section id="comment-ca-marche" className="py-24 bg-[#090D16] border-y border-slate-800/80 z-10 relative">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-14">
-          
-          <div className="text-center max-w-3xl mx-auto space-y-4">
-            <span className="px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-bold">
-              Prise en Main Immédiate
-            </span>
-            <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight">
-              Opérationnel en 3 étapes simples
-            </h2>
-            <p className="text-base text-slate-400 leading-relaxed">
-              Aucune formation technique requise. Votre imprimerie est prête en 60 secondes.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            
-            <div className="p-8 rounded-3xl bg-[#101726] border border-slate-800 space-y-5 relative">
-              <span className="w-12 h-12 rounded-2xl bg-brand-primary text-white font-black text-lg flex items-center justify-center shadow-lg shadow-emerald-600/30">1</span>
-              <h3 className="text-xl font-bold text-white">1. Configurez votre Imprimerie</h3>
-              <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
-                Créez votre compte gratuit. Saisissez votre logo, votre adresse et vos tarifs habituels pour les papiers et supports.
-              </p>
-            </div>
-
-            <div className="p-8 rounded-3xl bg-[#101726] border border-slate-800 space-y-5 relative">
-              <span className="w-12 h-12 rounded-2xl bg-brand-primary text-white font-black text-lg flex items-center justify-center shadow-lg shadow-emerald-600/30">2</span>
-              <h3 className="text-xl font-bold text-white">2. Générez vos Devis & BAT</h3>
-              <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
-                Calculez les montants HT et TVA 18% en un clic. Faites valider le Bon à Tirer par le client avant le tirage en atelier.
-              </p>
-            </div>
-
-            <div className="p-8 rounded-3xl bg-[#101726] border border-slate-800 space-y-5 relative">
-              <span className="w-12 h-12 rounded-2xl bg-brand-primary text-white font-black text-lg flex items-center justify-center shadow-lg shadow-emerald-600/30">3</span>
-              <h3 className="text-xl font-bold text-white">3. Livrez & Encaissez en FCFA</h3>
-              <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
-                Dès la livraison effectuée, la facture A4 est générée automatiquement. Suivez vos acomptes et règlements en temps réel.
-              </p>
-            </div>
-
-          </div>
-
-        </div>
-      </section>
-
-      {/* SECTION TÉMOIGNAGES */}
-      <section id="temoignages" className="py-24 z-10 relative">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-14">
-          
-          <div className="text-center max-w-3xl mx-auto space-y-4">
-            <span className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-brand-primary text-xs font-bold">
-              Preuve Sociale & Avis
-            </span>
-            <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight">
-              Reconnu par les gérants d'imprimerie en Afrique francophone
-            </h2>
-            <p className="text-base text-slate-400 leading-relaxed">
-              Découvrez les retours d'expérience authentiques de nos utilisateurs au Sénégal, en Côte d'Ivoire et au Gabon.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            
-            {/* Testimonial 1 */}
-            <div className="p-8 rounded-3xl bg-[#101726] border border-slate-800 space-y-5 shadow-xl hover:border-brand-primary/40 transition">
-              <div className="flex items-center gap-1 text-amber-400">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-4 h-4 fill-amber-400" />
-                ))}
-              </div>
-              <p className="text-xs sm:text-sm text-slate-300 italic leading-relaxed">
-                "PrintFlow a totalement réinventé la gestion de notre atelier à Dakar. Nos devis sont validés 2x plus vite et le calcul automatique de la TVA 18% nous fait gagner un temps précieux lors des bilans."
-              </p>
-              <div className="pt-3 border-t border-slate-800 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-brand-primary text-white font-bold flex items-center justify-center text-sm shadow-md">
-                  MN
-                </div>
-                <div>
-                  <h4 className="text-xs font-bold text-white">Mamadou Ndiaye</h4>
-                  <p className="text-[11px] text-slate-400">Directeur, Sud Print • Dakar, Sénégal 🇸🇳</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Testimonial 2 */}
-            <div className="p-8 rounded-3xl bg-[#101726] border border-slate-800 space-y-5 shadow-xl hover:border-cyan-500/40 transition">
-              <div className="flex items-center gap-1 text-amber-400">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-4 h-4 fill-amber-400" />
-                ))}
-              </div>
-              <p className="text-xs sm:text-sm text-slate-300 italic leading-relaxed">
-                "Le verrouillage électronique des BAT nous a épargné plusieurs ré-impressions coûteuses à Abidjan. Les fiches d'atelier sont claires et nos clients apprécient le rendu des factures."
-              </p>
-              <div className="pt-3 border-t border-slate-800 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-cyan-600 text-white font-bold flex items-center justify-center text-sm shadow-md">
-                  KK
-                </div>
-                <div>
-                  <h4 className="text-xs font-bold text-white">Kouassi Konan</h4>
-                  <p className="text-[11px] text-slate-400">Fondateur, Ivoire Impression • Abidjan 🇨🇮</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Testimonial 3 */}
-            <div className="p-8 rounded-3xl bg-[#101726] border border-slate-800 space-y-5 shadow-xl hover:border-emerald-500/40 transition">
-              <div className="flex items-center gap-1 text-amber-400">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-4 h-4 fill-amber-400" />
-                ))}
-              </div>
-              <p className="text-xs sm:text-sm text-slate-300 italic leading-relaxed">
-                "Grâce au catalogue public inclus dans le plan Pro, nous recevons régulièrement des demandes de devis d'entreprises locales à Libreville. C'est le SaaS idéal !"
-              </p>
-              <div className="pt-3 border-t border-slate-800 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-emerald-600 text-white font-bold flex items-center justify-center text-sm shadow-md">
-                  SO
-                </div>
-                <div>
-                  <h4 className="text-xs font-bold text-white">Stéphanie Ondo</h4>
-                  <p className="text-[11px] text-slate-400">Gérante, Libreville Graphique • Gabon 🇬🇦</p>
-                </div>
-              </div>
-            </div>
-
-          </div>
-
-        </div>
-      </section>
-
-      {/* SECTION TARIFICATION */}
-      <section id="tarification" className="py-24 bg-[#090D16] border-y border-slate-800/80 z-10 relative">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-14">
-          
-          <div className="text-center max-w-3xl mx-auto space-y-4">
-            <span className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-brand-primary text-xs font-bold">
-              Tarification Transparente
-            </span>
-            <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight">
-              Des formules adaptées à votre croissance
-            </h2>
-            <p className="text-base text-slate-400 leading-relaxed">
-              Démarrez gratuitement sans carte bancaire, puis évoluez vers notre formule Pro illimitée.
-            </p>
-
-            {/* Monthly / Yearly Toggle */}
-            <div className="flex items-center justify-center gap-4 pt-4">
-              <span className={`text-xs font-bold cursor-pointer ${billingCycle === 'monthly' ? 'text-white' : 'text-slate-500'}`} onClick={() => setBillingCycle('monthly')}>
-                Paiement Mensuel
-              </span>
-              <button
-                onClick={() => setBillingCycle(billingCycle === 'monthly' ? 'yearly' : 'monthly')}
-                className="w-14 h-7 rounded-full bg-slate-800 p-1 relative transition cursor-pointer border border-slate-700"
-              >
-                <div className={`w-5 h-5 rounded-full bg-brand-primary transition-transform ${billingCycle === 'yearly' ? 'translate-x-7' : 'translate-x-0'}`} />
-              </button>
-              <span className={`text-xs font-bold cursor-pointer ${billingCycle === 'yearly' ? 'text-white' : 'text-slate-500'}`} onClick={() => setBillingCycle('yearly')}>
-                Paiement Annuel <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-brand-primary font-bold border border-emerald-500/30">-20% Réduction</span>
-              </span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto items-stretch">
-            
-            {/* Plan Gratuit */}
-            <div className="p-8 sm:p-10 rounded-3xl bg-[#101726] border border-slate-800 space-y-6 flex flex-col justify-between">
-              <div className="space-y-4">
-                <div className="space-y-1">
-                  <h3 className="text-2xl font-black text-white">Plan Découverte</h3>
-                  <p className="text-xs text-slate-400">Idéal pour tester l'application en conditions réelles.</p>
-                </div>
-
-                <div className="py-2">
-                  <span className="text-4xl sm:text-5xl font-black text-white">0 FCFA</span>
-                  <span className="text-xs text-slate-400 font-semibold"> / 7 jours d'essai</span>
-                </div>
-
-                <ul className="space-y-3 text-xs text-slate-300 font-medium pt-2">
-                  <li className="flex items-center gap-2.5">
-                    <Check className="w-4 h-4 text-brand-primary shrink-0" />
-                    <span>1 Compte Administrateur</span>
-                  </li>
-                  <li className="flex items-center gap-2.5">
-                    <Check className="w-4 h-4 text-brand-primary shrink-0" />
-                    <span>Émission de Devis & Factures FCFA</span>
-                  </li>
-                  <li className="flex items-center gap-2.5">
-                    <Check className="w-4 h-4 text-brand-primary shrink-0" />
-                    <span>Calcul automatique de la TVA (18%)</span>
-                  </li>
-                  <li className="flex items-center gap-2.5">
-                    <Check className="w-4 h-4 text-brand-primary shrink-0" />
-                    <span>Export PDF A4 standard</span>
-                  </li>
-                </ul>
-              </div>
-
-              <Link
-                href="/login"
-                className="w-full py-3.5 rounded-full border border-slate-700 text-slate-200 hover:bg-slate-800 text-xs font-bold transition text-center cursor-pointer"
-              >
-                Démarrer l'Essai Gratuit
-              </Link>
-            </div>
-
-            {/* Plan Pro (Highlighted UI/UX Pro Max) */}
-            <div className="p-8 sm:p-10 rounded-3xl bg-gradient-to-b from-emerald-950/80 via-[#0E1726] to-[#0A1220] border-2 border-brand-primary shadow-2xl shadow-emerald-950/80 text-white space-y-6 flex flex-col justify-between relative overflow-hidden">
-              
-              {/* Highlight Badge */}
-              <div className="absolute top-4 right-4 px-3.5 py-1 rounded-full bg-brand-primary text-white text-[10px] font-black uppercase tracking-wider shadow-md">
-                Formule Recommandée
-              </div>
-
-              <div className="space-y-4">
-                <div className="space-y-1">
-                  <h3 className="text-2xl font-black text-white">Plan Pro Imprimerie</h3>
-                  <p className="text-xs text-emerald-200">Pour les ateliers et imprimeries en activité.</p>
-                </div>
-
-                <div className="py-2">
-                  <span className="text-4xl sm:text-5xl font-black text-white">
-                    {billingCycle === 'yearly' ? formatFCFA(20000) : formatFCFA(25000)}
+            {/* Right Breathtaking Interactive Live Preview Box */}
+            <div className="lg:col-span-7">
+              <div className="p-8 rounded-3xl bg-[#101726] border border-[#00B060]/40 shadow-2xl space-y-6 relative overflow-hidden backdrop-blur-xl">
+                
+                {/* Header Preview */}
+                <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-[#00B060]" />
+                    <span className="text-sm font-bold text-white">{features[selectedFeature].previewTitle}</span>
+                  </div>
+                  <span className="px-3 py-1 rounded-full bg-[#00B060]/10 text-[#00B060] text-xs font-bold border border-[#00B060]/30">
+                    Aperçu Temps Réel
                   </span>
-                  <span className="text-xs text-emerald-200 font-semibold"> / mois</span>
                 </div>
 
-                <ul className="space-y-3 text-xs text-emerald-100 font-medium pt-2">
-                  <li className="flex items-center gap-2.5">
-                    <Check className="w-4 h-4 text-brand-primary shrink-0" />
-                    <span><strong>Utilisateurs illimités</strong> (Admin, Commercial, Chef d'atelier)</span>
-                  </li>
-                  <li className="flex items-center gap-2.5">
-                    <Check className="w-4 h-4 text-brand-primary shrink-0" />
-                    <span><strong>Validation BAT Fichiers (.ZIP 500 Mo)</strong></span>
-                  </li>
-                  <li className="flex items-center gap-2.5">
-                    <Check className="w-4 h-4 text-brand-primary shrink-0" />
-                    <span><strong>Boutique en ligne & Catalogue public 24/7</strong></span>
-                  </li>
-                  <li className="flex items-center gap-2.5">
-                    <Check className="w-4 h-4 text-brand-primary shrink-0" />
-                    <span><strong>Fiches d'atelier & Bons de Commande</strong> confidentiels</span>
-                  </li>
-                  <li className="flex items-center gap-2.5">
-                    <Check className="w-4 h-4 text-brand-primary shrink-0" />
-                    <span>Support client prioritaire sur WhatsApp</span>
-                  </li>
-                </ul>
-              </div>
+                <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                  {features[selectedFeature].description}
+                </p>
 
-              <Link
-                href="/login"
-                className="w-full py-4 rounded-full bg-brand-primary hover:bg-brand-primary-hover text-white text-xs font-bold transition text-center shadow-lg shadow-emerald-600/40 hover:scale-[1.02] cursor-pointer"
-              >
-                Passer au Plan Pro
-              </Link>
-            </div>
-
-          </div>
-
-        </div>
-      </section>
-
-      {/* SECTION FAQ ACCORDION */}
-      <section id="faq" className="py-24 z-10 relative">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-          
-          <div className="text-center space-y-4">
-            <span className="px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-bold">
-              Foire Aux Questions
-            </span>
-            <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight">
-              Questions Fréquentes
-            </h2>
-          </div>
-
-          <div className="space-y-4">
-            {faqs.map((faq, index) => (
-              <div
-                key={index}
-                className="rounded-2xl bg-[#101726] border border-slate-800 overflow-hidden transition"
-              >
-                <button
-                  onClick={() => setOpenFaq(openFaq === index ? null : index)}
-                  className="w-full p-5 text-left text-sm font-bold text-white flex justify-between items-center gap-4 cursor-pointer hover:text-brand-primary transition"
-                >
-                  <span>{faq.q}</span>
-                  <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${openFaq === index ? 'rotate-180 text-brand-primary' : ''}`} />
-                </button>
-                {openFaq === index && (
-                  <div className="px-5 pb-5 text-xs text-slate-400 leading-relaxed border-t border-slate-800/60 pt-3">
-                    {faq.a}
+                {/* Feature Specific Live Interactive Demo Card */}
+                {selectedFeature === 0 && (
+                  <div className="p-5 rounded-2xl bg-[#080C14] border border-slate-800 space-y-3 text-xs">
+                    <div className="flex justify-between items-center text-slate-400 pb-2 border-b border-slate-800">
+                      <span>Article : <strong className="text-white">{features[0].previewContent.item}</strong></span>
+                      <span className="text-[#00B060] font-bold">{features[0].previewContent.qty}</span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 py-2 text-slate-300">
+                      <div>
+                        <p className="text-[10px] text-slate-500 uppercase font-bold">Total HT</p>
+                        <p className="font-bold text-white text-sm">{features[0].previewContent.totalHt}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-slate-500 uppercase font-bold">TVA 18%</p>
+                        <p className="font-bold text-amber-400 text-sm">{features[0].previewContent.vat18}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-slate-500 uppercase font-bold">TOTAL TTC</p>
+                        <p className="font-black text-[#00B060] text-sm">{features[0].previewContent.totalTtc}</p>
+                      </div>
+                    </div>
                   </div>
                 )}
+
+                {selectedFeature === 1 && (
+                  <div className="p-5 rounded-2xl bg-[#080C14] border border-slate-800 space-y-3 text-xs">
+                    <div className="flex justify-between items-center text-slate-300">
+                      <span className="font-bold text-white">{features[1].previewContent.file}</span>
+                      <span className="px-2.5 py-1 rounded-full bg-cyan-500/10 text-cyan-400 text-[10px] font-bold border border-cyan-500/20">
+                        {features[1].previewContent.status}
+                      </span>
+                    </div>
+                    <p className="text-[#00B060] font-semibold flex items-center gap-1.5 pt-2">
+                      <ShieldCheck className="w-4 h-4" />
+                      <span>{features[1].previewContent.verdict}</span>
+                    </p>
+                  </div>
+                )}
+
+                {selectedFeature === 2 && (
+                  <div className="p-5 rounded-2xl bg-[#080C14] border border-slate-800 space-y-3 text-xs">
+                    <div className="space-y-1">
+                      <p className="text-slate-400 font-bold">Machine : <span className="text-white">{features[2].previewContent.machine}</span></p>
+                      <p className="text-slate-400 font-bold">Papier & Format : <span className="text-white">{features[2].previewContent.paper}</span></p>
+                      <p className="text-slate-400 font-bold">Façonnage : <span className="text-white">{features[2].previewContent.finishing}</span></p>
+                    </div>
+                    <p className="text-amber-400 font-bold pt-2 border-t border-slate-800">
+                      {features[2].previewContent.confidentiality}
+                    </p>
+                  </div>
+                )}
+
+                {selectedFeature === 3 && (
+                  <div className="p-5 rounded-2xl bg-[#080C14] border border-slate-800 space-y-3 text-xs">
+                    <p className="font-mono text-slate-400">{features[3].previewContent.url}</p>
+                    <p className="font-bold text-white">{features[3].previewContent.lead}</p>
+                    <button className="px-4 py-2 rounded-full bg-[#00B060] text-white font-bold text-xs shadow-md">
+                      {features[3].previewContent.action}
+                    </button>
+                  </div>
+                )}
+
               </div>
-            ))}
+            </div>
+
           </div>
 
-        </div>
-      </section>
+        </section>
 
-      {/* SECTION CTA FINAL */}
-      <section className="py-24 z-10 relative overflow-hidden">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="p-10 sm:p-16 rounded-3xl bg-gradient-to-r from-emerald-600 via-emerald-700 to-emerald-900 text-white space-y-6 shadow-2xl relative overflow-hidden">
-            <h2 className="text-3xl sm:text-5xl font-black tracking-tight leading-tight">
-              Prêt à moderniser la gestion de votre imprimerie ?
-            </h2>
-            <p className="text-base text-emerald-100 max-w-2xl mx-auto leading-relaxed">
-              Rejoignez des centaines d'entrepreneurs africains qui font confiance à PrintFlow pour leurs devis, BAT et factures.
-            </p>
-            <div className="pt-4">
-              <Link
-                href="/login"
-                className="inline-flex items-center gap-2 px-9 py-4 rounded-full bg-white text-emerald-950 hover:bg-emerald-50 text-sm font-black transition shadow-xl hover:scale-105 cursor-pointer"
-              >
-                <span>Commencer gratuitement (Essai 7 jours)</span>
-                <ArrowRight className="w-4.5 h-4.5 text-emerald-950" />
-              </Link>
+        {/* HOW IT WORKS SECTION */}
+        <section id="comment-ca-marche" className="py-24 bg-[#080C14] border-y border-slate-800/80">
+          <div className="max-w-7xl mx-auto px-4 sm:px-8 space-y-16">
+            
+            <div className="text-center max-w-3xl mx-auto space-y-3">
+              <p className="text-[#00B060] text-xs font-bold uppercase tracking-wider">Prise en Main Immédiate</p>
+              <h2 className="text-3xl sm:text-5xl font-black font-serif text-white">Opérationnel en 3 étapes simples</h2>
+              <p className="text-sm sm:text-base text-slate-400">Aucune formation technique requise. Votre imprimerie est prête en 60 secondes.</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              
+              <div className="bg-[#101726] p-8 rounded-3xl border border-slate-800 space-y-4 feature-card-glow text-center">
+                <div className="w-14 h-14 bg-[#00B060] text-white rounded-full flex items-center justify-center text-xl font-black mx-auto shadow-lg shadow-[#00B060]/30">1</div>
+                <h3 className="text-lg font-bold text-white">Configurez votre Imprimerie</h3>
+                <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
+                  Créez votre compte gratuit. Saisissez votre logo, votre adresse et vos tarifs habituels pour les papiers et supports.
+                </p>
+              </div>
+
+              <div className="bg-[#101726] p-8 rounded-3xl border border-slate-800 space-y-4 feature-card-glow text-center">
+                <div className="w-14 h-14 bg-[#00B060] text-white rounded-full flex items-center justify-center text-xl font-black mx-auto shadow-lg shadow-[#00B060]/30">2</div>
+                <h3 className="text-lg font-bold text-white">Générez vos Devis & BAT</h3>
+                <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
+                  Calculez les montants HT et TVA 18% en un clic. Faites valider le Bon à Tirer par le client avant le tirage en atelier.
+                </p>
+              </div>
+
+              <div className="bg-[#101726] p-8 rounded-3xl border border-slate-800 space-y-4 feature-card-glow text-center">
+                <div className="w-14 h-14 bg-[#00B060] text-white rounded-full flex items-center justify-center text-xl font-black mx-auto shadow-lg shadow-[#00B060]/30">3</div>
+                <h3 className="text-lg font-bold text-white">Livrez & Encaissez en FCFA</h3>
+                <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
+                  Dès la livraison effectuée, la facture A4 est générée automatiquement. Suivez vos acomptes et règlements en temps réel.
+                </p>
+              </div>
+
+            </div>
+
+          </div>
+        </section>
+
+        {/* TESTIMONIALS SECTION (INFINITE AUTO-SCROLLING MARQUEE ANIMATION) */}
+        <section id="temoignages" className="py-24 overflow-hidden relative">
+          
+          <div className="text-center max-w-3xl mx-auto space-y-3 px-4 mb-16">
+            <p className="text-[#00B060] text-xs font-bold uppercase tracking-wider">Preuve Sociale & Avis</p>
+            <h2 className="text-3xl sm:text-5xl font-black font-serif text-white">Reconnu par les gérants d'imprimerie en Afrique francophone</h2>
+          </div>
+
+          {/* Marquee Container */}
+          <div className="relative w-full overflow-hidden py-4">
+            
+            {/* Fade edges */}
+            <div className="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-[#060A10] to-transparent z-10 pointer-events-none" />
+            <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-[#060A10] to-transparent z-10 pointer-events-none" />
+
+            <div className="animate-marquee gap-6">
+              {[...testimonials, ...testimonials].map((t, idx) => (
+                <div
+                  key={idx}
+                  className="w-[380px] bg-[#101726] p-8 rounded-3xl border border-slate-800 space-y-4 shrink-0 hover:border-[#00B060]/50 transition duration-300"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className={`w-12 h-12 rounded-full ${t.color} text-white flex items-center justify-center font-bold text-sm shadow-md`}>
+                      {t.initials}
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-white text-sm">{t.name}</h4>
+                      <p className="text-[11px] text-slate-400">{t.role} • {t.location}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 text-amber-400">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className="w-3.5 h-3.5 fill-amber-400" />
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-300 italic leading-relaxed">
+                    "{t.text}"
+                  </p>
+                </div>
+              ))}
+            </div>
+
+          </div>
+
+        </section>
+
+        {/* PRICING SECTION */}
+        <section id="tarification" className="py-24 bg-[#080C14] border-t border-slate-800/80">
+          <div className="max-w-7xl mx-auto px-4 sm:px-8 space-y-16">
+            
+            <div className="text-center max-w-3xl mx-auto space-y-3">
+              <p className="text-[#00B060] text-xs font-bold uppercase tracking-wider">Tarification Transparente</p>
+              <h2 className="text-3xl sm:text-5xl font-black font-serif text-white">Des formules adaptées à votre croissance</h2>
+              <p className="text-sm sm:text-base text-slate-400">Démarrez gratuitement sans carte bancaire, puis évoluez vers nos plans premium.</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch max-w-6xl mx-auto">
+              
+              {/* Plan Gratuit */}
+              <div className="bg-[#101726] p-8 sm:p-10 rounded-3xl border border-slate-800 flex flex-col justify-between space-y-6">
+                <div className="space-y-4">
+                  <h3 className="text-2xl font-black text-white">Plan Gratuit</h3>
+                  <p className="text-xs text-slate-400">Pour tester la puissance de l'outil.</p>
+                  <div className="py-2">
+                    <span className="text-4xl font-black text-white">0 FCFA</span>
+                    <span className="text-xs text-slate-400 font-semibold"> / 7 jours d'essai</span>
+                  </div>
+                  <ul className="space-y-3 text-xs text-slate-300">
+                    <li className="flex items-center gap-2.5"><Check className="w-4 h-4 text-[#00B060]" /> 1 seul utilisateur</li>
+                    <li className="flex items-center gap-2.5"><Check className="w-4 h-4 text-[#00B060]" /> Devis & Factures FCFA</li>
+                    <li className="flex items-center gap-2.5"><Check className="w-4 h-4 text-[#00B060]" /> TVA 18% automatique</li>
+                  </ul>
+                </div>
+                <Link href="/login" className="w-full text-center bg-slate-800 text-white font-bold text-xs py-4 rounded-full border border-slate-700 hover:bg-slate-700 transition">
+                  Commencer
+                </Link>
+              </div>
+
+              {/* Plan Standard */}
+              <div className="bg-[#101726] p-8 sm:p-10 rounded-3xl border border-slate-700 flex flex-col justify-between space-y-6 relative">
+                <span className="absolute top-4 right-4 bg-[#00B060]/20 text-[#00B060] border border-[#00B060]/30 text-[10px] font-bold px-3 py-1 rounded-full uppercase">
+                  Populaire
+                </span>
+                <div className="space-y-4">
+                  <h3 className="text-2xl font-black text-white">Plan Standard</h3>
+                  <p className="text-xs text-slate-400">Pour les ateliers en croissance.</p>
+                  <div className="py-2">
+                    <span className="text-4xl font-black text-white">{formatFCFA(15000)}</span>
+                    <span className="text-xs text-slate-400 font-semibold"> / mois</span>
+                  </div>
+                  <ul className="space-y-3 text-xs text-slate-300">
+                    <li className="flex items-center gap-2.5"><Check className="w-4 h-4 text-[#00B060]" /> 2 utilisateurs inclus</li>
+                    <li className="flex items-center gap-2.5"><Check className="w-4 h-4 text-[#00B060]" /> Toutes les fonctions du gratuit</li>
+                    <li className="flex items-center gap-2.5"><Check className="w-4 h-4 text-[#00B060]" /> Export PDF personnalisé</li>
+                  </ul>
+                </div>
+                <Link href="/login" className="w-full text-center bg-[#1a3c34] hover:bg-[#00B060] text-white font-bold text-xs py-4 rounded-full transition shadow-md">
+                  Choisir Standard
+                </Link>
+              </div>
+
+              {/* Plan Pro (Highlighted) */}
+              <div className="bg-gradient-to-b from-[#1a3c34] via-[#101726] to-[#060A10] p-8 sm:p-10 rounded-3xl border-2 border-[#00B060] flex flex-col justify-between space-y-6 shadow-2xl relative">
+                <span className="absolute top-4 right-4 bg-[#00B060] text-white text-[10px] font-black px-3.5 py-1 rounded-full uppercase shadow-md">
+                  Recommandé
+                </span>
+                <div className="space-y-4">
+                  <h3 className="text-2xl font-black text-white">Plan Pro</h3>
+                  <p className="text-xs text-emerald-200">L'expérience complète sans limites.</p>
+                  <div className="py-2">
+                    <span className="text-4xl font-black text-white">{formatFCFA(35000)}</span>
+                    <span className="text-xs text-emerald-200 font-semibold"> / mois</span>
+                  </div>
+                  <ul className="space-y-3 text-xs text-emerald-100 font-medium">
+                    <li className="flex items-center gap-2.5"><Check className="w-4 h-4 text-[#00B060]" /> <strong>Utilisateurs illimités</strong></li>
+                    <li className="flex items-center gap-2.5"><Check className="w-4 h-4 text-[#00B060]" /> <strong>Boutique en ligne complète</strong></li>
+                    <li className="flex items-center gap-2.5"><Check className="w-4 h-4 text-[#00B060]" /> <strong>Validation BAT illimitée</strong></li>
+                    <li className="flex items-center gap-2.5"><Check className="w-4 h-4 text-[#00B060]" /> Notifications de commandes</li>
+                  </ul>
+                </div>
+                <Link href="/login" className="w-full text-center bg-[#00B060] hover:bg-[#009652] text-white font-bold text-xs py-4 rounded-full transition shadow-lg shadow-[#00B060]/30">
+                  Passer au Plan Pro
+                </Link>
+              </div>
+
+            </div>
+
+          </div>
+        </section>
+
+        {/* FINAL CTA SECTION */}
+        <section className="py-24 relative overflow-hidden text-center">
+          <div className="max-w-5xl mx-auto px-4 sm:px-8">
+            <div className="p-10 sm:p-16 rounded-3xl bg-gradient-to-r from-[#01261f] via-[#1a3c34] to-[#00B060] text-white space-y-6 shadow-2xl relative border border-[#00B060]/40">
+              <h2 className="text-3xl sm:text-5xl font-black font-serif leading-tight">Prêt à transformer votre imprimerie ?</h2>
+              <p className="text-sm sm:text-base text-slate-200 max-w-2xl mx-auto">Rejoignez des centaines d'ateliers en Afrique francophone qui ont déjà modernisé leur gestion avec PrintFlow.</p>
+              <div className="pt-4 flex flex-col sm:flex-row gap-4 justify-center">
+                <Link href="/login" className="bg-white text-[#01261f] font-black text-sm px-10 py-4 rounded-full magnetic-btn shadow-xl hover:bg-slate-100 transition">
+                  Commencer gratuitement
+                </Link>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+
+      </main>
 
       {/* FOOTER */}
-      <footer className="bg-[#05080E] border-t border-slate-800/80 py-14 z-10 relative">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
-          
-          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-            <Link href="/" className="flex items-center gap-3">
-              <img src="/Favicon_PrintFlow.png" alt="Print_Flow" className="w-8 h-8 object-contain rounded-lg" />
-              <span className="text-lg font-black text-white">
-                Print<span className="text-brand-primary">_Flow</span>
-              </span>
-            </Link>
-
-            <nav className="flex flex-wrap justify-center gap-6 text-xs font-semibold text-slate-400">
-              <a href="#problemes" className="hover:text-brand-primary transition">Problèmes</a>
-              <a href="#bento-features" className="hover:text-brand-primary transition">Fonctionnalités</a>
-              <a href="#comparatif" className="hover:text-brand-primary transition">Comparatif</a>
-              <a href="#comment-ca-marche" className="hover:text-brand-primary transition">Comment ça marche</a>
-              <a href="#temoignages" className="hover:text-brand-primary transition">Témoignages</a>
-              <a href="#tarification" className="hover:text-brand-primary transition">Tarification</a>
-              <Link href="/login" className="hover:text-brand-primary transition">Connexion</Link>
-            </nav>
+      <footer className="bg-[#04060B] border-t border-slate-800/80 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-8 flex flex-col md:flex-row justify-between items-center gap-6 text-xs text-slate-400">
+          <div className="flex items-center gap-3">
+            <img src="/Favicon_PrintFlow.png" alt="Print_Flow" className="w-7 h-7 object-contain rounded-lg" />
+            <span className="font-bold text-white text-base">Print_Flow</span>
           </div>
-
-          <div className="pt-8 border-t border-slate-800/60 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-slate-500">
-            <span>© 2026 Print_Flow. Tous droits réservés.</span>
-            <span className="font-bold text-slate-300 flex items-center gap-1">
-              Fait avec fierté en Afrique 🌍
-            </span>
-          </div>
-
+          <span>© 2026 Print_Flow. Tous droits réservés.</span>
+          <span className="font-bold text-white">Fait avec fierté en Afrique 🌍</span>
         </div>
       </footer>
 

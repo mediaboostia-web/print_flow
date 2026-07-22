@@ -94,25 +94,23 @@ export const mockProfiles: Profile[] = [
   }
 ];
 
-// --- Auth (Mocked phase — passwords live here only until Supabase Auth is wired in) ---
+// --- Auth (Supabase Auth - auth.users handles authentication) ---
 export interface MockCredential {
   email: string;
-  password: string;
   profileId: string;
 }
 
 export const mockCredentials: MockCredential[] = [
-  { email: 'fatou.diop@sudprint.sn', password: 'sudprint2026', profileId: 'user-sud-admin' },
-  { email: 'amadou.sow@sudprint.sn', password: 'sudprint2026', profileId: 'user-sud-commercial' },
-  { email: 'moustapha.ndiaye@sudprint.sn', password: 'sudprint2026', profileId: 'user-sud-atelier' },
-  { email: 'ousmane.keita@sahelgraphique.ml', password: 'sahel2026', profileId: 'user-sahel-admin' },
-  { email: 'mariam.diallo@sahelgraphique.ml', password: 'sahel2026', profileId: 'user-sahel-commercial' },
+  { email: 'fatou.diop@sudprint.sn', profileId: 'user-sud-admin' },
+  { email: 'amadou.sow@sudprint.sn', profileId: 'user-sud-commercial' },
+  { email: 'moustapha.ndiaye@sudprint.sn', profileId: 'user-sud-atelier' },
+  { email: 'ousmane.keita@sahelgraphique.ml', profileId: 'user-sahel-admin' },
+  { email: 'mariam.diallo@sahelgraphique.ml', profileId: 'user-sahel-commercial' },
 ];
 
 export const mockSuperAdmin = {
   fullName: 'Root Administrateur',
   email: 'superadmin@printflow.io',
-  password: 'RootAccess#2026',
 };
 
 // --- Clients ---

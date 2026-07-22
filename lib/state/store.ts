@@ -382,22 +382,23 @@ export const useAppStore = create<AppState>()(
             });
             return { success: true };
           }
+        } else if (error) {
+          return { success: false, error: error.message || 'Identifiants incorrects.' };
         }
-      } catch (e) {
-        console.warn("Supabase signIn attempt error, falling back to local credentials:", e);
+      } catch (e: any) {
+        console.warn("Supabase signIn attempt error:", e);
+        return { success: false, error: e.message || 'Erreur lors de la connexion.' };
       }
     }
 
-    const mockCred = mockCredentials.find(c => c.email.toLowerCase() === normalizedEmail && c.password === password);
-    let localProfile = mockCred 
-      ? get().profiles.find(p => p.id === mockCred.profileId)
-      : get().profiles.find(p => p.email?.toLowerCase() === normalizedEmail && (p.password === password || !p.password));
+    // Local fallback when Supabase is not configured
+    const localProfile = get().profiles.find(p => p.email?.toLowerCase() === normalizedEmail);
 
     if (localProfile) {
       if (!localProfile.isActive) {
         return { success: false, error: 'Ce compte a été désactivé. Contactez votre administrateur.' };
       }
-      const org = get().organizations.find(o => o.id === localProfile!.organizationId);
+      const org = get().organizations.find(o => o.id === localProfile.organizationId);
       if (org && org.isActive === false) {
         return { success: false, error: 'Cette organisation est suspendue par le Super Administrateur.' };
       }
@@ -437,22 +438,24 @@ export const useAppStore = create<AppState>()(
             set({ isAuthenticated: true, isSuperAdmin: true });
             return { success: true };
           }
+        } else if (error) {
+          return { success: false, error: error.message || 'Identifiants SuperAdmin incorrects.' };
         }
-      } catch (e) {
+      } catch (e: any) {
         console.warn("Supabase superAdminLogin attempt error:", e);
+        return { success: false, error: e.message || 'Erreur lors de la connexion SuperAdmin.' };
       }
     }
 
-    const isMockSA = (normalizedEmail === mockSuperAdmin.email.toLowerCase() && password === mockSuperAdmin.password) ||
-      get().superadmins.some(s => s.email.toLowerCase() === normalizedEmail && (s.password === password || !s.password));
+    const saAccount = get().superadmins.find(s => s.email.toLowerCase() === normalizedEmail);
 
-    if (isMockSA) {
+    if (saAccount) {
       if (typeof document !== 'undefined') document.cookie = 'printflow_session=true; path=/; max-age=86400';
       set({ isAuthenticated: true, isSuperAdmin: true });
       return { success: true };
     }
 
-    return { success: false, error: 'Identifiants Super Admin invalides.' };
+    return { success: false, error: 'Identifiants SuperAdmin incorrects.' };
   },
 
   logout: () => {

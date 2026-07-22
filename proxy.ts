@@ -1,34 +1,37 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 
-// Real, server-side route protection (Next.js 16 renamed `middleware` to `proxy`).
-// Everything under app/(app)/* plus /super-admin is gated by an actual Supabase
-// Auth session read from cookies — this runs before any page/bundle is served,
-// unlike the client-side useEffect guards in app/(app)/layout.tsx and
-// app/super-admin/page.tsx, which only ever ran after the page had already loaded.
-const PROTECTED_APP_PATHS = [
-  '/dashboard', '/clients', '/devis', '/bat', '/commandes', '/commandes-en-ligne',
-  '/livraisons', '/factures', '/historique', '/parametres', '/aide',
+// Whitelist of public routes (Default Deny architecture for security)
+const PUBLIC_PATHS = [
+  '/',
+  '/login',
+  '/super-admin/login',
 ];
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Note: '/catalogue' (the internal, authenticated catalogue manager) is
-  // protected, but '/catalogue/[orgId]' (the public storefront) must never be.
-  const isSuperAdminArea = pathname.startsWith('/super-admin') && pathname !== '/super-admin/login';
-  const isProtectedAppPath =
-    pathname === '/catalogue' ||
-    PROTECTED_APP_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
-
-  if (!isSuperAdminArea && !isProtectedAppPath) {
+  // 1. Allow public static files, icons, and images
+  if (
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/api/public') ||
+    pathname.match(/\.(png|jpg|jpeg|gif|webp|svg|ico|css|js)$/)
+  ) {
     return NextResponse.next();
   }
 
+  // 2. Allow public storefront /catalogue/[orgId] (but NOT internal /catalogue)
+  const isPublicStorefront = pathname.startsWith('/catalogue/') && pathname !== '/catalogue';
+  const isPublicPath = PUBLIC_PATHS.includes(pathname) || isPublicStorefront;
+
+  if (isPublicPath) {
+    return NextResponse.next();
+  }
+
+  // 3. Server-side Supabase JWT validation for all protected paths
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!supabaseUrl || !supabaseAnonKey) {
-    // Supabase not configured yet — fall back to the client-side guard.
     return NextResponse.next();
   }
 
@@ -47,10 +50,11 @@ export async function proxy(request: NextRequest) {
     },
   });
 
-  const { data: { user }, error: getUserError } = await supabase.auth.getUser();
-  const printflowSession = request.cookies.get('printflow_session')?.value;
+  // Strictly check validated Supabase Auth user token on server
+  const { data: { user } } = await supabase.auth.getUser();
 
-  if (!user && !printflowSession) {
+  if (!user) {
+    const isSuperAdminArea = pathname.startsWith('/super-admin');
     const loginPath = isSuperAdminArea ? '/super-admin/login' : '/login';
     return NextResponse.redirect(new URL(loginPath, request.url));
   }

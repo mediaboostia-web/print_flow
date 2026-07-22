@@ -102,6 +102,63 @@ body {
   background: #475569;
 }
 
+/* Landing Page Animations & FX */
+@keyframes marquee {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 35s linear infinite;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
+.magnetic-btn {
+  transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.3s ease;
+}
+.magnetic-btn:hover {
+  transform: scale(1.04);
+  box-shadow: 0px 10px 28px rgba(0, 176, 96, 0.2);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.feature-card-glow {
+  position: relative;
+  transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.feature-card-glow:hover {
+  transform: translateY(-8px) scale(1.02);
+}
+
+.feature-card-glow::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 1.5rem;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(0, 176, 96, 0.6), rgba(99, 102, 241, 0.4), transparent);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.feature-card-glow:hover::before {
+  opacity: 1;
+}
+
 /*
   Printing a single element buried inside the scrollable app shell doesn't work with
   just `visibility: hidden` on everything else: the shell's `overflow-hidden`/`overflow-y-auto`

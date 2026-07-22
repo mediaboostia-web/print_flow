@@ -15,8 +15,11 @@ export const isSupabaseConfigured = !!(
 
 // Browser client — stores the Supabase Auth session in cookies (not localStorage)
 // so proxy.ts (server-side middleware) can read the same session to guard routes.
-// Every existing `supabase.from(...)` call site keeps working unchanged; the only
-// difference from the old createClient() is where/how the session is persisted.
 export const supabase = isSupabaseConfigured
   ? createBrowserClient(supabaseUrl!, supabaseAnonKey!)
-  : null as any;
+  : (new Proxy({}, {
+      get() {
+        console.warn('Supabase client accessed, but NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are not configured.');
+        return () => Promise.resolve({ data: null, error: new Error('Supabase client not configured.') });
+      }
+    }) as any);

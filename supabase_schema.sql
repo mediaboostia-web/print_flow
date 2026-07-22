@@ -48,12 +48,12 @@ CREATE TABLE public.organizations (
 CREATE TABLE public.profiles (
     id TEXT PRIMARY KEY,
     organization_id TEXT REFERENCES public.organizations(id) ON DELETE CASCADE,
+    auth_user_id UUID UNIQUE,
     full_name TEXT NOT NULL,
     role TEXT NOT NULL CHECK (role IN ('admin', 'commercial', 'chef_atelier')),
     email TEXT UNIQUE,
     phone TEXT,
     is_active BOOLEAN DEFAULT true,
-    password TEXT NOT NULL DEFAULT 'collaborateur2026', -- Local password for direct logins
     created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
@@ -61,9 +61,9 @@ CREATE TABLE public.profiles (
 -- 3. Superadmins (SaaS Operators)
 CREATE TABLE public.superadmins (
     id TEXT PRIMARY KEY,
+    auth_user_id UUID UNIQUE,
     full_name TEXT NOT NULL,
     email TEXT UNIQUE NOT NULL,
-    password TEXT NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 
@@ -699,7 +699,15 @@ CREATE POLICY "anon_insert_clients" ON public.clients FOR INSERT TO anon
 
 DROP POLICY IF EXISTS "anon_insert_online_orders" ON public.online_orders;
 CREATE POLICY "anon_insert_online_orders" ON public.online_orders FOR INSERT TO anon
-  WITH CHECK (true);
+  WITH CHECK (
+    status = 'nouvelle' AND
+    subtotal_fcfa >= 0 AND
+    EXISTS (
+      SELECT 1 FROM public.organizations o
+      WHERE o.id = online_orders.organization_id
+        AND o.subscription_plan_id = 'plan-pro' AND o.is_active = true AND o.catalogue_enabled = true
+    )
+  );
 
 -- 7) Demo accounts: DO NOT insert directly into auth.users.
 --    An earlier version of this script did that (crypt() + a raw INSERT) and
