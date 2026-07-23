@@ -116,7 +116,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="h-screen w-full bg-[#F5F2F9] dark:bg-[#070A10] flex items-center justify-center p-2 sm:p-4 overflow-hidden font-sans text-text-main">
+    <div className="h-screen w-full bg-[#F8F9FA] dark:bg-[#090D16] flex items-center justify-center p-2 sm:p-4 overflow-hidden font-sans text-text-main">
       {/* 2-Column Main Card Container - Strict Height fit without page scroll */}
       <div className="w-full max-w-4xl h-full max-h-[580px] bg-bg-card border border-border-subtle rounded-3xl shadow-xl overflow-hidden flex flex-col md:flex-row relative">
         
@@ -127,7 +127,7 @@ export default function LoginPage() {
           <div className="flex items-center gap-2">
             <img src="/Favicon_PrintFlow.png" alt="Print_Flow" className="w-8 h-8 object-contain rounded-xl shrink-0" />
             <span className="text-lg font-black tracking-tight text-text-main">
-              Print<span className="text-purple-600 dark:text-emerald-400">_Flow</span>
+              Print<span className="text-brand-primary">_Flow</span>
             </span>
           </div>
 
@@ -168,7 +168,7 @@ export default function LoginPage() {
                           value={orgName}
                           onChange={(e) => setOrgName(e.target.value)}
                           placeholder="Nom imprimerie"
-                          className="w-full pl-8 pr-2.5 py-1.5 bg-input-bg border border-border-subtle rounded-xl text-xs focus:outline-none focus:border-purple-600 text-text-main"
+                          className="w-full pl-8 pr-2.5 py-1.5 bg-input-bg border border-border-subtle rounded-xl text-xs focus:outline-none focus:border-brand-primary text-text-main"
                           required
                         />
                       </div>
@@ -185,7 +185,7 @@ export default function LoginPage() {
                           value={adminFullName}
                           onChange={(e) => setAdminFullName(e.target.value)}
                           placeholder="Nom & Prénom"
-                          className="w-full pl-8 pr-2.5 py-1.5 bg-input-bg border border-border-subtle rounded-xl text-xs focus:outline-none focus:border-purple-600 text-text-main"
+                          className="w-full pl-8 pr-2.5 py-1.5 bg-input-bg border border-border-subtle rounded-xl text-xs focus:outline-none focus:border-brand-primary text-text-main"
                           required
                         />
                       </div>
@@ -203,7 +203,7 @@ export default function LoginPage() {
                         value={phoneInput}
                         onChange={(e) => setPhoneInput(e.target.value)}
                         placeholder="ex: +221 77 123 45 67"
-                        className="w-full pl-8 pr-2.5 py-1.5 bg-input-bg border border-border-subtle rounded-xl text-xs focus:outline-none focus:border-purple-600 text-text-main"
+                        className="w-full pl-8 pr-2.5 py-1.5 bg-input-bg border border-border-subtle rounded-xl text-xs focus:outline-none focus:border-brand-primary text-text-main"
                       />
                     </div>
                   </div>
@@ -223,7 +223,7 @@ export default function LoginPage() {
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="vous@imprimerie.sn"
                     autoComplete="email"
-                    className="w-full pl-8 pr-2.5 py-1.5 bg-input-bg border border-border-subtle rounded-xl text-xs focus:outline-none focus:border-purple-600 text-text-main"
+                    className="w-full pl-8 pr-2.5 py-1.5 bg-input-bg border border-border-subtle rounded-xl text-xs focus:outline-none focus:border-brand-primary text-text-main"
                     required
                   />
                 </div>
@@ -242,7 +242,7 @@ export default function LoginPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
                     autoComplete="current-password"
-                    className="w-full pl-8 pr-8 py-1.5 bg-input-bg border border-border-subtle rounded-xl text-xs focus:outline-none focus:border-purple-600 text-text-main"
+                    className="w-full pl-8 pr-8 py-1.5 bg-input-bg border border-border-subtle rounded-xl text-xs focus:outline-none focus:border-brand-primary text-text-main"
                     required
                   />
                   <button
@@ -259,7 +259,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={isSubmitting || lockoutTimer > 0}
-                className="w-full py-2.5 mt-2 rounded-full bg-purple-700 hover:bg-purple-800 text-white text-xs font-bold transition shadow-sm disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
+                className="w-full py-2.5 mt-2 rounded-full bg-brand-primary hover:bg-brand-primary-hover text-white text-xs font-bold transition shadow-sm disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
               >
                 {isSubmitting ? (
                   <div className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
@@ -277,12 +277,12 @@ export default function LoginPage() {
                   setIsRegistering(!isRegistering);
                   setError('');
                 }}
-                className="text-[11px] font-bold text-text-secondary hover:text-purple-700 transition cursor-pointer"
+                className="text-[11px] font-bold text-text-secondary hover:text-brand-primary transition cursor-pointer"
               >
                 {isRegistering ? (
-                  <span>Déjà un compte ? <strong className="text-purple-700 underline">Se connecter</strong></span>
+                  <span>Déjà un compte ? <strong className="text-brand-primary underline">Se connecter</strong></span>
                 ) : (
-                  <span>Pas encore de compte ? <strong className="text-purple-700 underline">S'inscrire (Essai 7j)</strong></span>
+                  <span>Pas encore de compte ? <strong className="text-brand-primary underline">S'inscrire (Essai 7j)</strong></span>
                 )}
               </button>
             </div>
@@ -297,20 +297,20 @@ export default function LoginPage() {
         </div>
 
         {/* Right Column: Clean Background Image with Title & Description Only */}
-        <div className="hidden md:flex md:w-1/2 m-2 rounded-2xl bg-purple-950 text-white p-8 flex-col justify-end relative overflow-hidden shadow-lg border border-purple-800">
+        <div className="hidden md:flex md:w-1/2 m-2 rounded-2xl bg-slate-900 text-white p-8 flex-col justify-end relative overflow-hidden shadow-lg border border-slate-800">
           
           <div 
-            className="absolute inset-0 bg-cover bg-center opacity-60" 
+            className="absolute inset-0 bg-cover bg-center opacity-50" 
             style={{ backgroundImage: "url('/Sign in et login .png')" }}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-purple-950 via-purple-950/40 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
 
           {/* Title & Description Overlay */}
           <div className="relative z-10 space-y-2 text-left">
             <h2 className="text-2xl font-black leading-tight text-white font-sans">
               Centralisez Devis, BAT & Production.
             </h2>
-            <p className="text-xs text-purple-100/90 leading-relaxed max-w-md font-sans">
+            <p className="text-xs text-slate-300 leading-relaxed max-w-md font-sans">
               Gérez efficacement votre imprimerie : suivi d'atelier en temps réel, zéro oubli de facturation et encaissement d'acomptes en toute sérénité.
             </p>
           </div>
