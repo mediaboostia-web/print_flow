@@ -243,86 +243,95 @@ export default function LandingPage() {
         <section id="defis-solution" className="py-10 space-y-8 text-left" aria-label="Défis et Solutions Imprimerie">
           
           <div className="text-center space-y-2 max-w-2xl mx-auto">
-            <span className="text-xs font-extrabold uppercase tracking-wider text-brand-primary font-sans">Réalité du Terrain</span>
+            <span className="text-xs font-extrabold uppercase tracking-wider text-brand-primary font-sans">Résolution de Problèmes</span>
             <h2 className="text-2xl sm:text-4xl font-black text-text-main font-sans">
-              Des Défis Quotidiens aux Solutions Numériques.
+              Comment les Fonctionnalités Print_Flow Résolvent vos Défis.
             </h2>
+            <p className="text-xs text-text-secondary">
+              Chaque défi de votre atelier est directement éliminé par une fonctionnalité dédiée.
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
             
-            {/* Column 1: Les Défis */}
-            <div className="bg-bg-card border border-rose-200/70 dark:border-rose-900/50 rounded-3xl p-6 sm:p-8 space-y-6 shadow-xs">
-              <div className="flex items-center gap-3 border-b border-rose-100 dark:border-rose-900/40 pb-4">
-                <div className="w-10 h-10 rounded-2xl bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 flex items-center justify-center font-bold">
-                  <AlertTriangle className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-black text-text-main font-sans">Les Défis en Atelier</h3>
-                  <p className="text-xs text-rose-600 dark:text-rose-400">Problèmes récurrents sans outil centralisé</p>
-                </div>
+            {/* Resolution Pair 1: Devis */}
+            <div className="bg-bg-card border border-border-subtle rounded-3xl p-6 space-y-4 shadow-xs hover:border-brand-primary/40 transition">
+              <div className="flex items-center justify-between border-b border-border-subtle pb-3">
+                <span className="px-2.5 py-1 rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 text-[10px] font-bold flex items-center gap-1.5">
+                  <AlertTriangle className="w-3.5 h-3.5" />
+                  <span>DÉFI : Carnets papier égarés</span>
+                </span>
+                <span className="px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 text-[10px] font-bold flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-brand-primary" />
+                  <span>RÉSOLU PAR : Module Devis</span>
+                </span>
               </div>
-
-              <ul className="space-y-4 text-xs text-text-secondary">
-                <li className="flex items-start gap-3 bg-rose-50/50 dark:bg-rose-950/20 p-3 rounded-2xl border border-rose-100 dark:border-rose-900/30">
-                  <X className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
-                  <div>
-                    <strong className="text-text-main block font-sans">Carnets papier et devis perdus</strong>
-                    <span>Impossibilité de retrouver l'historique d'un client récurrent ou le prix appliqué au tirage précédent.</span>
-                  </div>
-                </li>
-                <li className="flex items-start gap-3 bg-rose-50/50 dark:bg-rose-950/20 p-3 rounded-2xl border border-rose-100 dark:border-rose-900/30">
-                  <X className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
-                  <div>
-                    <strong className="text-text-main block font-sans">Acomptes non enregistrés & litiges</strong>
-                    <span>Disputes lors de la livraison finale faute de preuve écrite du versement initial.</span>
-                  </div>
-                </li>
-                <li className="flex items-start gap-3 bg-rose-50/50 dark:bg-rose-950/20 p-3 rounded-2xl border border-rose-100 dark:border-rose-900/30">
-                  <X className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
-                  <div>
-                    <strong className="text-text-main block font-sans">Gâchis de papier sur fichiers non validés</strong>
-                    <span>Impression lancée sans Bon à Tirer (BAT) validé, générant des réimpressions coûteuses.</span>
-                  </div>
-                </li>
-              </ul>
+              <div className="space-y-2">
+                <h3 className="text-sm font-bold text-text-main font-sans">Prise de Devis & Archivage Numérique</h3>
+                <p className="text-xs text-text-secondary leading-relaxed">
+                  Fini la perte d'historique ou les oublis de prix récurrents. Générez vos devis en PDF A4 instantanément avec calcul automatique de la TVA personnalisable et retrouvez chaque client en 1 clic.
+                </p>
+              </div>
             </div>
 
-            {/* Column 2: La Solution Print_Flow */}
-            <div className="bg-bg-card border border-brand-primary/30 rounded-3xl p-6 sm:p-8 space-y-6 shadow-xs">
-              <div className="flex items-center gap-3 border-b border-border-subtle pb-4">
-                <div className="w-10 h-10 rounded-2xl bg-brand-primary/10 text-brand-primary flex items-center justify-center font-bold">
-                  <CheckCircle2 className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-black text-text-main font-sans">La Solution Print_Flow</h3>
-                  <p className="text-xs text-brand-primary">Traçabilité et sérénité financière 100%</p>
-                </div>
+            {/* Resolution Pair 2: Acomptes & Facturation */}
+            <div className="bg-bg-card border border-border-subtle rounded-3xl p-6 space-y-4 shadow-xs hover:border-brand-primary/40 transition">
+              <div className="flex items-center justify-between border-b border-border-subtle pb-3">
+                <span className="px-2.5 py-1 rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 text-[10px] font-bold flex items-center gap-1.5">
+                  <AlertTriangle className="w-3.5 h-3.5" />
+                  <span>DÉFI : Litiges sur les acomptes</span>
+                </span>
+                <span className="px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 text-[10px] font-bold flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-brand-primary" />
+                  <span>RÉSOLU PAR : Facturation & Acomptes</span>
+                </span>
               </div>
+              <div className="space-y-2">
+                <h3 className="text-sm font-bold text-text-main font-sans">Enregistrement & Déduction Automatique</h3>
+                <p className="text-xs text-text-secondary leading-relaxed">
+                  Chaque acompte perçu à la commande est verrouillé et déduit du montant Total TTC lors de la livraison. La facture finale affiche clairement le Solde Dû restant, évitant 100% des disputes d'impayés.
+                </p>
+              </div>
+            </div>
 
-              <ul className="space-y-4 text-xs text-text-secondary">
-                <li className="flex items-start gap-3 bg-emerald-50/50 dark:bg-emerald-950/20 p-3 rounded-2xl border border-emerald-100 dark:border-emerald-900/30">
-                  <Check className="w-4 h-4 text-brand-primary shrink-0 mt-0.5" />
-                  <div>
-                    <strong className="text-text-main block font-sans">Devis HT & TVA Configurable</strong>
-                    <span>Calcul automatique selon le papier, les dimensions et votre taux de TVA personnalisé avec PDF A4.</span>
-                  </div>
-                </li>
-                <li className="flex items-start gap-3 bg-emerald-50/50 dark:bg-emerald-950/20 p-3 rounded-2xl border border-emerald-100 dark:border-emerald-900/30">
-                  <Check className="w-4 h-4 text-brand-primary shrink-0 mt-0.5" />
-                  <div>
-                    <strong className="text-text-main block font-sans">Déduction automatique de l'acompte</strong>
-                    <span>L'acompte saisi est automatiquement sous-traité du total TTC sur la facture pour afficher le Solde Dû exact.</span>
-                  </div>
-                </li>
-                <li className="flex items-start gap-3 bg-emerald-50/50 dark:bg-emerald-950/20 p-3 rounded-2xl border border-emerald-100 dark:border-emerald-900/30">
-                  <Check className="w-4 h-4 text-brand-primary shrink-0 mt-0.5" />
-                  <div>
-                    <strong className="text-text-main block font-sans">Verrou BAT obligatoire</strong>
-                    <span>Aucune commande ne peut passer en production sans validation explicite du Bon à Tirer client.</span>
-                  </div>
-                </li>
-              </ul>
+            {/* Resolution Pair 3: Verrou BAT */}
+            <div className="bg-bg-card border border-border-subtle rounded-3xl p-6 space-y-4 shadow-xs hover:border-brand-primary/40 transition">
+              <div className="flex items-center justify-between border-b border-border-subtle pb-3">
+                <span className="px-2.5 py-1 rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 text-[10px] font-bold flex items-center gap-1.5">
+                  <AlertTriangle className="w-3.5 h-3.5" />
+                  <span>DÉFI : Gâchis de papier & réimpressions</span>
+                </span>
+                <span className="px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 text-[10px] font-bold flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-brand-primary" />
+                  <span>RÉSOLU PAR : Verrou BAT</span>
+                </span>
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-sm font-bold text-text-main font-sans">Blocage Automatique de Production</h3>
+                <p className="text-xs text-text-secondary leading-relaxed">
+                  Aucun tirage ne peut démarrer en atelier sans la validation explicite du Bon à Tirer (BAT) par le client. Vous éliminez définitivement le gâchis de papier causé par les fichiers erronés.
+                </p>
+              </div>
+            </div>
+
+            {/* Resolution Pair 4: Suivi de Flux */}
+            <div className="bg-bg-card border border-border-subtle rounded-3xl p-6 space-y-4 shadow-xs hover:border-brand-primary/40 transition">
+              <div className="flex items-center justify-between border-b border-border-subtle pb-3">
+                <span className="px-2.5 py-1 rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 text-[10px] font-bold flex items-center gap-1.5">
+                  <AlertTriangle className="w-3.5 h-3.5" />
+                  <span>DÉFI : Flou sur l'avancement d'atelier</span>
+                </span>
+                <span className="px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 text-[10px] font-bold flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-brand-primary" />
+                  <span>RÉSOLU PAR : Supervision de Flux</span>
+                </span>
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-sm font-bold text-text-main font-sans">Traçabilité & Suivi en Temps Réel</h3>
+                <p className="text-xs text-text-secondary leading-relaxed">
+                  Suivez en direct le statut exact de chaque tirage (En attente, Sous presse, Façonnage, Prêt) et éditez des fiches de production sans divulguer le nom des machines ni les marges.
+                </p>
+              </div>
             </div>
 
           </div>
