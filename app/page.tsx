@@ -154,11 +154,8 @@ export default function LandingPage() {
         isHeaderVisible ? 'translate-y-0 opacity-100' : '-translate-y-24 opacity-0 pointer-events-none'
       }`}>
         <header className="bg-bg-card/90 dark:bg-[#090D16]/90 backdrop-blur-md border border-border-subtle rounded-2xl px-6 py-3.5 flex items-center justify-between shadow-md transition duration-300">
-          <a href="#hero" className="flex items-center gap-3">
-            <img src="/Favicon_PrintFlow.png" alt="Logo Print_Flow" className="w-8 h-8 object-contain rounded-xl shrink-0" />
-            <span className="text-xl font-extrabold tracking-tight text-text-main font-sans">
-              Print<span className="text-brand-primary">_Flow</span>
-            </span>
+          <a href="#hero" className="flex items-center gap-3" aria-label="Print_Flow Accueil">
+            <img src="/Favicon_PrintFlow.png" alt="Logo Print_Flow" className="w-11 h-11 sm:w-12 sm:h-12 object-contain rounded-xl shrink-0 hover:scale-105 transition" />
           </a>
 
           {/* 5 CLEAN NAV LINKS (ACCUEIL, FONCTIONNALITÉS, TARIFS, TÉMOIGNAGES, FAQ) */}
@@ -180,20 +177,12 @@ export default function LandingPage() {
                 <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             ) : (
-              <>
-                <Link
-                  href="/login"
-                  className="px-4 py-2 text-xs font-bold text-text-main hover:text-brand-primary transition font-sans"
-                >
-                  Se connecter
-                </Link>
-                <Link
-                  href="/login"
-                  className="px-5 py-2.5 bg-brand-primary hover:bg-brand-primary-hover text-white text-xs font-bold rounded-full transition shadow-xs font-sans hover:scale-[1.03]"
-                >
-                  Démarrer l'essai
-                </Link>
-              </>
+              <Link
+                href="/login"
+                className="px-5 py-2 bg-brand-primary hover:bg-brand-primary-hover text-white text-xs font-bold rounded-full transition shadow-xs font-sans hover:scale-[1.03]"
+              >
+                Se connecter
+              </Link>
             )}
           </div>
         </header>
@@ -240,15 +229,15 @@ export default function LandingPage() {
               </Link>
             </div>
 
-            {/* SaaS Dashboard Frame Mockup */}
+            {/* SaaS Dashboard Frame Mockup (Crisp 1px Dark Border) */}
             <div className="pt-6 max-w-5xl mx-auto">
-              <div className="bg-bg-card p-2.5 rounded-3xl border border-border-subtle shadow-2xl overflow-hidden transform hover:scale-[1.01] transition duration-500">
-                <div className="bg-input-bg rounded-2xl overflow-hidden border border-border-subtle relative">
-                  <div className="h-8 bg-slate-200/80 dark:bg-slate-800/80 px-4 flex items-center gap-2 border-b border-border-subtle">
+              <div className="bg-bg-card p-2.5 rounded-3xl border border-slate-900/80 dark:border-slate-700 shadow-2xl overflow-hidden transform hover:scale-[1.01] transition duration-500">
+                <div className="bg-input-bg rounded-2xl overflow-hidden border border-slate-900/80 dark:border-slate-700 relative">
+                  <div className="h-8 bg-slate-900 text-slate-200 px-4 flex items-center gap-2 border-b border-slate-900/80">
                     <div className="w-2.5 h-2.5 rounded-full bg-rose-400" />
                     <div className="w-2.5 h-2.5 rounded-full bg-amber-400" />
                     <div className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
-                    <span className="text-[10px] font-bold text-text-secondary mx-auto">Supervision d'Atelier — Dashboard Print_Flow</span>
+                    <span className="text-[10px] font-bold text-slate-300 mx-auto font-sans">Supervision d'Atelier — Dashboard Print_Flow</span>
                   </div>
                   <img
                     src="/Capture d'écran Dashboard.png"

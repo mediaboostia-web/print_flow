@@ -55,16 +55,14 @@ export default function BottomNav() {
       href: '/commandes-en-ligne', 
       icon: ShoppingCart, 
       roleAllowed: true,
-      locked: !canUseOnlineOrders,
-      lockBadge: 'PRO' 
+      locked: !canUseOnlineOrders
     },
     { 
       name: 'Historique', 
       href: '/historique', 
       icon: History, 
       roleAllowed: true,
-      locked: !canAccessHistory,
-      lockBadge: 'PRO' 
+      locked: !canAccessHistory
     },
     { name: 'Paramètres', href: '/parametres', icon: Settings, roleAllowed: role === 'admin' },
     { name: 'Aide & FAQ', href: '/aide', icon: HelpCircle, roleAllowed: true },

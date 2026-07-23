@@ -56,7 +56,7 @@ export default function Sidebar() {
 
   return (
     <aside 
-      className={`bg-bg-card border-r border-border-subtle flex flex-col h-screen sticky top-0 shrink-0 transition-all duration-300 ${
+      className={`hidden md:flex bg-bg-card border-r border-border-subtle flex-col h-screen sticky top-0 shrink-0 transition-all duration-300 ${
         isSidebarCollapsed ? 'w-20' : 'w-20 md:w-64'
       }`}
     >

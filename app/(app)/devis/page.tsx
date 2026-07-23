@@ -39,6 +39,7 @@ export default function DevisPage() {
   const currentProfile = useAppStore((state) => state.getCurrentProfile());
   
   // Store States
+  const storeProfiles = useAppStore((state) => state.profiles);
   const storeClients = useAppStore((state) => state.clients);
   const storeQuotes = useAppStore((state) => state.quotes);
   const storeTaxes = useAppStore((state) => state.taxes);
@@ -1267,7 +1268,13 @@ export default function DevisPage() {
                       <div className="text-[11px] text-slate-600 space-y-0.5 pt-1">
                         <p><span className="font-semibold text-slate-800">Date d'émission :</span> {new Date(previewQuote.createdAt).toLocaleDateString('fr-FR')}</p>
                         <p><span className="font-semibold text-slate-800">Validité :</span> 30 jours</p>
-                        <p><span className="font-semibold text-slate-800">Établi par :</span> {previewQuote.createdBy}</p>
+                        <p><span className="font-semibold text-slate-800">Établi par :</span> {(() => {
+                          if (!previewQuote.createdBy) return currentProfile?.fullName || 'Commercial';
+                          const found = storeProfiles.find(p => p.id === previewQuote.createdBy || p.fullName === previewQuote.createdBy);
+                          if (found) return found.fullName;
+                          if (previewQuote.createdBy.includes('user-')) return currentProfile?.fullName || 'Commercial';
+                          return previewQuote.createdBy;
+                        })()}</p>
                       </div>
                     </div>
                   </div>
