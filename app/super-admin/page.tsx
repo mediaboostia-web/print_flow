@@ -310,8 +310,8 @@ export default function SuperAdminHomePage() {
   return (
     <div className="min-h-screen w-full bg-slate-50 text-slate-800 flex flex-col md:flex-row antialiased">
       
-      {/* Super Admin Left Sidebar */}
-      <aside className="w-full md:w-64 bg-white border-b md:border-b-0 md:border-r border-slate-200 flex flex-col shrink-0 md:sticky md:top-0 md:h-screen">
+      {/* Super Admin Left Sidebar (Desktop Only: hidden md:flex) */}
+      <aside className="hidden md:flex md:w-64 bg-white border-r border-slate-200 flex-col shrink-0 md:sticky md:top-0 md:h-screen">
         {/* Brand Header */}
         <div className="p-6 border-b border-slate-200 flex items-center gap-3">
           <div className="w-10 h-10 rounded-2xl bg-brand-primary/10 border border-brand-primary/20 flex items-center justify-center text-brand-primary shrink-0">
@@ -445,8 +445,60 @@ export default function SuperAdminHomePage() {
         </div>
       </aside>
 
+      {/* Super Admin Mobile Fixed Bottom Navigation */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 px-3 py-2 flex items-center justify-around shadow-2xl">
+        <button
+          onClick={() => setActiveTab('dashboard')}
+          className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-2xl transition text-[10px] font-medium ${
+            activeTab === 'dashboard' ? 'text-brand-primary font-bold bg-brand-primary/10' : 'text-slate-500'
+          }`}
+        >
+          <Activity className="w-5 h-5 mb-0.5" />
+          <span>Dashboard</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('subscriptions')}
+          className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-2xl transition text-[10px] font-medium ${
+            activeTab === 'subscriptions' ? 'text-brand-primary font-bold bg-brand-primary/10' : 'text-slate-500'
+          }`}
+        >
+          <CreditCard className="w-5 h-5 mb-0.5" />
+          <span>Formules</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('organizations')}
+          className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-2xl transition text-[10px] font-medium ${
+            activeTab === 'organizations' ? 'text-brand-primary font-bold bg-brand-primary/10' : 'text-slate-500'
+          }`}
+        >
+          <Building2 className="w-5 h-5 mb-0.5" />
+          <span>Orgs</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('audit_logs')}
+          className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-2xl transition text-[10px] font-medium ${
+            activeTab === 'audit_logs' ? 'text-brand-primary font-bold bg-brand-primary/10' : 'text-slate-500'
+          }`}
+        >
+          <FileText className="w-5 h-5 mb-0.5" />
+          <span>Journal</span>
+        </button>
+
+        <button
+          onClick={handleLogout}
+          className="flex flex-col items-center justify-center py-1 px-2.5 rounded-2xl transition text-[10px] font-medium text-rose-500 hover:bg-rose-50"
+          title="Se déconnecter"
+        >
+          <LogOut className="w-5 h-5 mb-0.5" />
+          <span>Sortie</span>
+        </button>
+      </div>
+
       {/* Main Panel */}
-      <main className="flex-1 min-w-0 bg-slate-50 p-6 md:p-10 space-y-8 overflow-y-auto">
+      <main className="flex-1 min-w-0 bg-slate-50 p-4 sm:p-6 md:p-10 pb-24 md:pb-10 space-y-8 overflow-y-auto">
         
         {/* Toast Notification popup */}
         {toastMessage && (
