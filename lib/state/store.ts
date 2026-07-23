@@ -214,6 +214,8 @@ interface AppState {
   addAuditLog: (action: string, options?: { entityType?: string; entityId?: string; metadata?: any } | null, organizationId?: string) => void;
   addOrganizationWithAdmin: (org: { name: string; address?: string; phone?: string; email?: string; subscriptionPlanId?: string }, admin: { fullName: string; email: string; role: 'admin'; phone?: string; password?: string }) => Promise<{ success: boolean; error?: string }>;
   toggleOrganizationActive: (orgId: string) => void;
+  updateOrganization: (org: Partial<Organization> & { id: string }) => void;
+  deleteOrganization: (orgId: string) => void;
   updateOrganizationSubscription: (orgId: string, planId: string, status: 'active' | 'suspended' | 'expired', endDate: string) => void;
   addSubscriptionPlan: (plan: { name: string; priceFcfa: number; billingCycle: '7_days' | 'monthly' | '6_months' | '12_months'; description: string }) => void;
   updateSubscriptionPlan: (plan: { id: string; name: string; priceFcfa: number; billingCycle: '7_days' | 'monthly' | '6_months' | '12_months'; description: string }) => void;
@@ -1862,6 +1864,73 @@ export const useAppStore = create<AppState>()(
     if (isSupabaseConfigured && supabase) {
       supabase.from('organizations').update({ is_active: isAct }).eq('id', orgId).then(({ error }: any) => {
         if (error) console.error("Error toggleOrganizationActive in Supabase:", error);
+      });
+    }
+  },
+
+  updateOrganization: (orgData) => {
+    set(state => {
+      const existing = state.organizations.find(o => o.id === orgData.id);
+      if (!existing) return state;
+      const updated = { ...existing, ...orgData };
+      return {
+        organizations: state.organizations.map(o => o.id === orgData.id ? updated : o),
+        auditLogs: [
+          {
+            id: `log-${Date.now()}`,
+            organizationId: 'system',
+            entityType: 'organization',
+            entityId: orgData.id,
+            action: `Organisation "${updated.name}" mise à jour par le Super Admin`,
+            occurredAt: new Date().toISOString()
+          },
+          ...state.auditLogs
+        ]
+      };
+    });
+
+    if (isSupabaseConfigured && supabase) {
+      const updates: any = {};
+      if (orgData.name !== undefined) updates.name = orgData.name;
+      if (orgData.address !== undefined) updates.address = orgData.address;
+      if (orgData.phone !== undefined) updates.phone = orgData.phone;
+      if (orgData.email !== undefined) updates.email = orgData.email;
+      if (orgData.isActive !== undefined) updates.is_active = orgData.isActive;
+      if (orgData.subscriptionPlanId !== undefined) updates.subscription_plan_id = orgData.subscriptionPlanId;
+      if (orgData.subscriptionStatus !== undefined) updates.subscription_status = orgData.subscriptionStatus;
+      if (orgData.subscriptionEndDate !== undefined) updates.subscription_end_date = orgData.subscriptionEndDate;
+
+      supabase.from('organizations').update(updates).eq('id', orgData.id).then(({ error }: any) => {
+        if (error) console.error("Error updating organization in Supabase:", error);
+      });
+    }
+  },
+
+  deleteOrganization: (orgId) => {
+    let orgName = '';
+    set(state => {
+      const org = state.organizations.find(o => o.id === orgId);
+      orgName = org ? org.name : orgId;
+      return {
+        organizations: state.organizations.filter(o => o.id !== orgId),
+        profiles: state.profiles.filter(p => p.organizationId !== orgId),
+        auditLogs: [
+          {
+            id: `log-${Date.now()}`,
+            organizationId: 'system',
+            entityType: 'organization',
+            entityId: orgId,
+            action: `Organisation "${orgName}" supprimée par le Super Admin`,
+            occurredAt: new Date().toISOString()
+          },
+          ...state.auditLogs
+        ]
+      };
+    });
+
+    if (isSupabaseConfigured && supabase) {
+      supabase.from('organizations').delete().eq('id', orgId).then(({ error }: any) => {
+        if (error) console.error("Error deleting organization in Supabase:", error);
       });
     }
   },

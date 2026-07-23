@@ -26,7 +26,9 @@ import {
   X,
   Download,
   Eye,
-  Printer
+  Printer,
+  MoreHorizontal,
+  ChevronRight
 } from 'lucide-react';
 import { useAppStore } from '@/lib/state/store';
 import { formatFCFA } from '@/lib/utils/money';
@@ -63,6 +65,8 @@ export default function SuperAdminHomePage() {
 
   const addOrganizationWithAdmin = useAppStore((state) => state.addOrganizationWithAdmin);
   const toggleOrganizationActive = useAppStore((state) => state.toggleOrganizationActive);
+  const updateOrganization = useAppStore((state) => state.updateOrganization);
+  const deleteOrganization = useAppStore((state) => state.deleteOrganization);
   const updateOrganizationSubscription = useAppStore((state) => state.updateOrganizationSubscription);
   const addSubscriptionPlan = useAppStore((state) => state.addSubscriptionPlan);
   const updateSubscriptionPlan = useAppStore((state) => state.updateSubscriptionPlan);
@@ -70,6 +74,9 @@ export default function SuperAdminHomePage() {
   const addInvoiceTemplate = useAppStore((state) => state.addInvoiceTemplate);
   const loadSupabaseData = useAppStore((state) => state.loadSupabaseData);
   const addSuperAdmin = useAppStore((state) => state.addSuperAdmin);
+
+  // Mobile Side Drawer state
+  const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
 
   // Navigation tab: 'dashboard' | 'subscriptions' | 'organizations' | 'templates' | 'audit_logs' | 'themes' | 'profile'
   const [activeTab, setActiveTab] = useState<'dashboard' | 'subscriptions' | 'organizations' | 'templates' | 'audit_logs' | 'themes' | 'profile'>('dashboard');
@@ -87,6 +94,15 @@ export default function SuperAdminHomePage() {
 
   // Modals & form states
   const [isOrgModalOpen, setIsOrgModalOpen] = useState(false);
+  const [isEditOrgModalOpen, setIsEditOrgModalOpen] = useState(false);
+  const [editingOrg, setEditingOrg] = useState<Organization | null>(null);
+  const [editOrgName, setEditOrgName] = useState('');
+  const [editOrgAddress, setEditOrgAddress] = useState('');
+  const [editOrgPhone, setEditOrgPhone] = useState('');
+  const [editOrgEmail, setEditOrgEmail] = useState('');
+  const [editOrgPlanId, setEditOrgPlanId] = useState('plan-std');
+  const [editOrgIsActive, setEditOrgIsActive] = useState(true);
+
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
@@ -223,6 +239,45 @@ export default function SuperAdminHomePage() {
 
     setIsOrgModalOpen(false);
     triggerToast('Organisation et compte Administrateur créés avec succès !');
+  };
+
+  // Edit Organization Handler
+  const handleOpenEditOrg = (org: Organization) => {
+    setEditingOrg(org);
+    setEditOrgName(org.name);
+    setEditOrgAddress(org.address || '');
+    setEditOrgPhone(org.phone || '');
+    setEditOrgEmail(org.email || '');
+    setEditOrgPlanId(org.subscriptionPlanId || 'plan-std');
+    setEditOrgIsActive(org.isActive ?? true);
+    setIsEditOrgModalOpen(true);
+  };
+
+  const handleSaveEditOrg = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingOrg || !editOrgName) return;
+
+    updateOrganization({
+      id: editingOrg.id,
+      name: editOrgName,
+      address: editOrgAddress,
+      phone: editOrgPhone,
+      email: editOrgEmail,
+      subscriptionPlanId: editOrgPlanId,
+      isActive: editOrgIsActive
+    });
+
+    setIsEditOrgModalOpen(false);
+    setEditingOrg(null);
+    triggerToast(`Organisation "${editOrgName}" mise à jour avec succès.`);
+  };
+
+  // Delete Organization Handler
+  const handleDeleteOrg = (org: Organization) => {
+    if (confirm(`Êtes-vous sûr de vouloir supprimer définitivement l'imprimerie "${org.name}" ? Toutes ses données seront supprimées.`)) {
+      deleteOrganization(org.id);
+      triggerToast(`Organisation "${org.name}" supprimée avec succès.`);
+    }
   };
 
   // Plan Submit Form
@@ -446,9 +501,9 @@ export default function SuperAdminHomePage() {
       </aside>
 
       {/* Super Admin Mobile Fixed Bottom Navigation */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 px-3 py-2 flex items-center justify-around shadow-2xl">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 px-2 py-1.5 flex items-center justify-around shadow-2xl">
         <button
-          onClick={() => setActiveTab('dashboard')}
+          onClick={() => { setActiveTab('dashboard'); setIsMobileDrawerOpen(false); }}
           className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-2xl transition text-[10px] font-medium ${
             activeTab === 'dashboard' ? 'text-brand-primary font-bold bg-brand-primary/10' : 'text-slate-500'
           }`}
@@ -458,7 +513,7 @@ export default function SuperAdminHomePage() {
         </button>
 
         <button
-          onClick={() => setActiveTab('subscriptions')}
+          onClick={() => { setActiveTab('subscriptions'); setIsMobileDrawerOpen(false); }}
           className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-2xl transition text-[10px] font-medium ${
             activeTab === 'subscriptions' ? 'text-brand-primary font-bold bg-brand-primary/10' : 'text-slate-500'
           }`}
@@ -468,7 +523,7 @@ export default function SuperAdminHomePage() {
         </button>
 
         <button
-          onClick={() => setActiveTab('organizations')}
+          onClick={() => { setActiveTab('organizations'); setIsMobileDrawerOpen(false); }}
           className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-2xl transition text-[10px] font-medium ${
             activeTab === 'organizations' ? 'text-brand-primary font-bold bg-brand-primary/10' : 'text-slate-500'
           }`}
@@ -478,7 +533,7 @@ export default function SuperAdminHomePage() {
         </button>
 
         <button
-          onClick={() => setActiveTab('audit_logs')}
+          onClick={() => { setActiveTab('audit_logs'); setIsMobileDrawerOpen(false); }}
           className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-2xl transition text-[10px] font-medium ${
             activeTab === 'audit_logs' ? 'text-brand-primary font-bold bg-brand-primary/10' : 'text-slate-500'
           }`}
@@ -488,14 +543,159 @@ export default function SuperAdminHomePage() {
         </button>
 
         <button
-          onClick={handleLogout}
-          className="flex flex-col items-center justify-center py-1 px-2.5 rounded-2xl transition text-[10px] font-medium text-rose-500 hover:bg-rose-50"
-          title="Se déconnecter"
+          onClick={() => setIsMobileDrawerOpen(!isMobileDrawerOpen)}
+          className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-2xl transition text-[10px] font-medium ${
+            ['templates', 'themes', 'profile'].includes(activeTab) || isMobileDrawerOpen
+              ? 'text-brand-primary font-bold bg-brand-primary/10' 
+              : 'text-slate-500'
+          }`}
         >
-          <LogOut className="w-5 h-5 mb-0.5" />
-          <span>Sortie</span>
+          <MoreHorizontal className="w-5 h-5 mb-0.5" />
+          <span>Plus</span>
         </button>
       </div>
+
+      {/* Super Admin Mobile Drawer (Menu latéral "Plus") */}
+      {isMobileDrawerOpen && (
+        <div className="md:hidden fixed inset-0 z-50 flex justify-end">
+          {/* Backdrop Overlay */}
+          <div 
+            className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity animate-fade-in"
+            onClick={() => setIsMobileDrawerOpen(false)}
+          />
+
+          {/* Drawer Panel */}
+          <div className="relative w-4/5 max-w-xs bg-white h-full shadow-2xl flex flex-col justify-between z-10 p-6 overflow-y-auto">
+            <div className="space-y-6">
+              {/* Header */}
+              <div className="flex items-center justify-between pb-4 border-b border-slate-200">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-brand-primary/10 border border-brand-primary/20 flex items-center justify-center text-brand-primary shrink-0">
+                    <Globe className="w-4.5 h-4.5" />
+                  </div>
+                  <div>
+                    <h3 className="text-xs font-black text-slate-900">Print_Flow</h3>
+                    <span className="text-[9px] text-brand-primary font-bold uppercase tracking-wider block">Super Admin</span>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setIsMobileDrawerOpen(false)}
+                  className="p-1.5 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Navigation Items */}
+              <div className="space-y-1">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-3 mb-2">Tous les modules</p>
+                
+                <button
+                  onClick={() => { setActiveTab('dashboard'); setIsMobileDrawerOpen(false); }}
+                  className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-xs font-bold transition ${
+                    activeTab === 'dashboard' ? 'bg-brand-primary/10 text-brand-primary' : 'text-slate-600 hover:bg-slate-50'
+                  }`}
+                >
+                  <span className="flex items-center gap-3">
+                    <Activity className="w-4 h-4" />
+                    <span>Dashboard Global</span>
+                  </span>
+                  <ChevronRight className="w-4 h-4 text-slate-400" />
+                </button>
+
+                <button
+                  onClick={() => { setActiveTab('subscriptions'); setIsMobileDrawerOpen(false); }}
+                  className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-xs font-bold transition ${
+                    activeTab === 'subscriptions' ? 'bg-brand-primary/10 text-brand-primary' : 'text-slate-600 hover:bg-slate-50'
+                  }`}
+                >
+                  <span className="flex items-center gap-3">
+                    <CreditCard className="w-4 h-4" />
+                    <span>Formules & Abonnements</span>
+                  </span>
+                  <ChevronRight className="w-4 h-4 text-slate-400" />
+                </button>
+
+                <button
+                  onClick={() => { setActiveTab('organizations'); setIsMobileDrawerOpen(false); }}
+                  className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-xs font-bold transition ${
+                    activeTab === 'organizations' ? 'bg-brand-primary/10 text-brand-primary' : 'text-slate-600 hover:bg-slate-50'
+                  }`}
+                >
+                  <span className="flex items-center gap-3">
+                    <Building2 className="w-4 h-4" />
+                    <span>Gestion Organisations</span>
+                  </span>
+                  <ChevronRight className="w-4 h-4 text-slate-400" />
+                </button>
+
+                <button
+                  onClick={() => { setActiveTab('templates'); setIsMobileDrawerOpen(false); }}
+                  className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-xs font-bold transition ${
+                    activeTab === 'templates' ? 'bg-brand-primary/10 text-brand-primary' : 'text-slate-600 hover:bg-slate-50'
+                  }`}
+                >
+                  <span className="flex items-center gap-3">
+                    <Layout className="w-4 h-4" />
+                    <span>Gabarits & Templates</span>
+                  </span>
+                  <ChevronRight className="w-4 h-4 text-slate-400" />
+                </button>
+
+                <button
+                  onClick={() => { setActiveTab('audit_logs'); setIsMobileDrawerOpen(false); }}
+                  className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-xs font-bold transition ${
+                    activeTab === 'audit_logs' ? 'bg-brand-primary/10 text-brand-primary' : 'text-slate-600 hover:bg-slate-50'
+                  }`}
+                >
+                  <span className="flex items-center gap-3">
+                    <FileText className="w-4 h-4" />
+                    <span>Journal d'Activités</span>
+                  </span>
+                  <ChevronRight className="w-4 h-4 text-slate-400" />
+                </button>
+
+                <button
+                  onClick={() => { setActiveTab('themes'); setIsMobileDrawerOpen(false); }}
+                  className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-xs font-bold transition ${
+                    activeTab === 'themes' ? 'bg-brand-primary/10 text-brand-primary' : 'text-slate-600 hover:bg-slate-50'
+                  }`}
+                >
+                  <span className="flex items-center gap-3">
+                    <Globe className="w-4 h-4" />
+                    <span>Thèmes (Bientôt dispo)</span>
+                  </span>
+                  <ChevronRight className="w-4 h-4 text-slate-400" />
+                </button>
+
+                <button
+                  onClick={() => { setActiveTab('profile'); setIsMobileDrawerOpen(false); }}
+                  className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-xs font-bold transition ${
+                    activeTab === 'profile' ? 'bg-brand-primary/10 text-brand-primary' : 'text-slate-600 hover:bg-slate-50'
+                  }`}
+                >
+                  <span className="flex items-center gap-3">
+                    <Shield className="w-4 h-4" />
+                    <span>Profil & Opérateurs</span>
+                  </span>
+                  <ChevronRight className="w-4 h-4 text-slate-400" />
+                </button>
+              </div>
+            </div>
+
+            {/* Logout button at bottom of drawer */}
+            <div className="pt-6 border-t border-slate-200 mt-6">
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-2xl bg-rose-50 text-rose-600 hover:bg-rose-100 text-xs font-bold transition"
+              >
+                <LogOut className="w-4 h-4 shrink-0" />
+                <span>Se déconnecter</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Main Panel */}
       <main className="flex-1 min-w-0 bg-slate-50 p-4 sm:p-6 md:p-10 pb-24 md:pb-10 space-y-8 overflow-y-auto">
@@ -937,22 +1137,41 @@ export default function SuperAdminHomePage() {
                               </span>
                             </td>
 
-                            {/* Action toggle */}
+                            {/* Action toggle & CRUD buttons */}
                             <td className="px-6 py-4 whitespace-nowrap text-center">
-                              <button
-                                onClick={() => {
-                                  toggleOrganizationActive(org.id);
-                                  triggerToast(`Statut de "${org.name}" modifié.`);
-                                }}
-                                className={`px-3 py-1.5 rounded-full text-[10px] font-bold transition flex items-center gap-1 mx-auto border ${
-                                  org.isActive 
-                                    ? 'bg-rose-500/10 text-rose-650 border-rose-500/20 hover:bg-rose-500/20' 
-                                    : 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20 hover:bg-emerald-500/20'
-                                }`}
-                              >
-                                <Power className="w-3 h-3" />
-                                <span>{org.isActive ? 'Suspendre' : 'Réactiver'}</span>
-                              </button>
+                              <div className="flex items-center justify-center gap-1.5">
+                                <button
+                                  onClick={() => {
+                                    toggleOrganizationActive(org.id);
+                                    triggerToast(`Statut de "${org.name}" modifié.`);
+                                  }}
+                                  className={`px-3 py-1.5 rounded-full text-[10px] font-bold transition flex items-center gap-1 border ${
+                                    org.isActive 
+                                      ? 'bg-rose-500/10 text-rose-650 border-rose-500/20 hover:bg-rose-500/20' 
+                                      : 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20 hover:bg-emerald-500/20'
+                                  }`}
+                                  title={org.isActive ? 'Suspendre' : 'Réactiver'}
+                                >
+                                  <Power className="w-3 h-3" />
+                                  <span>{org.isActive ? 'Suspendre' : 'Réactiver'}</span>
+                                </button>
+
+                                <button
+                                  onClick={() => handleOpenEditOrg(org)}
+                                  className="p-1.5 rounded-xl border border-slate-200 text-slate-600 hover:text-brand-primary hover:bg-brand-primary/10 hover:border-brand-primary/30 transition"
+                                  title="Modifier l'imprimerie"
+                                >
+                                  <Edit2 className="w-3.5 h-3.5" />
+                                </button>
+
+                                <button
+                                  onClick={() => handleDeleteOrg(org)}
+                                  className="p-1.5 rounded-xl border border-rose-200 text-rose-500 hover:bg-rose-50 hover:border-rose-300 transition"
+                                  title="Supprimer définitivement"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
                             </td>
 
                           </tr>
@@ -1416,6 +1635,114 @@ export default function SuperAdminHomePage() {
                 </button>
               </div>
 
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ---------------- EDIT ORGANIZATION MODAL ---------------- */}
+      {isEditOrgModalOpen && editingOrg && (
+        <div className="fixed inset-0 bg-slate-900/60 flex items-center justify-center z-50 p-4 backdrop-blur-xs animate-fade-in">
+          <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-lg shadow-premium overflow-hidden transform scale-100 transition duration-300 text-slate-800">
+            {/* Header */}
+            <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+              <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                <Building2 className="w-5 h-5 text-brand-primary" />
+                <span>Modifier l'Imprimerie "{editingOrg.name}"</span>
+              </h3>
+              <button 
+                onClick={() => setIsEditOrgModalOpen(false)}
+                className="p-1.5 rounded-xl text-slate-550 hover:bg-slate-100 transition"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleSaveEditOrg} className="p-6 space-y-4">
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase">Nom de l'imprimerie *</label>
+                    <input
+                      type="text"
+                      value={editOrgName}
+                      onChange={(e) => setEditOrgName(e.target.value)}
+                      className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-brand-primary"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase">Adresse E-mail *</label>
+                    <input
+                      type="email"
+                      value={editOrgEmail}
+                      onChange={(e) => setEditOrgEmail(e.target.value)}
+                      className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-brand-primary"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase">Téléphone</label>
+                    <input
+                      type="text"
+                      value={editOrgPhone}
+                      onChange={(e) => setEditOrgPhone(e.target.value)}
+                      className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-brand-primary"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase">Formule d'abonnement</label>
+                    <Dropdown
+                      options={subscriptionPlans.map(p => ({ value: p.id, label: p.name }))}
+                      value={editOrgPlanId}
+                      onChange={(val) => setEditOrgPlanId(val)}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase">Adresse physique</label>
+                  <input
+                    type="text"
+                    value={editOrgAddress}
+                    onChange={(e) => setEditOrgAddress(e.target.value)}
+                    className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-brand-primary"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase block">Statut du compte</label>
+                  <Dropdown
+                    options={[
+                      { value: 'true', label: 'Actif (Accès autorisé)' },
+                      { value: 'false', label: 'Suspendu (Accès bloqué)' }
+                    ]}
+                    value={editOrgIsActive ? 'true' : 'false'}
+                    onChange={(val) => setEditOrgIsActive(val === 'true')}
+                  />
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="pt-4 border-t border-slate-100 flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsEditOrgModalOpen(false)}
+                  className="px-4 py-2 rounded-full border border-slate-200 hover:bg-slate-50 text-xs font-bold text-slate-600 transition"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-full bg-brand-primary hover:bg-brand-primary-hover text-white text-xs font-bold transition shadow-sm"
+                >
+                  Mettre à jour l'imprimerie
+                </button>
+              </div>
             </form>
           </div>
         </div>
