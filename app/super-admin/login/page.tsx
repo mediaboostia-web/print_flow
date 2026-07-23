@@ -217,22 +217,22 @@ export default function SuperAdminLoginPage() {
 
         </div>
 
-        {/* Right Column: Image Background ('Sign in et login .png') */}
-        <div className="hidden md:flex md:w-1/2 m-3 rounded-2xl md:rounded-3xl bg-slate-950 text-white p-8 flex-col justify-end relative overflow-hidden shadow-xl border border-slate-200">
+        {/* Right Column: Background Image matching org user login ('Sign in et login .png') */}
+        <div className="hidden md:flex md:w-1/2 m-2.5 rounded-2xl md:rounded-3xl bg-slate-950 text-white p-8 flex-col justify-end relative overflow-hidden shadow-xl border border-slate-800">
           
-          {/* Background Image: Sign in et login .png */}
+          {/* Background Image: 'Sign in et login .png' (identical to user login page) */}
           <div 
-            className="absolute inset-0 bg-cover bg-center opacity-85" 
+            className="absolute inset-0 bg-cover bg-center opacity-50" 
             style={{ backgroundImage: "url('/Sign in et login .png')" }}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
 
-          {/* Title & Description */}
+          {/* Title & Description Overlay */}
           <div className="relative z-10 space-y-2 text-left">
             <h2 className="text-2xl lg:text-3xl font-black leading-tight tracking-tight text-white font-sans">
               Supervision Globale de la Plateforme
             </h2>
-            <p className="text-xs lg:text-sm text-slate-200 leading-relaxed max-w-sm font-sans">
+            <p className="text-xs lg:text-sm text-slate-300 leading-relaxed max-w-sm font-sans">
               Console d'administration réservée à l'opérateur SaaS : gestion des organisations, abonnements et traçabilité globale.
             </p>
           </div>
