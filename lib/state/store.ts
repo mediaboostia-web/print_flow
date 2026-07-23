@@ -33,6 +33,7 @@ import {
   AuditLog
 } from '@/types/domain';
 import { supabase, isSupabaseConfigured } from '@/lib/supabaseClient';
+import { isValidEmail } from '@/lib/utils/email';
 
 // Creates a brand-new Supabase Auth user (e.g. a Super Admin provisioning an
 // org admin, or an admin adding a colleague) without hijacking the CALLER's
@@ -340,6 +341,9 @@ export const useAppStore = create<AppState>()(
   },
 
   login: async (email, password) => {
+    if (!isValidEmail(email)) {
+      return { success: false, error: 'Veuillez saisir une adresse e-mail valide (ex: contact@exemple.com).' };
+    }
     const normalizedEmail = email.trim().toLowerCase();
 
     if (isSupabaseConfigured && supabase) {
@@ -429,6 +433,9 @@ export const useAppStore = create<AppState>()(
   },
 
   superAdminLogin: async (email, password) => {
+    if (!isValidEmail(email)) {
+      return { success: false, error: 'Veuillez saisir une adresse e-mail valide (ex: superadmin@printflow.io).' };
+    }
     const normalizedEmail = email.trim().toLowerCase();
 
     if (isSupabaseConfigured && supabase) {
@@ -489,6 +496,9 @@ export const useAppStore = create<AppState>()(
   },
 
   registerFreeTrial: async ({ orgName, adminFullName, email, phone, password }) => {
+    if (!isValidEmail(email)) {
+      return { success: false, error: 'Veuillez saisir une adresse e-mail valide (ex: admin@imprimerie.sn).' };
+    }
     const normalizedEmail = email.trim().toLowerCase();
     let authUserId: string | undefined = undefined;
 

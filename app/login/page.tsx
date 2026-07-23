@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { useAppStore } from '@/lib/state/store';
 import { formatFCFA } from '@/lib/utils/money';
+import { isValidEmail } from '@/lib/utils/email';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -69,6 +70,11 @@ export default function LoginPage() {
     // Check rate limiter lock
     if (lockoutTimer > 0) {
       setError(`Accès temporairement verrouillé. Veuillez patienter encore ${lockoutTimer}s.`);
+      return;
+    }
+
+    if (!isValidEmail(email)) {
+      setError('Veuillez saisir une adresse e-mail valide (ex: utilisateur@domaine.com).');
       return;
     }
 

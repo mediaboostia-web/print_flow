@@ -16,6 +16,7 @@ import {
   CheckCircle2 
 } from 'lucide-react';
 import { useAppStore } from '@/lib/state/store';
+import { isValidEmail } from '@/lib/utils/email';
 
 export default function SuperAdminLoginPage() {
   const router = useRouter();
@@ -63,6 +64,11 @@ export default function SuperAdminLoginPage() {
 
     if (!email.trim() || !password) {
       setError('Veuillez renseigner votre e-mail et votre mot de passe.');
+      return;
+    }
+
+    if (!isValidEmail(email)) {
+      setError('Veuillez saisir une adresse e-mail valide (ex: superadmin@printflow.io).');
       return;
     }
 

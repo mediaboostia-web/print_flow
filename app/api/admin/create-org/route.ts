@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { isValidEmail } from '@/lib/utils/email';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -11,6 +12,10 @@ export async function POST(request: Request) {
 
     if (!org?.name || !admin?.fullName || !admin?.email) {
       return NextResponse.json({ success: false, error: "Le nom de l'organisation, le nom de l'admin et l'email sont obligatoires." }, { status: 400 });
+    }
+
+    if (!isValidEmail(admin.email)) {
+      return NextResponse.json({ success: false, error: "L'adresse e-mail renseignée n'est pas valide (format invalide)." }, { status: 400 });
     }
 
     if (!supabaseUrl || !serviceRoleKey) {
