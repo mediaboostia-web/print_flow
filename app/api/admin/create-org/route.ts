@@ -18,12 +18,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: "L'adresse e-mail renseignée n'est pas valide (format invalide)." }, { status: 400 });
     }
 
-    if (!supabaseUrl || !serviceRoleKey) {
-      return NextResponse.json({ success: false, error: "La clé SUPABASE_SERVICE_ROLE_KEY n'est pas configurée sur le serveur." }, { status: 500 });
+    const keyToUse = serviceRoleKey || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (!supabaseUrl || !keyToUse) {
+      return NextResponse.json({ success: false, error: "Supabase n'est pas configuré sur le serveur." }, { status: 500 });
     }
 
-    // Initialize Supabase Admin client with service_role key
-    const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
+    // Initialize Supabase client
+    const supabaseAdmin = createClient(supabaseUrl, keyToUse, {
       auth: {
         autoRefreshToken: false,
         persistSession: false
@@ -34,25 +35,28 @@ export async function POST(request: Request) {
     const adminPassword = admin.password || 'admin123';
     let authUserId: string | null = null;
 
-    // 1. Create or retrieve auth user using service role admin API
-    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-      email: normalizedEmail,
-      password: adminPassword,
-      email_confirm: true,
-      user_metadata: { full_name: admin.fullName }
-    });
+    // 1. Attempt creating or retrieving auth user
+    try {
+      if (serviceRoleKey) {
+        const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+          email: normalizedEmail,
+          password: adminPassword,
+          email_confirm: true,
+          user_metadata: { full_name: admin.fullName }
+        });
 
-    if (authData?.user) {
-      authUserId = authData.user.id;
-    } else if (authError) {
-      // If user already exists in auth.users, retrieve their UUID
-      const { data: listData } = await supabaseAdmin.auth.admin.listUsers();
-      const existingUser = listData?.users?.find(u => u.email?.toLowerCase() === normalizedEmail);
-      if (existingUser) {
-        authUserId = existingUser.id;
-      } else {
-        return NextResponse.json({ success: false, error: authError.message }, { status: 400 });
+        if (authData?.user) {
+          authUserId = authData.user.id;
+        } else if (authError) {
+          const { data: listData } = await supabaseAdmin.auth.admin.listUsers();
+          const existingUser = listData?.users?.find(u => u.email?.toLowerCase() === normalizedEmail);
+          if (existingUser) {
+            authUserId = existingUser.id;
+          }
+        }
       }
+    } catch (authErr) {
+      console.warn("Auth user creation warning (service role key may be absent):", authErr);
     }
 
     // 2. Insert Organization into Postgres

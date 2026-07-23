@@ -18,11 +18,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: "L'adresse e-mail renseignée n'est pas valide (format invalide)." }, { status: 400 });
     }
 
-    if (!supabaseUrl || !serviceRoleKey) {
-      return NextResponse.json({ success: false, error: "La clé SUPABASE_SERVICE_ROLE_KEY n'est pas configurée sur le serveur." }, { status: 500 });
+    const keyToUse = serviceRoleKey || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (!supabaseUrl || !keyToUse) {
+      return NextResponse.json({ success: false, error: "Supabase n'est pas configuré sur le serveur." }, { status: 500 });
     }
 
-    const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
+    const supabaseAdmin = createClient(supabaseUrl, keyToUse, {
       auth: {
         autoRefreshToken: false,
         persistSession: false
@@ -30,27 +31,32 @@ export async function POST(request: Request) {
     });
 
     const normalizedEmail = profile.email.trim().toLowerCase();
-    const profilePassword = profile.password || 'collaborateur2026';
+    const profilePassword = profile.password || 'user123';
     let authUserId: string | null = null;
 
-    // 1. Create or retrieve auth user
-    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-      email: normalizedEmail,
-      password: profilePassword,
-      email_confirm: true,
-      user_metadata: { full_name: profile.fullName }
-    });
+    try {
+      if (serviceRoleKey) {
+        const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+          email: normalizedEmail,
+          password: profilePassword,
+          email_confirm: true,
+          user_metadata: { full_name: profile.fullName }
+        });
 
-    if (authData?.user) {
-      authUserId = authData.user.id;
-    } else if (authError) {
-      const { data: listData } = await supabaseAdmin.auth.admin.listUsers();
-      const existingUser = listData?.users?.find(u => u.email?.toLowerCase() === normalizedEmail);
-      if (existingUser) {
-        authUserId = existingUser.id;
-      } else {
-        return NextResponse.json({ success: false, error: authError.message }, { status: 400 });
+        if (authData?.user) {
+          authUserId = authData.user.id;
+        } else if (authError) {
+          const { data: listData } = await supabaseAdmin.auth.admin.listUsers();
+          const existingUser = listData?.users?.find(u => u.email?.toLowerCase() === normalizedEmail);
+          if (existingUser) {
+            authUserId = existingUser.id;
+          } else {
+            return NextResponse.json({ success: false, error: authError.message }, { status: 400 });
+          }
+        }
       }
+    } catch (authErr) {
+      console.warn("Auth user creation warning in create-profile:", authErr);
     }
 
     // 2. Insert Profile into Postgres

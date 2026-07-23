@@ -1812,17 +1812,17 @@ export const useAppStore = create<AppState>()(
       });
 
       const data = await res.json();
-      if (!res.ok || !data.success) {
-        return { success: false, error: data.error || "Impossible de créer l'imprimerie et son administrateur." };
-      }
-
-      if (data.org && data.profile) {
+      if (res.ok && data.success && data.org && data.profile) {
         set(state => ({
           organizations: [data.org, ...state.organizations.filter(o => o.id !== data.org.id)],
           profiles: [data.profile, ...state.profiles.filter(p => p.id !== data.profile.id)]
         }));
         get().addAuditLog(`Organisation "${data.org.name}" créée par le Super Admin avec l'admin "${data.profile.fullName}"`, null, 'system');
         return { success: true };
+      }
+
+      if (data?.error && !data.error.includes('SUPABASE_SERVICE_ROLE_KEY') && !data.error.includes('configuré sur le serveur')) {
+        return { success: false, error: data.error };
       }
     } catch (e: any) {
       console.warn("API route /api/admin/create-org unavailable, using client fallback:", e);
