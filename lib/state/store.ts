@@ -1751,16 +1751,31 @@ export const useAppStore = create<AppState>()(
   },
 
   addOrganizationWithAdmin: async (org, admin) => {
-    let userId = `user-${Date.now()}`;
-    if (isSupabaseConfigured && supabase) {
-      try {
-        const { userId: authId } = await createAuthUserPreservingSession(admin.email, admin.password || 'admin123');
-        if (authId) userId = authId;
-      } catch (e) {
-        console.warn("Supabase auth signup skipped, using local fallback ID:", e);
+    try {
+      const res = await fetch('/api/admin/create-org', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ org, admin })
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        return { success: false, error: data.error || "Impossible de créer l'imprimerie et son administrateur." };
       }
+
+      if (data.org && data.profile) {
+        set(state => ({
+          organizations: [data.org, ...state.organizations.filter(o => o.id !== data.org.id)],
+          profiles: [data.profile, ...state.profiles.filter(p => p.id !== data.profile.id)]
+        }));
+        get().addAuditLog(`Organisation "${data.org.name}" créée par le Super Admin avec l'admin "${data.profile.fullName}"`, null, 'system');
+        return { success: true };
+      }
+    } catch (e: any) {
+      console.warn("API route /api/admin/create-org unavailable, using client fallback:", e);
     }
 
+    // Client fallback when API route is unreachable
     const newOrgId = `org-${Date.now()}`;
     const newOrg: Organization = {
       id: newOrgId,
@@ -1785,7 +1800,6 @@ export const useAppStore = create<AppState>()(
       email: admin.email.trim().toLowerCase(),
       phone: admin.phone,
       isActive: true,
-      authUserId: userId,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
@@ -1795,41 +1809,7 @@ export const useAppStore = create<AppState>()(
       profiles: [...state.profiles, newProfile]
     }));
 
-    get().addAuditLog(`Organisation "${org.name}" créée par le Super Admin avec l'admin "${admin.fullName}"`, null, 'system');
-
-    if (isSupabaseConfigured && supabase) {
-      try {
-        await supabase.from('organizations').insert([{
-          id: newOrg.id,
-          name: newOrg.name,
-          address: newOrg.address,
-          phone: newOrg.phone,
-          email: newOrg.email,
-          is_active: newOrg.isActive,
-          subscription_plan_id: newOrg.subscriptionPlanId,
-          subscription_status: newOrg.subscriptionStatus,
-          subscription_end_date: newOrg.subscriptionEndDate,
-          catalogue_enabled: true,
-          created_at: newOrg.createdAt
-        }]);
-
-        await supabase.from('profiles').insert([{
-          id: newProfile.id,
-          organization_id: newProfile.organizationId,
-          full_name: newProfile.fullName,
-          role: newProfile.role,
-          email: newProfile.email,
-          phone: newProfile.phone,
-          is_active: newProfile.isActive,
-          auth_user_id: newProfile.authUserId,
-          created_at: newProfile.createdAt,
-          updated_at: newProfile.updatedAt
-        }]);
-      } catch (e: any) {
-        console.warn("Supabase insertion error on addOrganizationWithAdmin:", e);
-      }
-    }
-
+    get().addAuditLog(`Organisation "${org.name}" créée par le Super Admin (mode local)`, null, 'system');
     return { success: true };
   },
 
@@ -2005,19 +1985,36 @@ export const useAppStore = create<AppState>()(
     if (currentOrg && currentOrg.subscriptionPlanId === 'plan-free') {
       return { success: false, error: "L'ajout de personnel est bloqué sur le plan d'essai gratuit. Veuillez passer à un abonnement Standard ou Pro." };
     }
-    if (!isSupabaseConfigured || !supabase) {
-      return { success: false, error: "Supabase n'est pas configuré." };
-    }
     if (!profile.email) {
       return { success: false, error: "L'adresse e-mail est obligatoire." };
     }
 
-    const { userId, error: authError } = await createAuthUserPreservingSession(profile.email, profile.password || 'collaborateur2026');
-    if (!userId) {
-      return { success: false, error: authError };
+    const orgId = get().currentOrgId;
+
+    try {
+      const res = await fetch('/api/admin/create-profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ organizationId: orgId, profile })
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        return { success: false, error: data.error || "Impossible de créer le collaborateur." };
+      }
+
+      if (data.profile) {
+        set(state => ({
+          profiles: [data.profile, ...state.profiles.filter(p => p.id !== data.profile.id)]
+        }));
+        get().addAuditLog(`Collaborateur "${data.profile.fullName}" créé avec le rôle ${data.profile.role}`, null, orgId);
+        return { success: true };
+      }
+    } catch (e: any) {
+      console.warn("API route /api/admin/create-profile unavailable, using client fallback:", e);
     }
 
-    const orgId = get().currentOrgId;
+    // Client fallback
     const newProfileId = `user-${Date.now()}`;
     const newProfile: Profile = {
       id: newProfileId,
@@ -2027,7 +2024,6 @@ export const useAppStore = create<AppState>()(
       email: profile.email.trim().toLowerCase(),
       phone: profile.phone,
       isActive: true,
-      authUserId: userId,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
@@ -2036,25 +2032,7 @@ export const useAppStore = create<AppState>()(
       profiles: [...state.profiles, newProfile]
     }));
 
-    get().addAuditLog(`Collaborateur "${profile.fullName}" créé avec le rôle ${profile.role}`, null, orgId);
-
-    const { error } = await supabase.from('profiles').insert([{
-      id: newProfile.id,
-      organization_id: newProfile.organizationId,
-      full_name: newProfile.fullName,
-      role: newProfile.role,
-      email: newProfile.email,
-      phone: newProfile.phone,
-      is_active: newProfile.isActive,
-      auth_user_id: newProfile.authUserId,
-      created_at: newProfile.createdAt,
-      updated_at: newProfile.updatedAt
-    }]);
-    if (error) {
-      console.error("Error inserting profile in Supabase:", error);
-      return { success: false, error: error.message };
-    }
-
+    get().addAuditLog(`Collaborateur "${profile.fullName}" créé avec le rôle ${profile.role} (mode local)`, null, orgId);
     return { success: true };
   },
 
@@ -2110,21 +2088,35 @@ export const useAppStore = create<AppState>()(
   },
 
   addSuperAdmin: async (sa) => {
-    if (!isSupabaseConfigured || !supabase) {
-      return { success: false, error: "Supabase n'est pas configuré." };
+    try {
+      const res = await fetch('/api/admin/create-superadmin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ superadmin: sa })
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        return { success: false, error: data.error || "Impossible de créer le Super Admin." };
+      }
+
+      if (data.superadmin) {
+        set(state => ({
+          superadmins: [data.superadmin, ...state.superadmins.filter(s => s.id !== data.superadmin.id)]
+        }));
+        get().addAuditLog(`Super Admin "${data.superadmin.fullName}" créé`, null, 'system');
+        return { success: true };
+      }
+    } catch (e: any) {
+      console.warn("API route /api/admin/create-superadmin unavailable, using client fallback:", e);
     }
 
-    const { userId, error: authError } = await createAuthUserPreservingSession(sa.email, sa.password || 'RootAccess#2026');
-    if (!userId) {
-      return { success: false, error: authError };
-    }
-
+    // Client fallback
     const newSaId = `superadmin-${Date.now()}`;
     const newSa = {
       id: newSaId,
       fullName: sa.fullName,
       email: sa.email.trim().toLowerCase(),
-      authUserId: userId,
       createdAt: new Date().toISOString()
     };
 
@@ -2132,20 +2124,7 @@ export const useAppStore = create<AppState>()(
       superadmins: [...state.superadmins, newSa]
     }));
 
-    try {
-      const { error } = await supabase.from('superadmins').insert([{
-        id: newSa.id,
-        full_name: newSa.fullName,
-        email: newSa.email,
-        auth_user_id: newSa.authUserId,
-        created_at: newSa.createdAt
-      }]);
-      if (error) return { success: false, error: error.message };
-    } catch (e: any) {
-      return { success: false, error: e.message };
-    }
-
-    get().addAuditLog(`Super Admin "${sa.fullName}" créé`, null, 'system');
+    get().addAuditLog(`Super Admin "${sa.fullName}" créé (mode local)`, null, 'system');
     return { success: true };
   },
 

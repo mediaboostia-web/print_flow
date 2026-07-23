@@ -521,6 +521,37 @@ CREATE TABLE IF NOT EXISTS public.online_orders (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 
+-- 24. Subscription Plans
+CREATE TABLE IF NOT EXISTS public.subscription_plans (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    price_fcfa NUMERIC NOT NULL DEFAULT 0,
+    billing_cycle TEXT NOT NULL DEFAULT 'monthly',
+    description TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+-- 25. Invoice Templates
+CREATE TABLE IF NOT EXISTS public.invoice_templates (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+-- Seed default plans & templates
+INSERT INTO public.subscription_plans (id, name, price_fcfa, billing_cycle, description) VALUES
+('plan-free', 'Essai Gratuit 7 jours', 0, '7_days', 'Accès complet pendant 7 jours pour tester Print_Flow'),
+('plan-std', 'Formule Standard', 25000, 'monthly', 'Gestion complète devis, BAT, production & factures'),
+('plan-pro', 'Formule Pro', 45000, 'monthly', 'Formule Standard + Catalogue public en ligne & Commandes directes')
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO public.invoice_templates (id, name) VALUES
+('modern', 'Moderne (Standard)'),
+('tech', 'Tech-Luxe (Futuriste)'),
+('classic', 'Classique (Imprimerie)')
+ON CONFLICT (id) DO NOTHING;
+
+
 
 --------------------------------------------------------------------------------
 -- MIGRATION: Supabase Auth & Row Level Security
@@ -708,6 +739,19 @@ CREATE POLICY "anon_insert_online_orders" ON public.online_orders FOR INSERT TO 
         AND o.subscription_plan_id = 'plan-pro' AND o.is_active = true AND o.catalogue_enabled = true
     )
   );
+
+-- 6b) Subscription Plans & Invoice Templates RLS
+ALTER TABLE public.subscription_plans ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "sub_plans_select" ON public.subscription_plans;
+CREATE POLICY "sub_plans_select" ON public.subscription_plans FOR SELECT USING (true);
+DROP POLICY IF EXISTS "sub_plans_manage" ON public.subscription_plans;
+CREATE POLICY "sub_plans_manage" ON public.subscription_plans FOR ALL TO authenticated USING (public.is_superadmin()) WITH CHECK (public.is_superadmin());
+
+ALTER TABLE public.invoice_templates ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "inv_temp_select" ON public.invoice_templates;
+CREATE POLICY "inv_temp_select" ON public.invoice_templates FOR SELECT USING (true);
+DROP POLICY IF EXISTS "inv_temp_manage" ON public.invoice_templates;
+CREATE POLICY "inv_temp_manage" ON public.invoice_templates FOR ALL TO authenticated USING (public.is_superadmin()) WITH CHECK (public.is_superadmin());
 
 -- 7) Demo accounts: DO NOT insert directly into auth.users.
 --    An earlier version of this script did that (crypt() + a raw INSERT) and
