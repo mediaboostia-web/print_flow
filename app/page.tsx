@@ -53,8 +53,8 @@ export default function LandingPage() {
       quote: "Grâce au verrou BAT obligatoire de Print_Flow, nous avons éliminé 100% des réimpressions dues aux erreurs de fichier client. Chaque tirage lancé est validé d'avance."
     },
     {
-      name: "Fatou Diop",
-      role: "Gérante d'Atelier",
+      name: "Ibrahima Sow",
+      role: "Gérant d'Atelier",
       company: "Repro Express (Bamako, Mali)",
       image: "/Temoignage (2).jpg",
       quote: "Le suivi des acomptes et la déduction automatique du reste à payer sur les factures finales nous ont permis de sécuriser notre trésorerie sans aucune contestation."
@@ -74,8 +74,8 @@ export default function LandingPage() {
       a: "Vous bénéficiez d'un accès immédiat à toutes les fonctionnalités principales de Print_Flow pour 1 utilisateur sans engagement et sans carte bancaire."
     },
     {
-      q: "Est-ce adapté aux tarifs d'impression en FCFA / XAF ?",
-      a: "Absolument. Print_Flow est nativement configuré pour la monnaie FCFA / XAF avec gestion de la TVA 18% et des formats A4/A3/A2/Banderoles."
+      q: "Est-ce adapté à la monnaie FCFA / XAF et aux taxes locales ?",
+      a: "Absolument. Print_Flow est nativement configuré pour la monnaie FCFA / XAF avec calcul automatique de la TVA personnalisable selon le taux propre à votre imprimerie ou pays."
     },
     {
       q: "Comment l'acompte versé est-il déduit sur la facture ?",
@@ -92,7 +92,7 @@ export default function LandingPage() {
   ];
 
   // Schema.org JSON-LD for Programmatic SEO
-  const jsonLd = {
+  const jsonLdSoftware = {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
     "name": "Print_Flow",
@@ -107,27 +107,44 @@ export default function LandingPage() {
     "description": "Logiciel de gestion et facturation pour imprimeries et ateliers de reprographie en Afrique francophone. Devis, BAT, Bons de Commande, Livraisons et Encaissements."
   };
 
+  const jsonLdFaq = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": faqs.map(f => ({
+      "@type": "Question",
+      "name": f.q,
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": f.a
+      }
+    }))
+  };
+
   return (
     <div className="min-h-screen bg-[#F8F9FA] dark:bg-[#090D16] text-text-main font-sans selection:bg-brand-primary selection:text-white">
-      {/* Programmatic SEO JSON-LD */}
+      {/* Programmatic SEO JSON-LD Microdata */}
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdSoftware) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdFaq) }}
       />
 
       {/* Main Outer Container */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-16">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-16">
         
         {/* Top Header Navbar Card */}
         <header className="bg-bg-card border border-border-subtle rounded-2xl px-6 py-3.5 flex items-center justify-between shadow-xs sticky top-4 z-50">
           <div className="flex items-center gap-3">
-            <img src="/Favicon_PrintFlow.png" alt="Print_Flow" className="w-8 h-8 object-contain rounded-xl shrink-0" />
+            <img src="/Favicon_PrintFlow.png" alt="Logo Print_Flow" className="w-8 h-8 object-contain rounded-xl shrink-0" />
             <span className="text-xl font-extrabold tracking-tight text-text-main font-sans">
               Print<span className="text-brand-primary">_Flow</span>
             </span>
           </div>
 
-          <nav className="hidden md:flex items-center gap-8 text-xs font-bold text-text-secondary font-sans">
+          <nav className="hidden md:flex items-center gap-8 text-xs font-bold text-text-secondary font-sans" aria-label="Navigation principale">
             <a href="#defis-solution" className="hover:text-brand-primary transition">Défis & Solution</a>
             <a href="#fonctionnalites" className="hover:text-brand-primary transition">Fonctionnalités</a>
             <a href="#tarifs" className="hover:text-brand-primary transition">Tarifs</a>
@@ -164,7 +181,7 @@ export default function LandingPage() {
         </header>
 
         {/* SECTION 1: HERO */}
-        <section className="pt-6 pb-8 text-center space-y-8">
+        <section className="pt-6 pb-8 text-center space-y-8" aria-label="Présentation Print_Flow">
           
           {/* Centered Top Badge */}
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-xs font-bold text-emerald-800 dark:text-emerald-300 shadow-xs">
@@ -223,7 +240,7 @@ export default function LandingPage() {
         </section>
 
         {/* SECTION 2: DEFIS VS SOLUTIONS */}
-        <section id="defis-solution" className="py-10 space-y-8 text-left">
+        <section id="defis-solution" className="py-10 space-y-8 text-left" aria-label="Défis et Solutions Imprimerie">
           
           <div className="text-center space-y-2 max-w-2xl mx-auto">
             <span className="text-xs font-extrabold uppercase tracking-wider text-brand-primary font-sans">Réalité du Terrain</span>
@@ -287,8 +304,8 @@ export default function LandingPage() {
                 <li className="flex items-start gap-3 bg-emerald-50/50 dark:bg-emerald-950/20 p-3 rounded-2xl border border-emerald-100 dark:border-emerald-900/30">
                   <Check className="w-4 h-4 text-brand-primary shrink-0 mt-0.5" />
                   <div>
-                    <strong className="text-text-main block font-sans">Devis HT & TVA 18% instantanés</strong>
-                    <span>Calcul automatique selon le grammage, le papier et les options de façonnage avec PDF A4.</span>
+                    <strong className="text-text-main block font-sans">Devis HT & TVA Configurable</strong>
+                    <span>Calcul automatique selon le papier, les dimensions et votre taux de TVA personnalisé avec PDF A4.</span>
                   </div>
                 </li>
                 <li className="flex items-start gap-3 bg-emerald-50/50 dark:bg-emerald-950/20 p-3 rounded-2xl border border-emerald-100 dark:border-emerald-900/30">
@@ -313,53 +330,53 @@ export default function LandingPage() {
         </section>
 
         {/* SECTION 3: FONCTIONNALITÉS */}
-        <section id="fonctionnalites" className="py-10 space-y-8 text-center">
+        <section id="fonctionnalites" className="py-10 space-y-8 text-center" aria-label="Fonctionnalités Principales">
           
           <div className="space-y-2 max-w-2xl mx-auto">
-            <span className="text-xs font-extrabold uppercase tracking-wider text-brand-primary font-sans">Plateforme Complète</span>
+            <span className="text-xs font-extrabold uppercase tracking-wider text-brand-primary font-sans">Fonctionnalités Clés</span>
             <h2 className="text-2xl sm:text-4xl font-black text-text-main font-sans">
-              Tout ce dont votre imprimerie a besoin. Sans la complexité.
+              Facturation, Boutique & Traçabilité d'Atelier 100%.
             </h2>
             <p className="text-xs text-text-secondary">
-              Conçu pour simplifier la vie des commerciaux, des chefs d'atelier et des gérants.
+              Les 5 piliers conçus pour rationaliser l'ensemble du flux de votre imprimerie.
             </p>
           </div>
 
           {/* 5 Cards Grid Layout */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center text-left">
             
-            {/* Left Column (2 Stacked Cards) */}
+            {/* Left Column (2 Stacked Cards: Facturation & Commandes en ligne) */}
             <div className="space-y-6">
               <div className="bg-bg-card border border-border-subtle rounded-3xl p-6 shadow-xs hover:-translate-y-1 hover:border-brand-primary/40 transition duration-300 space-y-3">
                 <div className="w-10 h-10 rounded-2xl bg-brand-primary/10 text-brand-primary flex items-center justify-center">
-                  <Calculator className="w-5 h-5" />
+                  <CreditCard className="w-5 h-5" />
                 </div>
-                <h3 className="text-base font-bold text-text-main font-sans">Prise de Devis Express</h3>
+                <h3 className="text-base font-bold text-text-main font-sans">1. Facturation & Acomptes</h3>
                 <p className="text-xs text-text-secondary leading-relaxed font-sans">
-                  Générez des devis personnalisés avec TVA 18%, options de finitions et aperçu A4 imprimable en un clic.
+                  Génération de devis HT/TTC, enregistrement des acomptes et déduction automatique sur la facture avec calcul du Solde Dû.
                 </p>
               </div>
 
               <div className="bg-bg-card border border-border-subtle rounded-3xl p-6 shadow-xs hover:-translate-y-1 hover:border-brand-primary/40 transition duration-300 space-y-3">
                 <div className="w-10 h-10 rounded-2xl bg-brand-primary/10 text-brand-primary flex items-center justify-center">
-                  <FileCheck className="w-5 h-5" />
+                  <Package className="w-5 h-5" />
                 </div>
-                <h3 className="text-base font-bold text-text-main font-sans">Verrou & Validation BAT</h3>
+                <h3 className="text-base font-bold text-text-main font-sans">2. Commandes en Ligne</h3>
                 <p className="text-xs text-text-secondary leading-relaxed font-sans">
-                  Téléversement des épreuves (.ZIP), gestion des versions et verrouillage automatique avant le lancement de presse.
+                  Inbox centralisée pour valider, traiter et convertir en devis officiel les demandes clients reçues depuis la vitrine web.
                 </p>
               </div>
             </div>
 
-            {/* Center Featured Card */}
+            {/* Center Featured Card (Suivi du Flux d'Atelier) */}
             <div className="bg-slate-900 text-white rounded-3xl p-6 shadow-md hover:-translate-y-1 transition duration-300 flex flex-col justify-between h-full min-h-[380px] border border-slate-800">
               <div className="space-y-2">
                 <div className="w-10 h-10 rounded-2xl bg-brand-primary/20 text-brand-primary flex items-center justify-center">
                   <Printer className="w-5 h-5" />
                 </div>
-                <h3 className="text-lg font-black text-white font-sans">Supervision d'Atelier en Temps Réel</h3>
+                <h3 className="text-lg font-black text-white font-sans">3. Suivi du Flux d'Atelier</h3>
                 <p className="text-xs text-slate-300 leading-relaxed font-sans">
-                  Visualisez le statut de chaque commande : En attente, Sous presse, Façonnage ou Prêt à livrer.
+                  Tableau de supervision en temps réel : En attente, Sous presse, Façonnage, Prêt et Livré.
                 </p>
               </div>
 
@@ -367,32 +384,32 @@ export default function LandingPage() {
                 <div className="bg-slate-800 p-2 rounded-2xl shadow-inner border border-slate-700 overflow-hidden">
                   <img
                     src="/Capture d'écran Dashboard.png"
-                    alt="Ecran SAAS Print_Flow"
+                    alt="Gestion du flux et suivi d'atelier"
                     className="w-full h-auto rounded-xl object-cover"
                   />
                 </div>
               </div>
             </div>
 
-            {/* Right Column (2 Stacked Cards) */}
+            {/* Right Column (2 Stacked Cards: Boutique Vitrine & Historique Audit) */}
             <div className="space-y-6">
               <div className="bg-bg-card border border-border-subtle rounded-3xl p-6 shadow-xs hover:-translate-y-1 hover:border-brand-primary/40 transition duration-300 space-y-3">
                 <div className="w-10 h-10 rounded-2xl bg-brand-primary/10 text-brand-primary flex items-center justify-center">
-                  <CreditCard className="w-5 h-5" />
+                  <Building2 className="w-5 h-5" />
                 </div>
-                <h3 className="text-base font-bold text-text-main font-sans">Gestion des Acomptes & Impayés</h3>
+                <h3 className="text-base font-bold text-text-main font-sans">4. Boutique Public Storefront</h3>
                 <p className="text-xs text-text-secondary leading-relaxed font-sans">
-                  Enregistrez les paiements partiels et affichez clairement le Solde Dû restant sur la facture finale.
+                  Vitrine en ligne personnalisée avec vos produits (papiers, textiles, supports rigides) accessible 24h/7j pour vos clients.
                 </p>
               </div>
 
               <div className="bg-bg-card border border-border-subtle rounded-3xl p-6 shadow-xs hover:-translate-y-1 hover:border-brand-primary/40 transition duration-300 space-y-3">
                 <div className="w-10 h-10 rounded-2xl bg-brand-primary/10 text-brand-primary flex items-center justify-center">
-                  <Layers className="w-5 h-5" />
+                  <Clock className="w-5 h-5" />
                 </div>
-                <h3 className="text-base font-bold text-text-main font-sans">Bons de Production Confidentiels</h3>
+                <h3 className="text-base font-bold text-text-main font-sans">5. Historique & Journal d'Audit</h3>
                 <p className="text-xs text-text-secondary leading-relaxed font-sans">
-                  Fiches ateliers imprimables sans le nom des machines pour garantir la confidentialité client.
+                  Traçabilité chronologique intégrale : historique des modifications de devis, validations BAT, règlements et livraisons.
                 </p>
               </div>
             </div>
@@ -402,7 +419,7 @@ export default function LandingPage() {
         </section>
 
         {/* SECTION 4: PRICING */}
-        <section id="tarifs" className="py-10 space-y-8 text-center">
+        <section id="tarifs" className="py-10 space-y-8 text-center" aria-label="Tarifs et Abonnements">
           
           <div className="space-y-2 max-w-2xl mx-auto">
             <span className="text-xs font-extrabold uppercase tracking-wider text-brand-primary font-sans">Transparence Tarifaire</span>
@@ -437,7 +454,7 @@ export default function LandingPage() {
                   </li>
                   <li className="flex items-center gap-2">
                     <Check className="w-4 h-4 text-brand-primary shrink-0" />
-                    <span>Devis & Factures TVA 18%</span>
+                    <span>Devis & Factures TVA Configurable</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <Check className="w-4 h-4 text-brand-primary shrink-0" />
@@ -455,7 +472,7 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* Card 2: FORMULE PRO */}
+            {/* Card 2: FORMULE PRO (Dark Contrast Distinctive Card) */}
             <div className="bg-slate-950 text-white border-2 border-brand-primary rounded-3xl p-6 flex flex-col justify-between space-y-6 shadow-xl relative">
               <div className="absolute -top-3.5 right-6 px-3 py-1 bg-brand-primary text-white text-[10px] font-black uppercase rounded-full tracking-wider">
                 LE PLUS POPULAIRE
@@ -543,7 +560,7 @@ export default function LandingPage() {
         </section>
 
         {/* SECTION 5: TÉMOIGNAGES */}
-        <section id="temoignages" className="py-10 space-y-8 text-center bg-bg-card border border-border-subtle rounded-3xl p-6 sm:p-10 shadow-xs">
+        <section id="temoignages" className="py-10 space-y-8 text-center bg-bg-card border border-border-subtle rounded-3xl p-6 sm:p-10 shadow-xs" aria-label="Témoignages Clients">
           
           <div className="space-y-2 max-w-2xl mx-auto">
             <span className="px-3 py-1 rounded-full bg-brand-primary/10 text-brand-primary text-[11px] font-bold inline-block font-sans">
@@ -571,7 +588,7 @@ export default function LandingPage() {
                   className="w-12 h-12 rounded-full object-cover border-2 border-brand-primary shrink-0"
                 />
                 <div>
-                  <h4 className="text-sm font-bold text-text-main font-sans">{testimonials[activeTestimonial].name}</h4>
+                  <h3 className="text-sm font-bold text-text-main font-sans">{testimonials[activeTestimonial].name}</h3>
                   <p className="text-xs text-text-secondary">{testimonials[activeTestimonial].role} • {testimonials[activeTestimonial].company}</p>
                 </div>
               </div>
@@ -581,6 +598,7 @@ export default function LandingPage() {
             <div className="flex items-center justify-center gap-4">
               <button
                 onClick={() => setActiveTestimonial((prev) => (prev === 0 ? testimonials.length - 1 : prev - 1))}
+                aria-label="Témoignage précédent"
                 className="p-2 rounded-full bg-bg-card border border-border-subtle hover:border-brand-primary text-text-main transition cursor-pointer"
               >
                 <ChevronLeft className="w-5 h-5" />
@@ -591,6 +609,7 @@ export default function LandingPage() {
                   <button
                     key={idx}
                     onClick={() => setActiveTestimonial(idx)}
+                    aria-label={`Aller au témoignage ${idx + 1}`}
                     className={`w-2.5 h-2.5 rounded-full transition-all cursor-pointer ${
                       idx === activeTestimonial ? 'bg-brand-primary w-6' : 'bg-slate-300 dark:bg-slate-700'
                     }`}
@@ -600,6 +619,7 @@ export default function LandingPage() {
 
               <button
                 onClick={() => setActiveTestimonial((prev) => (prev === testimonials.length - 1 ? 0 : prev + 1))}
+                aria-label="Témoignage suivant"
                 className="p-2 rounded-full bg-bg-card border border-border-subtle hover:border-brand-primary text-text-main transition cursor-pointer"
               >
                 <ChevronRight className="w-5 h-5" />
@@ -610,7 +630,7 @@ export default function LandingPage() {
         </section>
 
         {/* SECTION 6: FAQ */}
-        <section id="faq" className="py-10 space-y-8 text-left">
+        <section id="faq" className="py-10 space-y-8 text-left" aria-label="Foire Aux Questions">
           
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             
@@ -618,7 +638,7 @@ export default function LandingPage() {
             <div className="lg:col-span-4 bg-bg-card border border-border-subtle rounded-3xl p-6 space-y-4 shadow-xs">
               <img
                 src="/Temoignage (2).jpg"
-                alt="Support Technique"
+                alt="Support Technique Print_Flow"
                 className="w-14 h-14 rounded-full object-cover border-2 border-brand-primary"
               />
               <div className="space-y-1">
@@ -650,6 +670,7 @@ export default function LandingPage() {
                   >
                     <button
                       onClick={() => setOpenFaqIndex(isOpen ? null : idx)}
+                      aria-expanded={isOpen}
                       className="w-full p-4 flex items-center justify-between text-left font-bold text-sm text-text-main hover:text-brand-primary transition cursor-pointer font-sans"
                     >
                       <span>{faq.q}</span>
@@ -682,7 +703,7 @@ export default function LandingPage() {
           <p>© 2026 Print_Flow. Tous droits réservés.</p>
         </footer>
 
-      </div>
+      </main>
     </div>
   );
 }
