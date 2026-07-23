@@ -23,7 +23,6 @@ import {
   Package,
   FileCheck,
   Calculator,
-  Play,
   X,
   AlertTriangle,
   ChevronLeft,
@@ -143,6 +142,7 @@ export default function LandingPage() {
             <a href="#comment-ca-marche" className="hover:text-brand-primary transition">Comment ça marche</a>
             <a href="#solutions" className="hover:text-brand-primary transition">Sérénité Atelier</a>
             <a href="#defis-solution" className="hover:text-brand-primary transition">Défis & Solutions</a>
+            <a href="#temoignages" className="hover:text-brand-primary transition">Témoignages</a>
             <a href="#tarifs" className="hover:text-brand-primary transition">Tarifs</a>
             <a href="#faq" className="hover:text-brand-primary transition">FAQ</a>
           </nav>
@@ -175,8 +175,8 @@ export default function LandingPage() {
           </div>
         </header>
 
-        {/* HERO SECTION */}
-        <section className="pt-6 pb-8 text-center space-y-8" aria-label="Présentation Print_Flow">
+        {/* HERO SECTION (WITH AMBIENT TOP GRADIENT & SINGLE CTA) */}
+        <section className="pt-6 pb-8 text-center space-y-8 bg-gradient-to-b from-brand-primary/5 via-transparent to-transparent -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 rounded-b-3xl" aria-label="Présentation Print_Flow">
           
           {/* Centered Top Badge */}
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-xs font-bold text-emerald-800 dark:text-emerald-300 shadow-xs">
@@ -195,22 +195,15 @@ export default function LandingPage() {
             </p>
           </div>
 
-          {/* Action CTAs */}
-          <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
+          {/* Single Primary Action CTA */}
+          <div className="flex items-center justify-center pt-2">
             <Link
               href="/login"
-              className="px-7 py-3.5 bg-brand-primary hover:bg-brand-primary-hover text-white text-xs font-bold rounded-full transition shadow-md flex items-center gap-2 font-sans hover:scale-[1.03]"
+              className="px-8 py-4 bg-brand-primary hover:bg-brand-primary-hover text-white text-sm font-extrabold rounded-full transition shadow-lg flex items-center gap-2.5 font-sans hover:scale-[1.04]"
             >
               <span>Démarrer l'essai gratuit</span>
               <ArrowRight className="w-4 h-4" />
             </Link>
-            <a
-              href="#comment-ca-marche"
-              className="px-6 py-3.5 bg-bg-card hover:bg-input-bg text-text-main border border-border-subtle text-xs font-bold rounded-full transition flex items-center gap-2 shadow-xs hover:scale-[1.02]"
-            >
-              <Play className="w-3.5 h-3.5 fill-text-main" />
-              <span>Comment ça marche</span>
-            </a>
           </div>
 
           {/* SaaS Dashboard Frame Mockup */}
@@ -234,17 +227,17 @@ export default function LandingPage() {
 
         </section>
 
-        {/* SECTION: COMMENT ÇA MARCHE (EXACT SCREENSHOT 1 DISPOSITION & HOVER SCALING) */}
-        <section id="comment-ca-marche" className="py-10 space-y-8 text-center" aria-label="Comment ça marche">
+        {/* SECTION 1: COMMENT ÇA MARCHE (CONTRASTED DARK THEME CONTAINER) */}
+        <section id="comment-ca-marche" className="py-10 space-y-8 text-center bg-slate-900 text-white border border-slate-800 rounded-3xl p-6 sm:p-12 shadow-2xl" aria-label="Comment ça marche">
           
           <div className="space-y-2 max-w-2xl mx-auto">
-            <span className="px-3.5 py-1 rounded-full bg-brand-primary/10 text-brand-primary text-[11px] font-extrabold inline-block font-sans border border-brand-primary/20">
+            <span className="px-3.5 py-1 rounded-full bg-brand-primary/20 text-brand-primary text-[11px] font-extrabold inline-block font-sans border border-brand-primary/30">
               How It Works
             </span>
-            <h2 className="text-2xl sm:text-4xl font-black text-text-main font-sans">
+            <h2 className="text-2xl sm:text-4xl font-black text-white font-sans">
               De l'Inscription à la Rentabilité — Simplifié.
             </h2>
-            <p className="text-xs text-text-secondary max-w-lg mx-auto">
+            <p className="text-xs text-slate-400 max-w-lg mx-auto">
               Notre processus fluide vous aide à inscrire votre atelier, suivre la fabrication et encaisser vos factures sans aucune complexité.
             </p>
           </div>
@@ -253,25 +246,25 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch text-left pt-4">
             
             {/* Card 01 */}
-            <div className="bg-bg-card border border-border-subtle rounded-3xl p-6 flex flex-col justify-between space-y-6 shadow-xs hover:scale-[1.03] transition duration-300 hover:shadow-xl cursor-pointer">
+            <div className="bg-slate-800/80 border border-slate-700/80 rounded-3xl p-6 flex flex-col justify-between space-y-6 shadow-md hover:scale-[1.03] transition duration-300 hover:shadow-2xl cursor-pointer">
               <div className="space-y-4">
-                <span className="text-4xl font-black text-slate-300 dark:text-slate-700 font-sans block">01</span>
-                <div className="w-10 h-10 rounded-2xl bg-brand-primary/10 text-brand-primary flex items-center justify-center">
+                <span className="text-4xl font-black text-slate-600 font-sans block">01</span>
+                <div className="w-10 h-10 rounded-2xl bg-brand-primary/20 text-brand-primary flex items-center justify-center">
                   <UserCheck className="w-5 h-5" />
                 </div>
                 <div className="space-y-1.5">
-                  <h3 className="text-base font-bold text-text-main font-sans">Inscription en 3 clics</h3>
-                  <p className="text-xs text-text-secondary leading-relaxed font-sans">
+                  <h3 className="text-base font-bold text-white font-sans">Inscription en 3 clics</h3>
+                  <p className="text-xs text-slate-300 leading-relaxed font-sans">
                     Créez votre compte en quelques secondes, accédez à votre espace d'impression sans carte bancaire.
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* Card 02 (Featured Card - Middle highlighted card with header image as in screenshot 1) */}
-            <div className="bg-bg-card border-2 border-brand-primary rounded-3xl p-5 flex flex-col justify-between space-y-4 shadow-md hover:scale-[1.03] transition duration-300 hover:shadow-2xl cursor-pointer">
+            {/* Card 02 (Featured Card - Middle highlighted card with header image) */}
+            <div className="bg-slate-950 border-2 border-brand-primary rounded-3xl p-5 flex flex-col justify-between space-y-4 shadow-xl hover:scale-[1.03] transition duration-300 hover:shadow-2xl cursor-pointer">
               <div className="space-y-3">
-                <div className="rounded-2xl overflow-hidden border border-border-subtle aspect-16/9 bg-slate-100">
+                <div className="rounded-2xl overflow-hidden border border-slate-800 aspect-16/9 bg-slate-900">
                   <img
                     src="/Capture d'écran Dashboard1.png"
                     alt="Créez votre atelier & Partagez le lien"
@@ -282,8 +275,8 @@ export default function LandingPage() {
                   <Store className="w-4 h-4" />
                 </div>
                 <div className="space-y-1.5">
-                  <h3 className="text-base font-bold text-text-main font-sans">Créez & Partagez la Boutique</h3>
-                  <p className="text-xs text-text-secondary leading-relaxed font-sans">
+                  <h3 className="text-base font-bold text-white font-sans">Créez & Partagez la Boutique</h3>
+                  <p className="text-xs text-slate-300 leading-relaxed font-sans">
                     Configurez vos tarifs papiers et partagez le lien de votre vitrine web avec vos clients.
                   </p>
                 </div>
@@ -291,15 +284,15 @@ export default function LandingPage() {
             </div>
 
             {/* Card 03 */}
-            <div className="bg-bg-card border border-border-subtle rounded-3xl p-6 flex flex-col justify-between space-y-6 shadow-xs hover:scale-[1.03] transition duration-300 hover:shadow-xl cursor-pointer">
+            <div className="bg-slate-800/80 border border-slate-700/80 rounded-3xl p-6 flex flex-col justify-between space-y-6 shadow-md hover:scale-[1.03] transition duration-300 hover:shadow-2xl cursor-pointer">
               <div className="space-y-4">
-                <span className="text-4xl font-black text-slate-300 dark:text-slate-700 font-sans block">03</span>
-                <div className="w-10 h-10 rounded-2xl bg-brand-primary/10 text-brand-primary flex items-center justify-center">
+                <span className="text-4xl font-black text-slate-600 font-sans block">03</span>
+                <div className="w-10 h-10 rounded-2xl bg-brand-primary/20 text-brand-primary flex items-center justify-center">
                   <Workflow className="w-5 h-5" />
                 </div>
                 <div className="space-y-1.5">
-                  <h3 className="text-base font-bold text-text-main font-sans">Gérez & Suivez le Flux</h3>
-                  <p className="text-xs text-text-secondary leading-relaxed font-sans">
+                  <h3 className="text-base font-bold text-white font-sans">Gérez & Suivez le Flux</h3>
+                  <p className="text-xs text-slate-300 leading-relaxed font-sans">
                     Traitez vos demandes reçues en direct et suivez chaque dossier étape par étape (Calage, Impression, Façonnage).
                   </p>
                 </div>
@@ -307,15 +300,15 @@ export default function LandingPage() {
             </div>
 
             {/* Card 04 */}
-            <div className="bg-bg-card border border-border-subtle rounded-3xl p-6 flex flex-col justify-between space-y-6 shadow-xs hover:scale-[1.03] transition duration-300 hover:shadow-xl cursor-pointer">
+            <div className="bg-slate-800/80 border border-slate-700/80 rounded-3xl p-6 flex flex-col justify-between space-y-6 shadow-md hover:scale-[1.03] transition duration-300 hover:shadow-2xl cursor-pointer">
               <div className="space-y-4">
-                <span className="text-4xl font-black text-slate-300 dark:text-slate-700 font-sans block">04</span>
-                <div className="w-10 h-10 rounded-2xl bg-brand-primary/10 text-brand-primary flex items-center justify-center">
+                <span className="text-4xl font-black text-slate-600 font-sans block">04</span>
+                <div className="w-10 h-10 rounded-2xl bg-brand-primary/20 text-brand-primary flex items-center justify-center">
                   <Receipt className="w-5 h-5" />
                 </div>
                 <div className="space-y-1.5">
-                  <h3 className="text-base font-bold text-text-main font-sans">Facturez & Gérez vos Revenus</h3>
-                  <p className="text-xs text-text-secondary leading-relaxed font-sans">
+                  <h3 className="text-base font-bold text-white font-sans">Facturez & Gérez vos Revenus</h3>
+                  <p className="text-xs text-slate-300 leading-relaxed font-sans">
                     Enregistrez les acomptes, éditez les factures finales et suivez le Solde Dû en toute sérénité.
                   </p>
                 </div>
@@ -326,8 +319,8 @@ export default function LandingPage() {
 
         </section>
 
-        {/* SECTION: SÉRÉNITÉ RETROUVÉE AVEC PRINTFLOW (EXACT SCREENSHOT 2 REPRODUCTION WITH 'SIGN IN ET LOGIN') */}
-        <section id="solutions" className="py-10 space-y-8 text-left" aria-label="La Sérénité Retrouvée avec Print_Flow">
+        {/* SECTION 2: SÉRÉNITÉ RETROUVÉE AVEC PRINTFLOW (AMBIENT GREEN GRADIENT ACCENT BACKDROP) */}
+        <section id="solutions" className="py-10 space-y-8 text-left bg-gradient-to-br from-emerald-950/20 via-bg-card to-emerald-950/10 border border-brand-primary/30 rounded-3xl p-6 sm:p-10 shadow-lg" aria-label="La Sérénité Retrouvée avec Print_Flow">
           
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
             
@@ -341,7 +334,7 @@ export default function LandingPage() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent" />
 
-                {/* Overlapping Floating Badge as in Screenshot 2 */}
+                {/* Overlapping Floating Badge */}
                 <div className="absolute bottom-6 left-6 right-6 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-border-subtle rounded-2xl p-4 shadow-xl flex items-center gap-3">
                   <div className="flex -space-x-2 overflow-hidden">
                     <img className="inline-block h-8 w-8 rounded-full ring-2 ring-white object-cover" src="/Temoignage.jpg" alt="" />
@@ -356,10 +349,10 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* Right Column: Card Layout as in Screenshot 2 */}
-            <div className="lg:col-span-7 bg-bg-card border border-border-subtle rounded-3xl p-6 sm:p-10 space-y-6 shadow-sm text-left">
+            {/* Right Column: Card Layout */}
+            <div className="lg:col-span-7 space-y-6 text-left">
               <div className="space-y-3">
-                <span className="px-3.5 py-1 rounded-full bg-brand-primary/10 text-brand-primary text-[11px] font-extrabold inline-block font-sans">
+                <span className="px-3.5 py-1 rounded-full bg-brand-primary/10 text-brand-primary text-[11px] font-extrabold inline-block font-sans border border-brand-primary/20">
                   Sérénité Atelier
                 </span>
                 <h2 className="text-2xl sm:text-4xl font-black text-text-main font-sans leading-tight">
@@ -381,10 +374,10 @@ export default function LandingPage() {
                 </Link>
               </div>
 
-              {/* 2 Sub-cards at Bottom as in Screenshot 2 */}
+              {/* 2 Sub-cards at Bottom */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-border-subtle">
                 
-                <div className="bg-input-bg border border-border-subtle rounded-2xl p-4 space-y-2 hover:scale-[1.02] transition">
+                <div className="bg-bg-card border border-border-subtle rounded-2xl p-4 space-y-2 hover:scale-[1.02] transition shadow-xs">
                   <div className="w-8 h-8 rounded-xl bg-brand-primary/10 text-brand-primary flex items-center justify-center">
                     <Shield className="w-4 h-4" />
                   </div>
@@ -394,7 +387,7 @@ export default function LandingPage() {
                   </p>
                 </div>
 
-                <div className="bg-input-bg border border-border-subtle rounded-2xl p-4 space-y-2 hover:scale-[1.02] transition">
+                <div className="bg-bg-card border border-border-subtle rounded-2xl p-4 space-y-2 hover:scale-[1.02] transition shadow-xs">
                   <div className="w-8 h-8 rounded-xl bg-brand-primary/10 text-brand-primary flex items-center justify-center">
                     <Eye className="w-4 h-4" />
                   </div>
@@ -411,8 +404,8 @@ export default function LandingPage() {
 
         </section>
 
-        {/* SECTION: DÉFIS VS SOLUTIONS (PAIRED CARDS) */}
-        <section id="defis-solution" className="py-10 space-y-8 text-left" aria-label="Défis et Solutions Imprimerie">
+        {/* SECTION 3: DÉFIS VS SOLUTIONS (SOFT GRAY / DARK CARD CONTAINER) */}
+        <section id="defis-solution" className="py-10 space-y-8 text-left bg-slate-100/70 dark:bg-slate-900/60 border border-border-subtle rounded-3xl p-6 sm:p-10 shadow-xs" aria-label="Défis et Solutions Imprimerie">
           
           <div className="text-center space-y-2 max-w-2xl mx-auto">
             <span className="text-xs font-extrabold uppercase tracking-wider text-brand-primary font-sans">Résolution de Problèmes</span>
@@ -510,15 +503,88 @@ export default function LandingPage() {
 
         </section>
 
-        {/* SECTION: TARIFS */}
-        <section id="tarifs" className="py-10 space-y-8 text-center" aria-label="Tarifs et Abonnements">
+        {/* SECTION 4: TÉMOIGNAGES (SOMBRE ET ACCUEILLANT) */}
+        <section id="temoignages" className="py-10 space-y-8 text-center bg-slate-900 text-white border border-slate-800 rounded-3xl p-6 sm:p-10 shadow-xl" aria-label="Témoignages Clients">
+          
+          <div className="space-y-2 max-w-2xl mx-auto">
+            <span className="px-3.5 py-1 rounded-full bg-brand-primary/20 text-brand-primary text-[11px] font-bold inline-block font-sans border border-brand-primary/30">
+              Témoignages
+            </span>
+            <h2 className="text-2xl sm:text-4xl font-black text-white font-sans">
+              Adopté par les imprimeries à travers l'Afrique francophone
+            </h2>
+            <p className="text-xs text-slate-400">
+              Découvrez comment nos utilisateurs ont sécurisé leurs acomptes et leur production.
+            </p>
+          </div>
+
+          {/* Testimonial Display Slide */}
+          <div className="max-w-3xl mx-auto space-y-6 pt-4">
+            <div className="bg-slate-800/90 border border-slate-700 rounded-2xl p-6 sm:p-8 space-y-4 text-left shadow-md">
+              <p className="text-sm sm:text-base italic text-slate-100 leading-relaxed font-sans">
+                "{testimonials[activeTestimonial].quote}"
+              </p>
+              
+              <div className="flex items-center gap-4 pt-2 border-t border-slate-700">
+                <img
+                  src={testimonials[activeTestimonial].image}
+                  alt={testimonials[activeTestimonial].name}
+                  className="w-12 h-12 rounded-full object-cover border-2 border-brand-primary shrink-0"
+                />
+                <div>
+                  <h3 className="text-sm font-bold text-white font-sans">{testimonials[activeTestimonial].name}</h3>
+                  <p className="text-xs text-slate-400">{testimonials[activeTestimonial].role} • {testimonials[activeTestimonial].company}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Slider Controls */}
+            <div className="flex items-center justify-center gap-4">
+              <button
+                onClick={() => setActiveTestimonial((prev) => (prev === 0 ? testimonials.length - 1 : prev - 1))}
+                aria-label="Témoignage précédent"
+                className="p-2 rounded-full bg-slate-800 border border-slate-700 hover:border-brand-primary text-white transition cursor-pointer hover:scale-[1.05]"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+
+              <div className="flex items-center gap-2">
+                {testimonials.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setActiveTestimonial(idx)}
+                    aria-label={`Aller au témoignage ${idx + 1}`}
+                    className={`w-2.5 h-2.5 rounded-full transition-all cursor-pointer ${
+                      idx === activeTestimonial ? 'bg-brand-primary w-6' : 'bg-slate-700'
+                    }`}
+                  />
+                ))}
+              </div>
+
+              <button
+                onClick={() => setActiveTestimonial((prev) => (prev === testimonials.length - 1 ? 0 : prev + 1))}
+                aria-label="Témoignage suivant"
+                className="p-2 rounded-full bg-slate-800 border border-slate-700 hover:border-brand-primary text-white transition cursor-pointer hover:scale-[1.05]"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+
+        </section>
+
+        {/* SECTION 5: TARIFS (PLACÉE MAINTENANT APRÈS LES TÉMOIGNAGES) */}
+        <section id="tarifs" className="py-10 space-y-8 text-center bg-slate-100/60 dark:bg-slate-900/40 border border-border-subtle rounded-3xl p-6 sm:p-10 shadow-xs" aria-label="Tarifs et Abonnements">
           
           <div className="space-y-2 max-w-2xl mx-auto">
             <span className="text-xs font-extrabold uppercase tracking-wider text-brand-primary font-sans">Transparence Tarifaire</span>
             <h2 className="text-2xl sm:text-4xl font-black text-text-main font-sans">Des Tarifs Clairs et Sans Surprise.</h2>
+            <p className="text-xs text-text-secondary">
+              Choisissez le forfait adapté à la taille de votre atelier. Changez d'offre à tout moment.
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch max-w-5xl mx-auto text-left">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch max-w-5xl mx-auto text-left pt-4">
             
             {/* Card 1: DÉMARRAGE */}
             <div className="bg-bg-card border border-border-subtle rounded-3xl p-6 flex flex-col justify-between space-y-6 shadow-xs hover:scale-[1.01] transition">
@@ -651,77 +717,7 @@ export default function LandingPage() {
 
         </section>
 
-        {/* SECTION: TÉMOIGNAGES */}
-        <section id="temoignages" className="py-10 space-y-8 text-center bg-bg-card border border-border-subtle rounded-3xl p-6 sm:p-10 shadow-xs" aria-label="Témoignages Clients">
-          
-          <div className="space-y-2 max-w-2xl mx-auto">
-            <span className="px-3 py-1 rounded-full bg-brand-primary/10 text-brand-primary text-[11px] font-bold inline-block font-sans">
-              Témoignages
-            </span>
-            <h2 className="text-2xl sm:text-4xl font-black text-text-main font-sans">
-              Adopté par les imprimeries à travers l'Afrique francophone
-            </h2>
-            <p className="text-xs text-text-secondary">
-              Découvrez comment nos utilisateurs ont sécurisé leurs acomptes et leur production.
-            </p>
-          </div>
-
-          {/* Testimonial Display Slide */}
-          <div className="max-w-3xl mx-auto space-y-6 pt-4">
-            <div className="bg-input-bg border border-border-subtle rounded-2xl p-6 sm:p-8 space-y-4 text-left shadow-xs">
-              <p className="text-sm sm:text-base italic text-text-main leading-relaxed font-sans">
-                "{testimonials[activeTestimonial].quote}"
-              </p>
-              
-              <div className="flex items-center gap-4 pt-2 border-t border-border-subtle">
-                <img
-                  src={testimonials[activeTestimonial].image}
-                  alt={testimonials[activeTestimonial].name}
-                  className="w-12 h-12 rounded-full object-cover border-2 border-brand-primary shrink-0"
-                />
-                <div>
-                  <h3 className="text-sm font-bold text-text-main font-sans">{testimonials[activeTestimonial].name}</h3>
-                  <p className="text-xs text-text-secondary">{testimonials[activeTestimonial].role} • {testimonials[activeTestimonial].company}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Slider Controls */}
-            <div className="flex items-center justify-center gap-4">
-              <button
-                onClick={() => setActiveTestimonial((prev) => (prev === 0 ? testimonials.length - 1 : prev - 1))}
-                aria-label="Témoignage précédent"
-                className="p-2 rounded-full bg-bg-card border border-border-subtle hover:border-brand-primary text-text-main transition cursor-pointer hover:scale-[1.05]"
-              >
-                <ChevronLeft className="w-5 h-5" />
-              </button>
-
-              <div className="flex items-center gap-2">
-                {testimonials.map((_, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => setActiveTestimonial(idx)}
-                    aria-label={`Aller au témoignage ${idx + 1}`}
-                    className={`w-2.5 h-2.5 rounded-full transition-all cursor-pointer ${
-                      idx === activeTestimonial ? 'bg-brand-primary w-6' : 'bg-slate-300 dark:bg-slate-700'
-                    }`}
-                  />
-                ))}
-              </div>
-
-              <button
-                onClick={() => setActiveTestimonial((prev) => (prev === testimonials.length - 1 ? 0 : prev + 1))}
-                aria-label="Témoignage suivant"
-                className="p-2 rounded-full bg-bg-card border border-border-subtle hover:border-brand-primary text-text-main transition cursor-pointer hover:scale-[1.05]"
-              >
-                <ChevronRight className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-
-        </section>
-
-        {/* SECTION: FAQ */}
+        {/* SECTION 6: FAQ */}
         <section id="faq" className="py-10 space-y-8 text-left" aria-label="Foire Aux Questions">
           
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
