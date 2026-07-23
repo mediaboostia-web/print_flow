@@ -452,8 +452,8 @@ DROP POLICY IF EXISTS "org_update" ON public.organizations;
 DROP POLICY IF EXISTS "org_delete" ON public.organizations;
 CREATE POLICY "org_select" ON public.organizations FOR SELECT TO authenticated
   USING (id = public.current_org_id() OR public.is_superadmin());
-CREATE POLICY "org_insert" ON public.organizations FOR INSERT TO authenticated
-  WITH CHECK (public.is_superadmin() OR auth.uid() IS NOT NULL);
+CREATE POLICY "org_insert" ON public.organizations FOR INSERT TO authenticated, anon
+  WITH CHECK (true);
 CREATE POLICY "org_update" ON public.organizations FOR UPDATE TO authenticated
   USING (id = public.current_org_id() OR public.is_superadmin())
   WITH CHECK (id = public.current_org_id() OR public.is_superadmin());
@@ -468,8 +468,8 @@ DROP POLICY IF EXISTS "profiles_update" ON public.profiles;
 DROP POLICY IF EXISTS "profiles_delete" ON public.profiles;
 CREATE POLICY "profiles_select" ON public.profiles FOR SELECT TO authenticated
   USING (organization_id = public.current_org_id() OR auth_user_id = auth.uid() OR email = auth.jwt() ->> 'email' OR public.is_superadmin());
-CREATE POLICY "profiles_insert" ON public.profiles FOR INSERT TO authenticated
-  WITH CHECK (auth_user_id = auth.uid() OR organization_id = public.current_org_id() OR public.is_superadmin() OR auth.uid() IS NOT NULL);
+CREATE POLICY "profiles_insert" ON public.profiles FOR INSERT TO authenticated, anon
+  WITH CHECK (true);
 CREATE POLICY "profiles_update" ON public.profiles FOR UPDATE TO authenticated
   USING (organization_id = public.current_org_id() OR auth_user_id = auth.uid() OR email = auth.jwt() ->> 'email' OR public.is_superadmin())
   WITH CHECK (organization_id = public.current_org_id() OR auth_user_id = auth.uid() OR email = auth.jwt() ->> 'email' OR public.is_superadmin());
@@ -484,8 +484,8 @@ DROP POLICY IF EXISTS "superadmins_update" ON public.superadmins;
 DROP POLICY IF EXISTS "superadmins_delete" ON public.superadmins;
 CREATE POLICY "superadmins_select" ON public.superadmins FOR SELECT TO authenticated
   USING (auth_user_id = auth.uid() OR email = auth.jwt() ->> 'email' OR public.is_superadmin());
-CREATE POLICY "superadmins_insert" ON public.superadmins FOR INSERT TO authenticated
-  WITH CHECK (public.is_superadmin() OR auth.uid() IS NOT NULL);
+CREATE POLICY "superadmins_insert" ON public.superadmins FOR INSERT TO authenticated, anon
+  WITH CHECK (true);
 CREATE POLICY "superadmins_update" ON public.superadmins FOR UPDATE TO authenticated
   USING (auth_user_id = auth.uid() OR email = auth.jwt() ->> 'email' OR public.is_superadmin());
 CREATE POLICY "superadmins_delete" ON public.superadmins FOR DELETE TO authenticated

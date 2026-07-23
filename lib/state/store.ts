@@ -1857,12 +1857,44 @@ export const useAppStore = create<AppState>()(
       updatedAt: new Date().toISOString()
     };
 
+    if (isSupabaseConfigured && supabase) {
+      try {
+        await supabase.from('organizations').insert([{
+          id: newOrg.id,
+          name: newOrg.name,
+          address: newOrg.address || '',
+          phone: newOrg.phone || '',
+          email: newOrg.email || '',
+          is_active: true,
+          subscription_plan_id: newOrg.subscriptionPlanId,
+          subscription_status: newOrg.subscriptionStatus,
+          subscription_end_date: newOrg.subscriptionEndDate,
+          catalogue_enabled: true,
+          created_at: newOrg.createdAt,
+        }]);
+
+        await supabase.from('profiles').insert([{
+          id: newProfile.id,
+          organization_id: newProfile.organizationId,
+          full_name: newProfile.fullName,
+          role: newProfile.role,
+          email: newProfile.email,
+          phone: newProfile.phone || '',
+          is_active: true,
+          created_at: newProfile.createdAt,
+          updated_at: newProfile.updatedAt,
+        }]);
+      } catch (err) {
+        console.error("Error persisting fallback org/profile to Supabase:", err);
+      }
+    }
+
     set(state => ({
-      organizations: [...state.organizations, newOrg],
-      profiles: [...state.profiles, newProfile]
+      organizations: [newOrg, ...state.organizations],
+      profiles: [newProfile, ...state.profiles]
     }));
 
-    get().addAuditLog(`Organisation "${org.name}" créée par le Super Admin (mode local)`, null, 'system');
+    get().addAuditLog(`Organisation "${org.name}" créée par le Super Admin`, null, 'system');
     return { success: true };
   },
 
@@ -2081,11 +2113,29 @@ export const useAppStore = create<AppState>()(
       updatedAt: new Date().toISOString()
     };
 
+    if (isSupabaseConfigured && supabase) {
+      try {
+        await supabase.from('profiles').insert([{
+          id: newProfile.id,
+          organization_id: newProfile.organizationId,
+          full_name: newProfile.fullName,
+          role: newProfile.role,
+          email: newProfile.email,
+          phone: newProfile.phone || '',
+          is_active: true,
+          created_at: newProfile.createdAt,
+          updated_at: newProfile.updatedAt,
+        }]);
+      } catch (err) {
+        console.error("Error persisting profile fallback to Supabase:", err);
+      }
+    }
+
     set(state => ({
       profiles: [...state.profiles, newProfile]
     }));
 
-    get().addAuditLog(`Collaborateur "${profile.fullName}" créé avec le rôle ${profile.role} (mode local)`, null, orgId);
+    get().addAuditLog(`Collaborateur "${profile.fullName}" créé avec le rôle ${profile.role}`, null, orgId);
     return { success: true };
   },
 
@@ -2173,11 +2223,24 @@ export const useAppStore = create<AppState>()(
       createdAt: new Date().toISOString()
     };
 
+    if (isSupabaseConfigured && supabase) {
+      try {
+        await supabase.from('superadmins').insert([{
+          id: newSa.id,
+          full_name: newSa.fullName,
+          email: newSa.email,
+          created_at: newSa.createdAt,
+        }]);
+      } catch (err) {
+        console.error("Error persisting superadmin fallback to Supabase:", err);
+      }
+    }
+
     set(state => ({
       superadmins: [...state.superadmins, newSa]
     }));
 
-    get().addAuditLog(`Super Admin "${sa.fullName}" créé (mode local)`, null, 'system');
+    get().addAuditLog(`Super Admin "${sa.fullName}" créé`, null, 'system');
     return { success: true };
   },
 
