@@ -27,6 +27,7 @@ import {
   AlertTriangle,
   ChevronLeft,
   PhoneCall,
+  Calendar,
   Plus,
   Minus,
   Workflow,
@@ -58,6 +59,39 @@ export default function LandingPage() {
   // Smart Hide/Show Sticky Header State
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
+
+  const APPOINTMENT_URL = 'https://calendar.google.com/calendar/appointments/schedules/AcZssZ34ZSkOmr-a7yJmjF7Co1fmZIc-bnEGaAhEX9LuFbrzKL1hW61qZKSBDjWKJuPb5hDKkrjALAsU?gv=true';
+
+  useEffect(() => {
+    // Inject Google Calendar Scheduling CSS
+    const link = document.createElement('link');
+    link.href = 'https://calendar.google.com/calendar/scheduling-button-script.css';
+    link.rel = 'stylesheet';
+    document.head.appendChild(link);
+
+    // Inject Google Calendar Scheduling JS
+    const script = document.createElement('script');
+    script.src = 'https://calendar.google.com/calendar/scheduling-button-script.js';
+    script.async = true;
+    script.onload = () => {
+      if ((window as any).calendar?.schedulingButton) {
+        (window as any).calendar.schedulingButton.load({
+          url: APPOINTMENT_URL,
+          color: '#8E24AA',
+          label: 'Réserver un rendez-vous',
+          target: document.body,
+        });
+      }
+    };
+    document.body.appendChild(script);
+
+    return () => {
+      try {
+        if (link.parentNode) link.parentNode.removeChild(link);
+        if (script.parentNode) script.parentNode.removeChild(script);
+      } catch (e) {}
+    };
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -784,7 +818,7 @@ export default function LandingPage() {
               </div>
 
               <a
-                href="https://calendar.google.com/calendar/u/0/r"
+                href={APPOINTMENT_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full py-3 bg-brand-primary hover:bg-brand-primary-hover text-white text-xs font-bold rounded-xl transition text-center flex items-center justify-center gap-2 shadow-xs font-sans hover:scale-[1.02]"
@@ -829,6 +863,22 @@ export default function LandingPage() {
           </div>
 
         </section>
+
+        {/* Floating Google Calendar Appointment Bubble */}
+        <a
+          href={APPOINTMENT_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="fixed bottom-6 right-6 z-50 bg-[#8E24AA] hover:bg-[#7b1fa2] text-white font-bold text-xs px-4 py-3 rounded-full shadow-[0_8px_25px_rgba(142,36,170,0.45)] flex items-center gap-2.5 hover:scale-105 transition-all duration-300 group cursor-pointer border border-purple-300/30"
+          title="Réserver un rendez-vous"
+        >
+          <span className="relative flex h-2.5 w-2.5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-white"></span>
+          </span>
+          <Calendar className="w-4 h-4 text-white group-hover:rotate-12 transition-transform shrink-0" />
+          <span className="whitespace-nowrap font-sans">Réserver un rendez-vous</span>
+        </a>
 
         {/* Footer */}
         <footer className="border-t border-border-subtle pt-8 pb-6 text-center text-xs text-text-secondary space-y-3">
