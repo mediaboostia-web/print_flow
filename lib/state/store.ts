@@ -715,18 +715,22 @@ export const useAppStore = create<AppState>()(
         isSupabaseLoading: false
       };
 
-      if (saRows && saRows.length > 0) {
-        updates.superadmins = saRows.map((s: any) => ({
+      if (saRows) {
+        const fetchedSa = saRows.map((s: any) => ({
           id: s.id,
           fullName: s.full_name,
           email: s.email,
           authUserId: s.auth_user_id,
           createdAt: s.created_at
         }));
+        updates.superadmins = [
+          ...fetchedSa,
+          ...get().superadmins.filter(s => !fetchedSa.some((fs: any) => fs.id === s.id))
+        ];
       }
 
-      if (orgRows && orgRows.length > 0) {
-        updates.organizations = orgRows.map((o: any) => ({
+      if (orgRows) {
+        const fetchedOrgs = orgRows.map((o: any) => ({
           id: o.id,
           name: o.name,
           address: o.address || '',
@@ -739,10 +743,14 @@ export const useAppStore = create<AppState>()(
           catalogueEnabled: o.catalogue_enabled !== false,
           createdAt: o.created_at
         }));
+        updates.organizations = [
+          ...fetchedOrgs,
+          ...get().organizations.filter(o => !fetchedOrgs.some((fo: any) => fo.id === o.id))
+        ];
       }
 
-      if (profileRows && profileRows.length > 0) {
-        updates.profiles = profileRows.map((p: any) => ({
+      if (profileRows) {
+        const fetchedProfiles = profileRows.map((p: any) => ({
           id: p.id,
           organizationId: p.organization_id,
           fullName: p.full_name,
@@ -755,6 +763,10 @@ export const useAppStore = create<AppState>()(
           createdAt: p.created_at,
           updatedAt: p.updated_at
         }));
+        updates.profiles = [
+          ...fetchedProfiles,
+          ...get().profiles.filter(p => !fetchedProfiles.some((fp: any) => fp.id === p.id))
+        ];
       }
 
       if (clientRows && clientRows.length > 0) {
