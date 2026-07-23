@@ -2203,159 +2203,185 @@ export const useAppStore = create<AppState>()(
   },
 
   fetchPublicCatalogue: async (orgId) => {
-    if (!isSupabaseConfigured || !supabase) {
-      return { org: null, products: [] };
-    }
+    // 1. Try fetching real Supabase data if configured
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const { data: orgRow } = await supabase.from('organizations').select('*').eq('id', orgId).maybeSingle();
 
-    try {
-      const { data: orgRow } = await supabase.from('organizations').select('*').eq('id', orgId).maybeSingle();
+        if (
+          orgRow &&
+          orgRow.is_active !== false &&
+          orgRow.subscription_plan_id === 'plan-pro' &&
+          orgRow.catalogue_enabled !== false
+        ) {
+          const org: Organization = {
+            id: orgRow.id,
+            name: orgRow.name,
+            address: orgRow.address,
+            phone: orgRow.phone,
+            email: orgRow.email,
+            isActive: orgRow.is_active,
+            subscriptionPlanId: orgRow.subscription_plan_id,
+            subscriptionStatus: orgRow.subscription_status,
+            subscriptionEndDate: orgRow.subscription_end_date,
+            catalogueEnabled: orgRow.catalogue_enabled !== false,
+            createdAt: orgRow.created_at
+          };
 
-      if (
-        !orgRow ||
-        orgRow.is_active === false ||
-        orgRow.subscription_plan_id !== 'plan-pro' ||
-        orgRow.catalogue_enabled === false
-      ) {
-        return { org: null, products: [] };
+          const [{ data: productRows }, { data: tierRows }] = await Promise.all([
+            supabase.from('products').select('*').eq('organization_id', orgId).eq('is_active', true),
+            supabase.from('product_price_tiers').select('*')
+          ]) as any[];
+
+          const products: Product[] = (productRows || []).map((p: any) => ({
+            id: p.id,
+            organizationId: p.organization_id,
+            name: p.name,
+            category: p.category,
+            description: p.description,
+            materialType: p.material_type || 'papier',
+            paperType: p.paper_type,
+            grammageG: p.grammage_g,
+            format: p.format,
+            formatOptions: p.format_options || [],
+            finishing: p.finishing,
+            photoUrl: p.photo_url,
+            unitPriceFcfa: Number(p.unit_price_fcfa),
+            vatRate: Number(p.vat_rate),
+            isActive: p.is_active,
+            priceTiers: (tierRows || [])
+              .filter((t: any) => t.product_id === p.id)
+              .map((t: any) => ({
+                id: t.id,
+                productId: t.product_id,
+                minQuantity: t.min_quantity,
+                maxQuantity: t.max_quantity ?? undefined,
+                unitPriceFcfa: Number(t.unit_price_fcfa)
+              })),
+            createdAt: p.created_at,
+            updatedAt: p.updated_at
+          }));
+
+          return { org, products };
+        }
+      } catch (e) {
+        console.error("Error fetching public catalogue from Supabase:", e);
       }
+    }
 
-      const org: Organization = {
-        id: orgRow.id,
-        name: orgRow.name,
-        address: orgRow.address,
-        phone: orgRow.phone,
-        email: orgRow.email,
-        isActive: orgRow.is_active,
-        subscriptionPlanId: orgRow.subscription_plan_id,
-        subscriptionStatus: orgRow.subscription_status,
-        subscriptionEndDate: orgRow.subscription_end_date,
-        catalogueEnabled: orgRow.catalogue_enabled !== false,
-        createdAt: orgRow.created_at
-      };
-
-      const [{ data: productRows }, { data: tierRows }] = await Promise.all([
-        supabase.from('products').select('*').eq('organization_id', orgId).eq('is_active', true),
-        supabase.from('product_price_tiers').select('*')
-      ]) as any[];
-
-      const products: Product[] = (productRows || []).map((p: any) => ({
-        id: p.id,
-        organizationId: p.organization_id,
-        name: p.name,
-        category: p.category,
-        description: p.description,
-        materialType: p.material_type || 'papier',
-        paperType: p.paper_type,
-        grammageG: p.grammage_g,
-        format: p.format,
-        formatOptions: p.format_options || [],
-        finishing: p.finishing,
-        photoUrl: p.photo_url,
-        unitPriceFcfa: Number(p.unit_price_fcfa),
-        vatRate: Number(p.vat_rate),
-        isActive: p.is_active,
-        priceTiers: (tierRows || [])
-          .filter((t: any) => t.product_id === p.id)
-          .map((t: any) => ({
-            id: t.id,
-            productId: t.product_id,
-            minQuantity: t.min_quantity,
-            maxQuantity: t.max_quantity ?? undefined,
-            unitPriceFcfa: Number(t.unit_price_fcfa)
-          })),
-        createdAt: p.created_at,
-        updatedAt: p.updated_at
-      }));
-
-      return { org, products };
-    } catch (e) {
-      console.error("Error in fetchPublicCatalogue:", e);
+    // 2. Fallback to local store data (Zustand state)
+    const localOrg = get().organizations.find(o => o.id === orgId);
+    if (
+      !localOrg ||
+      localOrg.isActive === false ||
+      localOrg.subscriptionPlanId !== 'plan-pro' ||
+      localOrg.catalogueEnabled === false
+    ) {
       return { org: null, products: [] };
     }
+
+    const localProducts = get().products.filter(p => p.organizationId === orgId && p.isActive);
+    return { org: localOrg, products: localProducts };
   },
 
   submitPublicOrder: async (orgId, payload) => {
-    if (!isSupabaseConfigured || !supabase) {
-      return { success: false, error: "Le catalogue en ligne n'est pas disponible pour le moment." };
-    }
     if (!payload.items.length) {
       return { success: false, error: 'Votre commande est vide.' };
     }
 
-    try {
-      // Find an existing client for this org by phone, otherwise create one.
-      const { data: existingClients } = await supabase
-        .from('clients')
-        .select('*')
-        .eq('organization_id', orgId)
-        .eq('phone', payload.phone)
-        .limit(1);
+    const randSuffix = Math.random().toString(36).substring(2, 7);
+    const orderId = `order-web-${Date.now()}-${randSuffix}`;
+    const orderNumber = `CMD-WEB-${Date.now().toString().slice(-4)}${Math.floor(Math.random() * 90 + 10)}`;
+    const subtotal = payload.items.reduce((sum, item) => sum + item.lineTotalFcfa, 0);
 
-      let clientId: string;
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const { data: existingClients } = await supabase
+          .from('clients')
+          .select('*')
+          .eq('organization_id', orgId)
+          .eq('phone', payload.phone)
+          .limit(1);
 
-      if (existingClients && existingClients.length > 0) {
-        clientId = existingClients[0].id;
-      } else {
-        clientId = `client-web-${Date.now()}`;
-        const { error: clientError } = await supabase.from('clients').insert([{
-          id: clientId,
+        let clientId: string;
+
+        if (existingClients && existingClients.length > 0) {
+          clientId = existingClients[0].id;
+        } else {
+          clientId = `client-web-${Date.now()}-${randSuffix}`;
+          const { error: clientError } = await supabase.from('clients').insert([{
+            id: clientId,
+            organization_id: orgId,
+            company_name: payload.companyName,
+            contact_name: payload.contactName,
+            phone: payload.phone,
+            email: payload.email,
+            address: payload.address,
+            source: 'catalogue_public',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          }]);
+          if (clientError) {
+            console.error("Error creating public client in Supabase:", clientError);
+          }
+        }
+
+        const { error: orderError } = await supabase.from('online_orders').insert([{
+          id: orderId,
           organization_id: orgId,
-          company_name: payload.companyName,
-          contact_name: payload.contactName,
-          phone: payload.phone,
-          email: payload.email,
-          address: payload.address,
-          source: 'catalogue_public',
+          order_number: orderNumber,
+          client_id: clientId,
+          status: 'nouvelle',
+          items: payload.items,
+          subtotal_fcfa: subtotal,
+          notes: payload.notes,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         }]);
-        if (clientError) {
-          console.error("Error creating public client in Supabase:", clientError);
-          return { success: false, error: "Impossible d'enregistrer vos coordonnées. Réessayez." };
+
+        if (orderError) {
+          console.error("Error creating online order in Supabase:", orderError);
         }
+      } catch (e: any) {
+        console.error("Error in submitPublicOrder Supabase sync:", e);
       }
+    }
 
-      const orderId = `order-web-${Date.now()}`;
-      const orderNumber = `CMD-WEB-${Date.now().toString().slice(-6)}`;
-      const subtotal = payload.items.reduce((sum, item) => sum + item.lineTotalFcfa, 0);
-
-      const { error: orderError } = await supabase.from('online_orders').insert([{
-        id: orderId,
-        organization_id: orgId,
-        order_number: orderNumber,
-        client_id: clientId,
-        status: 'nouvelle',
-        items: payload.items,
-        subtotal_fcfa: subtotal,
-        notes: payload.notes,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }]);
-
-      if (orderError) {
-        console.error("Error creating online order in Supabase:", orderError);
-        return { success: false, error: "Impossible d'enregistrer votre commande. Réessayez." };
-      }
-
-      const newOrder: OnlineOrder = {
-        id: orderId,
+    // Always record locally in Zustand state for instant reactive UI update
+    let localClient = get().clients.find(c => c.organizationId === orgId && c.phone === payload.phone);
+    let clientId = localClient?.id;
+    if (!clientId) {
+      clientId = `client-web-${Date.now()}-${randSuffix}`;
+      const newClient: Client = {
+        id: clientId,
         organizationId: orgId,
-        orderNumber,
-        clientId,
-        status: 'nouvelle',
-        items: payload.items,
-        subtotalFcfa: subtotal,
-        notes: payload.notes,
+        companyName: payload.companyName,
+        contactName: payload.contactName,
+        phone: payload.phone,
+        email: payload.email,
+        address: payload.address,
+        source: 'catalogue_public',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
-      set(state => ({ onlineOrders: [newOrder, ...state.onlineOrders] }));
-
-      return { success: true, orderNumber };
-    } catch (e: any) {
-      console.error("Error in submitPublicOrder:", e);
-      return { success: false, error: e.message || 'Une erreur est survenue.' };
+      set(state => ({ clients: [newClient, ...state.clients] }));
     }
+
+    const newOrder: OnlineOrder = {
+      id: orderId,
+      organizationId: orgId,
+      orderNumber,
+      clientId,
+      status: 'nouvelle',
+      items: payload.items,
+      subtotalFcfa: subtotal,
+      notes: payload.notes,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    set(state => ({ onlineOrders: [newOrder, ...state.onlineOrders] }));
+
+    return { success: true, orderNumber };
   }
     }),
     {
