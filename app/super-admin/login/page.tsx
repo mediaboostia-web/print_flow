@@ -16,7 +16,6 @@ import {
   CheckCircle2 
 } from 'lucide-react';
 import { useAppStore } from '@/lib/state/store';
-import { formatFCFA } from '@/lib/utils/money';
 
 export default function SuperAdminLoginPage() {
   const router = useRouter();
@@ -91,9 +90,9 @@ export default function SuperAdminLoginPage() {
   };
 
   return (
-    <div className="h-screen w-full bg-[#090D16] text-white flex items-center justify-center p-4 sm:p-6 lg:p-8 overflow-hidden font-sans">
+    <div className="h-screen w-full bg-gradient-to-br from-slate-50 via-emerald-50/40 to-slate-100 text-slate-800 flex items-center justify-center p-4 sm:p-6 lg:p-8 overflow-hidden font-sans">
       {/* 2-Column Main Card Container */}
-      <div className="w-full max-w-5xl h-full max-h-[640px] bg-[#101726] border border-[#1E293B] rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row relative">
+      <div className="w-full max-w-5xl h-full max-h-[640px] bg-white border border-slate-200/80 rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row relative">
         
         {/* Left Column: Form Section */}
         <div className="w-full md:w-1/2 p-6 sm:p-8 lg:p-10 flex flex-col justify-between overflow-y-auto no-scrollbar">
@@ -103,18 +102,18 @@ export default function SuperAdminLoginPage() {
             <div className="w-9 h-9 rounded-xl bg-brand-primary flex items-center justify-center text-white shadow-sm shrink-0">
               <Globe className="w-5 h-5" />
             </div>
-            <span className="text-xl font-bold tracking-tight text-white">
-              Print<span className="text-brand-primary">_Flow</span> <span className="text-slate-400 text-xs font-normal">SuperAdmin</span>
+            <span className="text-xl font-bold tracking-tight text-slate-900">
+              Print<span className="text-brand-primary">_Flow</span> <span className="text-slate-500 text-xs font-normal">SuperAdmin</span>
             </span>
           </div>
 
           {/* Form Content Block */}
           <div className="my-auto py-4 space-y-6 max-w-sm w-full mx-auto">
             <div className="space-y-1 text-left">
-              <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+              <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
                 Console Racine
               </h1>
-              <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
+              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
                 Authentification de sécurité globale pour les opérateurs de l'architecture.
               </p>
             </div>
@@ -122,34 +121,34 @@ export default function SuperAdminLoginPage() {
             <form onSubmit={handleSubmit} className="space-y-3.5">
               {/* Rate Limiting / Error Alert */}
               {error && (
-                <div className="p-3 bg-rose-950/30 border border-rose-900/50 rounded-2xl flex items-center gap-2.5 text-rose-400 text-xs font-medium animate-fade-in">
-                  <AlertCircle className="w-4 h-4 shrink-0" />
+                <div className="p-3 bg-rose-50 border border-rose-200 rounded-2xl flex items-center gap-2.5 text-rose-700 text-xs font-medium animate-fade-in">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
                   <span>{error}</span>
                 </div>
               )}
 
               {/* Rate Limiter Active Lock Banner */}
               {lockoutTimer > 0 && (
-                <div className="p-3 bg-amber-950/30 border border-amber-900/50 rounded-2xl flex items-center gap-2.5 text-amber-300 text-xs font-bold animate-pulse">
-                  <Clock className="w-4 h-4 shrink-0 text-amber-500" />
+                <div className="p-3 bg-amber-50 border border-amber-200 rounded-2xl flex items-center gap-2.5 text-amber-800 text-xs font-bold animate-pulse">
+                  <Clock className="w-4 h-4 shrink-0 text-amber-600" />
                   <span>Accès suspendu. Réessai disponible dans {lockoutTimer}s.</span>
                 </div>
               )}
 
               {/* Email */}
               <div className="space-y-1">
-                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider block">
                   Identifiant Opérateur *
                 </label>
                 <div className="relative">
-                  <Mail className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="superadmin@printflow.io"
                     autoComplete="email"
-                    className="w-full pl-9 pr-4 py-2 bg-[#1A2333] border border-[#1E293B] rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary text-white placeholder:text-slate-500 transition"
+                    className="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary focus:bg-white text-slate-900 placeholder:text-slate-400 transition"
                     required
                   />
                 </div>
@@ -157,24 +156,24 @@ export default function SuperAdminLoginPage() {
 
               {/* Password */}
               <div className="space-y-1">
-                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider block">
                   Mot de passe système *
                 </label>
                 <div className="relative">
-                  <Lock className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
                     autoComplete="current-password"
-                    className="w-full pl-9 pr-10 py-2 bg-[#1A2333] border border-[#1E293B] rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary text-white placeholder:text-slate-500 transition"
+                    className="w-full pl-9 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary focus:bg-white text-slate-900 placeholder:text-slate-400 transition"
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition"
                     tabIndex={-1}
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -184,12 +183,12 @@ export default function SuperAdminLoginPage() {
 
               {/* Options */}
               <div className="flex items-center justify-between pt-1">
-                <label className="flex items-center gap-2 text-xs text-slate-400 cursor-pointer select-none">
+                <label className="flex items-center gap-2 text-xs text-slate-600 cursor-pointer select-none">
                   <input
                     type="checkbox"
                     checked={rememberMe}
                     onChange={(e) => setRememberMe(e.target.checked)}
-                    className="w-3.5 h-3.5 rounded border-[#1E293B] bg-[#1A2333] text-brand-primary focus:ring-brand-primary"
+                    className="w-3.5 h-3.5 rounded border-slate-300 bg-slate-50 text-brand-primary focus:ring-brand-primary"
                   />
                   <span>Session sécurisée persistante</span>
                 </label>
@@ -199,7 +198,7 @@ export default function SuperAdminLoginPage() {
               <button
                 type="submit"
                 disabled={isSubmitting || lockoutTimer > 0}
-                className="w-full h-10 mt-2 rounded-full bg-brand-primary hover:bg-brand-primary-hover text-white text-xs font-bold transition shadow-sm disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
+                className="w-full h-10 mt-2 rounded-full bg-brand-primary hover:bg-brand-primary-hover text-white text-xs font-bold transition shadow-md disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2 hover:scale-[1.01]"
               >
                 {isSubmitting ? (
                   <div className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
@@ -211,29 +210,29 @@ export default function SuperAdminLoginPage() {
           </div>
 
           {/* Footer Copyright */}
-          <div className="flex items-center justify-between text-[11px] text-slate-500 pt-2 border-t border-[#1E293B]">
+          <div className="flex items-center justify-between text-[11px] text-slate-500 pt-2 border-t border-slate-100">
             <span>© 2026 Print_Flow Architecture.</span>
             <span>Protocole SSL / TLS</span>
           </div>
 
         </div>
 
-        {/* Right Column: Clean Background Image with Title & Description Only */}
-        <div className="hidden md:flex md:w-1/2 m-3 rounded-2xl md:rounded-3xl bg-slate-950 text-white p-8 flex-col justify-end relative overflow-hidden shadow-xl border border-slate-800">
+        {/* Right Column: Image Background ('Sign in et login .png') */}
+        <div className="hidden md:flex md:w-1/2 m-3 rounded-2xl md:rounded-3xl bg-slate-950 text-white p-8 flex-col justify-end relative overflow-hidden shadow-xl border border-slate-200">
           
-          {/* Background Image from public */}
+          {/* Background Image: Sign in et login .png */}
           <div 
-            className="absolute inset-0 bg-cover bg-center opacity-50" 
-            style={{ backgroundImage: "url('/Background Flux.png')" }}
+            className="absolute inset-0 bg-cover bg-center opacity-85" 
+            style={{ backgroundImage: "url('/Sign in et login .png')" }}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-transparent" />
 
           {/* Title & Description */}
           <div className="relative z-10 space-y-2 text-left">
             <h2 className="text-2xl lg:text-3xl font-black leading-tight tracking-tight text-white font-sans">
               Supervision Globale de la Plateforme
             </h2>
-            <p className="text-xs lg:text-sm text-slate-300 leading-relaxed max-w-sm font-sans">
+            <p className="text-xs lg:text-sm text-slate-200 leading-relaxed max-w-sm font-sans">
               Console d'administration réservée à l'opérateur SaaS : gestion des organisations, abonnements et traçabilité globale.
             </p>
           </div>
