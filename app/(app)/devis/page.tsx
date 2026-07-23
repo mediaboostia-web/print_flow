@@ -764,22 +764,24 @@ export default function DevisPage() {
                   />
                 </div>
 
-                {/* BAT Toggle option — locked once the quote already exists */}
+                {/* BAT Toggle option — compact and clean layout */}
                 {!editingQuoteId && (
-                  <div className="flex items-center justify-between sm:justify-start sm:gap-4 pt-6">
-                    <label className="text-xs font-bold text-text-secondary uppercase tracking-wider">BAT Obligatoire :</label>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={requiresBAT}
-                        onChange={(e) => setRequiresBAT(e.target.checked)}
-                        className="sr-only peer"
-                      />
-                      <div className="w-11 h-6 bg-slate-200 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-brand-primary"></div>
-                      <span className="ml-3 text-xs font-bold text-text-main">
-                        {requiresBAT ? 'Oui, exige un BAT' : 'Non, impression directe'}
-                      </span>
-                    </label>
+                  <div className="flex flex-col justify-end">
+                    <div className="p-2.5 bg-input-bg border border-border-subtle rounded-xl flex items-center justify-between gap-3">
+                      <span className="text-xs font-bold text-text-secondary uppercase tracking-wider">BAT Obligatoire</span>
+                      <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                        <input
+                          type="checkbox"
+                          checked={requiresBAT}
+                          onChange={(e) => setRequiresBAT(e.target.checked)}
+                          className="sr-only peer"
+                        />
+                        <div className="w-8 h-4.5 bg-slate-200 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-3.5 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all dark:border-gray-600 peer-checked:bg-brand-primary"></div>
+                        <span className="ml-2 text-xs font-bold text-text-main">
+                          {requiresBAT ? 'Oui' : 'Non'}
+                        </span>
+                      </label>
+                    </div>
                   </div>
                 )}
               </div>
@@ -844,7 +846,7 @@ export default function DevisPage() {
 
                       {/* Unit Price FCFA */}
                       <div className="md:col-span-2 space-y-1.5">
-                        <label className="text-[10px] font-bold text-text-secondary uppercase tracking-wider block">P.U. (FCFA) *</label>
+                        <label className="text-[10px] font-bold text-text-secondary uppercase tracking-wider block">Prix Unitaire *</label>
                         <input
                           type="number"
                           value={item.unitPriceFcfa || ''}

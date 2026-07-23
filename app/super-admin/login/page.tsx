@@ -95,7 +95,7 @@ export default function SuperAdminLoginPage() {
       <div className="w-full max-w-5xl h-full max-h-[640px] bg-white border border-slate-200/80 rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row relative">
         
         {/* Left Column: Form Section */}
-        <div className="w-full md:w-1/2 p-6 sm:p-8 lg:p-10 flex flex-col justify-between overflow-y-auto no-scrollbar">
+        <div className="w-full md:w-1/2 p-6 sm:p-8 lg:p-10 flex flex-col justify-between overflow-hidden">
           
           {/* Top Logo */}
           <div className="flex items-center gap-3">

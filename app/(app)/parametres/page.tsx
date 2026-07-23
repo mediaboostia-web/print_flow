@@ -527,16 +527,16 @@ export default function ParametresPage() {
               </table>
             </div>
 
-            <form onSubmit={handleAddMachine} className="flex gap-2 pt-2">
+            <form onSubmit={handleAddMachine} className="grid grid-cols-1 sm:grid-cols-12 gap-2 pt-2">
               <input
                 type="text"
                 value={machineName}
                 onChange={(e) => setMachineName(e.target.value)}
                 placeholder="Presse Heidelberg A4..."
-                className="flex-1 px-3 py-2.5 bg-input-bg border border-border-subtle rounded-xl text-xs focus:outline-none text-text-main"
+                className="sm:col-span-6 px-3 py-2.5 bg-input-bg border border-border-subtle rounded-xl text-xs focus:outline-none text-text-main"
                 required
               />
-              <div className="w-36 sm:w-40 shrink-0">
+              <div className="sm:col-span-4">
                 <Dropdown
                   value={machineType}
                   onChange={setMachineType}
@@ -550,9 +550,10 @@ export default function ParametresPage() {
               </div>
               <button
                 type="submit"
-                className="p-2 rounded-xl bg-brand-primary text-white hover:bg-brand-primary-hover transition shrink-0"
+                className="sm:col-span-2 p-2.5 rounded-xl bg-brand-primary text-white hover:bg-brand-primary-hover transition flex items-center justify-center font-bold text-xs gap-1"
               >
-                <Plus className="w-4 h-4" />
+                <Plus className="w-4 h-4 shrink-0" />
+                <span>Nouveau</span>
               </button>
             </form>
           </div>
@@ -679,7 +680,7 @@ export default function ParametresPage() {
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-brand-primary hover:bg-brand-primary-hover text-white text-xs font-bold transition shadow-sm animate-scale-pulse"
             >
               <Plus className="w-3.5 h-3.5" />
-              <span>Nouveau Collaborateur</span>
+              <span>Nouveau</span>
             </button>
           </div>
 

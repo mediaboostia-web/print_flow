@@ -80,48 +80,48 @@ export default function LandingPage() {
 
   const testimonials = [
     {
-      name: "Amadou Diallo",
-      role: "Directeur Général",
+      name: "Jeudi ZIZA",
+      role: "Directeur de Production",
       company: "Sud Print Imprimerie (Dakar, Sénégal)",
-      image: "/Temoignage.jpg",
+      image: "/Jeudi ZIZA.jpg",
       quote: "Grâce au verrou BAT obligatoire de Print_Flow, nous avons éliminé 100% des réimpressions dues aux erreurs de fichier client. Chaque tirage lancé est validé d'avance."
     },
     {
-      name: "Ibrahima Sow",
-      role: "Gérant d'Atelier",
-      company: "Repro Express (Bamako, Mali)",
-      image: "/Temoignage (2).jpg",
-      quote: "Le suivi des acomptes et la déduction automatique du reste à payer sur les factures finales nous ont permis de sécuriser notre trésorerie sans aucune contestation."
+      name: "Hullys Désiré",
+      role: "Fondateur & Lead Designer",
+      company: "Imprimerie Moderne (Libreville, Gabon)",
+      image: "/Desi.jpg",
+      quote: "La gestion simplifiée des acomptes et le calcul de TVA automatique ont transformé notre comptabilité. Les clients payent leur solde avec plaisir lors de la livraison."
     },
     {
-      name: "Marc Ouattara",
-      role: "Chef de Production",
-      company: "Imprimerie du Golfe (Abidjan, Côte d'Ivoire)",
-      image: "/Temoignage3.jpg",
-      quote: "Les fiches de production d'atelier sont parfaites : les opérateurs ont toutes les consignes exactes sans voir les marges ni la confidentialité des tarifs."
+      name: "Ruben",
+      role: "Chef d'Atelier",
+      company: "Repro Express (Abidjan, Côte d'Ivoire)",
+      image: "/Ruben.jpg",
+      quote: "Les fiches de fabrication d'atelier sont parfaites : les opérateurs ont toutes les consignes exactes sans voir nos marges ni nos prix de revient."
     }
   ];
 
   const faqs = [
     {
       q: "Comment fonctionne l'essai gratuit de 7 jours ?",
-      a: "Vous bénéficiez d'un accès immédiat à toutes les fonctionnalités principales de Print_Flow pour 1 utilisateur sans engagement et sans carte bancaire."
+      a: "Vous bénéficiez d'un accès immédiat et complet à toutes les fonctionnalités principales de Print_Flow, sans carte bancaire, sans engagement et avec une prise en main en moins de 3 minutes."
     },
     {
-      q: "Est-ce adapté à la monnaie locale et aux taxes de notre imprimerie ?",
-      a: "Absolument. Print_Flow est nativement configuré pour la monnaie FCFA avec calcul automatique de la TVA personnalisable selon le taux propre à votre établissement."
+      q: "Est-ce adapté à la monnaie locale (FCFA / XAF) et aux taxes de notre imprimerie ?",
+      a: "Oui, parfaitement ! Print_Flow intègre nativement la gestion en FCFA (XAF/XOF) avec calcul automatique de la TVA personnalisable selon les règles fiscales de votre pays."
     },
     {
-      q: "Comment l'acompte versé est-il déduit sur la facture ?",
-      a: "Lorsqu'un acompte est enregistré sur le bon de commande, il est automatiquement reporté sur la facture finale et déduit du montant Total TTC pour afficher le Solde Dû exact."
+      q: "Comment l'acompte est-il sécurisé et déduit sur la facture ?",
+      a: "Dès que l'acompte est enregistré sur le bon de commande, il est verrouillé et déduit automatiquement du montant Total TTC lors de la génération de la facture finale. Le solde dû s'affiche sans ambiguïté."
     },
     {
-      q: "Puis-je passer à la Formule Pro plus tard ?",
-      a: "Oui, à tout moment depuis votre tableau de bord. La Formule Pro débloque les collaborateurs illimités, la boutique en ligne et l'historique d'audit."
+      q: "Mes données d'imprimerie et mes tarifs sont-ils en sécurité ?",
+      a: "Absolument. Vos données sont hébergées sur une infrastructure Postgres sécurisée par Supabase avec isolation stricte par Row Level Security (RLS) et chiffrement bancaire SSL."
     },
     {
-      q: "Mes données d'imprimerie sont-elles sécurisées ?",
-      a: "Chaque organisation dispose d'un accès isolé protégé par le protocole Supabase Row Level Security (RLS) et chiffrement SSL 256-bit."
+      q: "Puis-je évoluer vers la Formule Pro à tout moment ?",
+      a: "Oui ! La Formule Pro débloque le nombre illimité de collaborateurs, la boutique en ligne publique et le journal d'audit complet de votre imprimerie en un clic."
     }
   ];
 
@@ -275,72 +275,90 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch text-left pt-4">
             
             {/* Card 01 */}
-            <div className="bg-input-bg border border-border-subtle rounded-3xl p-6 flex flex-col justify-between space-y-6 shadow-xs hover:scale-[1.03] transition duration-300 hover:shadow-xl cursor-pointer">
-              <div className="space-y-4">
-                <span className="text-4xl font-black text-slate-300 dark:text-slate-700 font-sans block">01</span>
-                <div className="w-10 h-10 rounded-2xl bg-brand-primary/10 text-brand-primary flex items-center justify-center">
-                  <UserCheck className="w-5 h-5" />
+            <div className="bg-bg-card border border-border-subtle rounded-3xl p-5 flex flex-col justify-between space-y-4 shadow-xs hover:scale-[1.03] transition duration-300 hover:shadow-xl cursor-pointer">
+              <div className="space-y-3">
+                <div className="rounded-2xl overflow-hidden border border-border-subtle aspect-16/9 bg-slate-100 dark:bg-slate-900">
+                  <img
+                    src="/Login.png"
+                    alt="Inscription en 3 clics"
+                    className="w-full h-full object-cover"
+                  />
                 </div>
-                <div className="space-y-1.5">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-brand-primary/10 text-brand-primary flex items-center justify-center shrink-0 font-bold">
+                    01
+                  </div>
                   <h3 className="text-base font-bold text-text-main font-sans">Inscription en 3 clics</h3>
-                  <p className="text-xs text-text-secondary leading-relaxed font-sans">
-                    Créez votre compte en quelques secondes et accédez directement à votre atelier sans carte bancaire.
-                  </p>
                 </div>
+                <p className="text-xs text-text-secondary leading-relaxed font-sans">
+                  Créez votre compte en quelques secondes et accédez directement à votre atelier sans carte bancaire.
+                </p>
               </div>
             </div>
 
             {/* Card 02 */}
             <div className="bg-bg-card border-2 border-brand-primary rounded-3xl p-5 flex flex-col justify-between space-y-4 shadow-md hover:scale-[1.03] transition duration-300 hover:shadow-2xl cursor-pointer">
               <div className="space-y-3">
-                <div className="rounded-2xl overflow-hidden border border-border-subtle aspect-16/9 bg-slate-100">
+                <div className="rounded-2xl overflow-hidden border border-border-subtle aspect-16/9 bg-slate-100 dark:bg-slate-900">
                   <img
-                    src="/Capture d'écran Dashboard1.png"
+                    src="/boutique.png"
                     alt="Créez votre atelier & Partagez le lien"
                     className="w-full h-full object-cover"
                   />
                 </div>
-                <div className="w-9 h-9 rounded-xl bg-brand-primary text-white flex items-center justify-center">
-                  <Store className="w-4 h-4" />
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-brand-primary text-white flex items-center justify-center shrink-0 font-bold">
+                    02
+                  </div>
+                  <h3 className="text-base font-bold text-text-main font-sans">Boutique & Catalogue</h3>
                 </div>
-                <div className="space-y-1.5">
-                  <h3 className="text-base font-bold text-text-main font-sans">Créez & Partagez la Boutique</h3>
-                  <p className="text-xs text-text-secondary leading-relaxed font-sans">
-                    Saisissez vos produits et partagez votre catalogue en ligne pour recevoir les demandes directes.
-                  </p>
-                </div>
+                <p className="text-xs text-text-secondary leading-relaxed font-sans">
+                  Saisissez vos produits et partagez votre catalogue en ligne pour recevoir les demandes directes.
+                </p>
               </div>
             </div>
 
             {/* Card 03 */}
-            <div className="bg-input-bg border border-border-subtle rounded-3xl p-6 flex flex-col justify-between space-y-6 shadow-xs hover:scale-[1.03] transition duration-300 hover:shadow-xl cursor-pointer">
-              <div className="space-y-4">
-                <span className="text-4xl font-black text-slate-300 dark:text-slate-700 font-sans block">03</span>
-                <div className="w-10 h-10 rounded-2xl bg-brand-primary/10 text-brand-primary flex items-center justify-center">
-                  <Workflow className="w-5 h-5" />
+            <div className="bg-bg-card border border-border-subtle rounded-3xl p-5 flex flex-col justify-between space-y-4 shadow-xs hover:scale-[1.03] transition duration-300 hover:shadow-xl cursor-pointer">
+              <div className="space-y-3">
+                <div className="rounded-2xl overflow-hidden border border-border-subtle aspect-16/9 bg-slate-100 dark:bg-slate-900">
+                  <img
+                    src="/flux.png"
+                    alt="Gérez & Suivez le Flux"
+                    className="w-full h-full object-cover"
+                  />
                 </div>
-                <div className="space-y-1.5">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-brand-primary/10 text-brand-primary flex items-center justify-center shrink-0 font-bold">
+                    03
+                  </div>
                   <h3 className="text-base font-bold text-text-main font-sans">Gérez & Suivez le Flux</h3>
-                  <p className="text-xs text-text-secondary leading-relaxed font-sans">
-                    Suivez le calage, la presse et le façonnage en temps réel sans courir après les dossiers.
-                  </p>
                 </div>
+                <p className="text-xs text-text-secondary leading-relaxed font-sans">
+                  Suivez le calage, la presse et le façonnage en temps réel sans courir après les dossiers.
+                </p>
               </div>
             </div>
 
             {/* Card 04 */}
-            <div className="bg-input-bg border border-border-subtle rounded-3xl p-6 flex flex-col justify-between space-y-6 shadow-xs hover:scale-[1.03] transition duration-300 hover:shadow-xl cursor-pointer">
-              <div className="space-y-4">
-                <span className="text-4xl font-black text-slate-300 dark:text-slate-700 font-sans block">04</span>
-                <div className="w-10 h-10 rounded-2xl bg-brand-primary/10 text-brand-primary flex items-center justify-center">
-                  <Receipt className="w-5 h-5" />
+            <div className="bg-bg-card border border-border-subtle rounded-3xl p-5 flex flex-col justify-between space-y-4 shadow-xs hover:scale-[1.03] transition duration-300 hover:shadow-xl cursor-pointer">
+              <div className="space-y-3">
+                <div className="rounded-2xl overflow-hidden border border-border-subtle aspect-16/9 bg-slate-100 dark:bg-slate-900">
+                  <img
+                    src="/facture.png"
+                    alt="Facturez & Gérez vos Revenus"
+                    className="w-full h-full object-cover"
+                  />
                 </div>
-                <div className="space-y-1.5">
-                  <h3 className="text-base font-bold text-text-main font-sans">Facturez & Gérez vos Revenus</h3>
-                  <p className="text-xs text-text-secondary leading-relaxed font-sans">
-                    Déduisez l'acompte automatiquement et encaissez le solde dû lors de la livraison sans litige.
-                  </p>
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-brand-primary/10 text-brand-primary flex items-center justify-center shrink-0 font-bold">
+                    04
+                  </div>
+                  <h3 className="text-base font-bold text-text-main font-sans">Facturez & Encaissez</h3>
                 </div>
+                <p className="text-xs text-text-secondary leading-relaxed font-sans">
+                  Déduisez l'acompte automatiquement et encaissez le solde dû lors de la livraison sans litige.
+                </p>
               </div>
             </div>
 
@@ -449,18 +467,18 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
             
             {/* Resolution Pair 1: Devis */}
-            <div className="bg-bg-card border border-border-subtle rounded-3xl p-6 space-y-4 shadow-xs hover:scale-[1.02] hover:border-brand-primary/40 transition duration-300">
-              <div className="flex items-center justify-between border-b border-border-subtle pb-3">
-                <span className="px-2.5 py-1 rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 text-[10px] font-bold flex items-center gap-1.5">
+            <div className="bg-bg-card border border-border-subtle rounded-3xl p-6 flex flex-col justify-between space-y-4 shadow-xs hover:scale-[1.02] hover:border-brand-primary/40 transition duration-300 h-full">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border-subtle pb-3">
+                <span className="px-3 py-1 rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 text-[10px] font-bold flex items-center gap-1.5 shrink-0">
                   <AlertTriangle className="w-3.5 h-3.5" />
-                  <span>DÉFI : Carnets papier égarés</span>
+                  <span>DÉFI : Carnets égarés</span>
                 </span>
-                <span className="px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 text-[10px] font-bold flex items-center gap-1.5">
+                <span className="px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 text-[10px] font-bold flex items-center gap-1.5 shrink-0">
                   <CheckCircle2 className="w-3.5 h-3.5 text-brand-primary" />
                   <span>RÉSOLU PAR : Module Devis</span>
                 </span>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-2 flex-1 flex flex-col justify-center">
                 <h3 className="text-sm font-bold text-text-main font-sans">Prise de Devis & Archivage Numérique</h3>
                 <p className="text-xs text-text-secondary leading-relaxed">
                   Fini la perte d'historique ou les oublis de prix récurrents. Générez vos devis en PDF A4 instantanément avec calcul automatique de la TVA personnalisable et retrouvez chaque client en 1 clic.
@@ -469,18 +487,18 @@ export default function LandingPage() {
             </div>
 
             {/* Resolution Pair 2: Acomptes & Facturation */}
-            <div className="bg-bg-card border border-border-subtle rounded-3xl p-6 space-y-4 shadow-xs hover:scale-[1.02] hover:border-brand-primary/40 transition duration-300">
-              <div className="flex items-center justify-between border-b border-border-subtle pb-3">
-                <span className="px-2.5 py-1 rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 text-[10px] font-bold flex items-center gap-1.5">
+            <div className="bg-bg-card border border-border-subtle rounded-3xl p-6 flex flex-col justify-between space-y-4 shadow-xs hover:scale-[1.02] hover:border-brand-primary/40 transition duration-300 h-full">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border-subtle pb-3">
+                <span className="px-3 py-1 rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 text-[10px] font-bold flex items-center gap-1.5 shrink-0">
                   <AlertTriangle className="w-3.5 h-3.5" />
-                  <span>DÉFI : Litiges sur les acomptes</span>
+                  <span>DÉFI : Litiges acomptes</span>
                 </span>
-                <span className="px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 text-[10px] font-bold flex items-center gap-1.5">
+                <span className="px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 text-[10px] font-bold flex items-center gap-1.5 shrink-0">
                   <CheckCircle2 className="w-3.5 h-3.5 text-brand-primary" />
-                  <span>RÉSOLU PAR : Facturation & Acomptes</span>
+                  <span>RÉSOLU PAR : Facturation</span>
                 </span>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-2 flex-1 flex flex-col justify-center">
                 <h3 className="text-sm font-bold text-text-main font-sans">Enregistrement & Déduction Automatique</h3>
                 <p className="text-xs text-text-secondary leading-relaxed">
                   Chaque acompte perçu à la commande est verrouillé et déduit du montant Total TTC lors de la livraison. La facture finale affiche clairement le Solde Dû restant, évitant 100% des disputes d'impayés.
@@ -489,18 +507,18 @@ export default function LandingPage() {
             </div>
 
             {/* Resolution Pair 3: Verrou BAT */}
-            <div className="bg-bg-card border border-border-subtle rounded-3xl p-6 space-y-4 shadow-xs hover:scale-[1.02] hover:border-brand-primary/40 transition duration-300">
-              <div className="flex items-center justify-between border-b border-border-subtle pb-3">
-                <span className="px-2.5 py-1 rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 text-[10px] font-bold flex items-center gap-1.5">
+            <div className="bg-bg-card border border-border-subtle rounded-3xl p-6 flex flex-col justify-between space-y-4 shadow-xs hover:scale-[1.02] hover:border-brand-primary/40 transition duration-300 h-full">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border-subtle pb-3">
+                <span className="px-3 py-1 rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 text-[10px] font-bold flex items-center gap-1.5 shrink-0">
                   <AlertTriangle className="w-3.5 h-3.5" />
-                  <span>DÉFI : Gâchis de papier & réimpressions</span>
+                  <span>DÉFI : Gâchis réimpressions</span>
                 </span>
-                <span className="px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 text-[10px] font-bold flex items-center gap-1.5">
+                <span className="px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 text-[10px] font-bold flex items-center gap-1.5 shrink-0">
                   <CheckCircle2 className="w-3.5 h-3.5 text-brand-primary" />
                   <span>RÉSOLU PAR : Verrou BAT</span>
                 </span>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-2 flex-1 flex flex-col justify-center">
                 <h3 className="text-sm font-bold text-text-main font-sans">Blocage Automatique de Production</h3>
                 <p className="text-xs text-text-secondary leading-relaxed">
                   Aucun tirage ne peut démarrer en atelier sans la validation explicite du Bon à Tirer (BAT) par le client. Vous éliminez définitivement le gâchis de papier causé par les fichiers erronés.
@@ -509,18 +527,18 @@ export default function LandingPage() {
             </div>
 
             {/* Resolution Pair 4: Suivi de Flux */}
-            <div className="bg-bg-card border border-border-subtle rounded-3xl p-6 space-y-4 shadow-xs hover:scale-[1.02] hover:border-brand-primary/40 transition duration-300">
-              <div className="flex items-center justify-between border-b border-border-subtle pb-3">
-                <span className="px-2.5 py-1 rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 text-[10px] font-bold flex items-center gap-1.5">
+            <div className="bg-bg-card border border-border-subtle rounded-3xl p-6 flex flex-col justify-between space-y-4 shadow-xs hover:scale-[1.02] hover:border-brand-primary/40 transition duration-300 h-full">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border-subtle pb-3">
+                <span className="px-3 py-1 rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 text-[10px] font-bold flex items-center gap-1.5 shrink-0">
                   <AlertTriangle className="w-3.5 h-3.5" />
-                  <span>DÉFI : Flou sur l'avancement d'atelier</span>
+                  <span>DÉFI : Flou atelier</span>
                 </span>
-                <span className="px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 text-[10px] font-bold flex items-center gap-1.5">
+                <span className="px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 text-[10px] font-bold flex items-center gap-1.5 shrink-0">
                   <CheckCircle2 className="w-3.5 h-3.5 text-brand-primary" />
-                  <span>RÉSOLU PAR : Supervision de Flux</span>
+                  <span>RÉSOLU PAR : Suivi de Flux</span>
                 </span>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-2 flex-1 flex flex-col justify-center">
                 <h3 className="text-sm font-bold text-text-main font-sans">Traçabilité & Suivi en Temps Réel</h3>
                 <p className="text-xs text-text-secondary leading-relaxed">
                   Suivez en direct le statut exact de chaque tirage (En attente, Sous presse, Façonnage, Prêt) et éditez des fiches de production sans divulguer le nom des machines ni les marges.
@@ -765,13 +783,15 @@ export default function LandingPage() {
                 </p>
               </div>
 
-              <Link
-                href="/login"
+              <a
+                href="https://calendar.google.com/calendar/u/0/r"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="w-full py-3 bg-brand-primary hover:bg-brand-primary-hover text-white text-xs font-bold rounded-xl transition text-center flex items-center justify-center gap-2 shadow-xs font-sans hover:scale-[1.02]"
               >
                 <PhoneCall className="w-4 h-4" />
                 <span>Réserver une Démo Gratuite</span>
-              </Link>
+              </a>
             </div>
 
             {/* Right Column Accordion */}
@@ -811,13 +831,22 @@ export default function LandingPage() {
         </section>
 
         {/* Footer */}
-        <footer className="border-t border-border-subtle pt-8 pb-6 text-center text-xs text-text-secondary space-y-2">
-          <div className="flex items-center justify-center gap-2 font-bold text-text-main font-sans">
+        <footer className="border-t border-border-subtle pt-8 pb-6 text-center text-xs text-text-secondary space-y-3">
+          <div className="flex flex-wrap items-center justify-center gap-3 font-bold text-text-main font-sans">
             <span>Print_Flow</span>
             <span>•</span>
             <span>Logiciel SaaS Imprimerie</span>
+            <span>•</span>
+            <a 
+              href="https://wa.me/24162451522" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="text-brand-primary hover:underline flex items-center gap-1"
+            >
+              <span>Contact WhatsApp : +241 62 45 15 22</span>
+            </a>
           </div>
-          <p>© 2026 Print_Flow. Tous droits réservés.</p>
+          <p>© 2026 Print_Flow. Tous droits réservés. <span className="font-bold text-text-main">Conçu par Hullys Désiré</span>.</p>
         </footer>
 
       </main>

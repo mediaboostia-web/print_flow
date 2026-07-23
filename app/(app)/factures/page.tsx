@@ -295,41 +295,41 @@ export default function FacturesPage() {
           {activeInvoice ? (
             <>
               {/* Preview controls */}
-              <div className="no-print flex justify-between items-center bg-bg-card border border-border-subtle p-3 rounded-2xl shadow-premium">
-                <span className="text-xs font-bold text-text-main flex items-center gap-1.5">
+              <div className="no-print flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-2.5 bg-bg-card border border-border-subtle p-3 rounded-2xl shadow-premium">
+                <span className="hidden sm:flex text-xs font-bold text-text-main items-center gap-1.5 shrink-0">
                   <Layers className="w-4.5 h-4.5 text-brand-primary" />
-                  Prévisualisation A4 Facture
+                  <span>Facture A4</span>
                 </span>
 
-                <div className="flex gap-2">
+                <div className="grid grid-cols-3 sm:flex gap-1.5 sm:gap-2 w-full sm:w-auto">
                   <button
                     onClick={() => setIsPaymentOpen(true)}
                     disabled={activeInvoice.status === 'soldee'}
-                    className={`text-[10px] font-bold px-3 py-1.5 rounded-full transition flex items-center gap-1 shadow-sm ${
+                    className={`text-[10px] sm:text-xs font-bold py-1.5 px-2 sm:px-3 rounded-full transition flex items-center justify-center gap-1 shadow-sm whitespace-nowrap ${
                       activeInvoice.status === 'soldee'
                         ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed border border-border-subtle'
                         : 'bg-brand-primary text-white hover:bg-brand-primary-hover'
                     }`}
                   >
-                    <DollarSign className="w-3.5 h-3.5" />
-                    <span>Enregistrer Paiement</span>
+                    <DollarSign className="w-3.5 h-3.5 shrink-0" />
+                    <span>Paiement</span>
                   </button>
                   <button
                     onClick={handlePrint}
-                    className="text-[10px] font-bold px-3 py-1.5 rounded-full border border-border-subtle hover:bg-slate-50 dark:hover:bg-slate-800 text-text-secondary transition flex items-center gap-1"
+                    className="text-[10px] sm:text-xs font-bold py-1.5 px-2 sm:px-3 rounded-full border border-border-subtle hover:bg-slate-50 dark:hover:bg-slate-800 text-text-secondary transition flex items-center justify-center gap-1 whitespace-nowrap"
                   >
-                    <Printer className="w-3.5 h-3.5" />
+                    <Printer className="w-3.5 h-3.5 shrink-0" />
                     <span>Imprimer</span>
                   </button>
                   <button
                     onClick={handleDownload}
                     disabled={isDownloading}
-                    className="text-[10px] font-bold px-3 py-1.5 rounded-full border border-border-subtle hover:bg-slate-50 dark:hover:bg-slate-800 text-text-secondary transition flex items-center gap-1 disabled:opacity-60 disabled:cursor-wait"
+                    className="text-[10px] sm:text-xs font-bold py-1.5 px-2 sm:px-3 rounded-full border border-border-subtle hover:bg-slate-50 dark:hover:bg-slate-800 text-text-secondary transition flex items-center justify-center gap-1 disabled:opacity-60 disabled:cursor-wait whitespace-nowrap"
                   >
                     {isDownloading ? (
-                      <div className="w-3.5 h-3.5 rounded-full border-2 border-text-secondary border-t-transparent animate-spin" />
+                      <div className="w-3.5 h-3.5 rounded-full border-2 border-text-secondary border-t-transparent animate-spin shrink-0" />
                     ) : (
-                      <Download className="w-3.5 h-3.5" />
+                      <Download className="w-3.5 h-3.5 shrink-0" />
                     )}
                     <span>{isDownloading ? 'Génération...' : 'Télécharger'}</span>
                   </button>
