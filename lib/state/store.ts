@@ -603,6 +603,8 @@ export const useAppStore = create<AppState>()(
       let paperFormatQuery = supabase.from('paper_formats').select('*');
       let auditQuery = supabase.from('audit_logs').select('*');
 
+      let superadminQuery = supabase.from('superadmins').select('*');
+
       if (!isSuperAdmin && currentOrgId) {
         orgQuery = orgQuery.eq('id', currentOrgId);
         profileQuery = profileQuery.eq('organization_id', currentOrgId);
@@ -643,19 +645,30 @@ export const useAppStore = create<AppState>()(
         { data: machineRows },
         { data: partnerRows },
         { data: paperFormatRows },
-        { data: auditRows }
+        { data: auditRows },
+        { data: saRows }
       ] = await Promise.all([
         orgQuery, profileQuery, clientQuery, productQuery, tierQuery,
         quoteQuery, quoteItemQuery, batQuery, batVersionQuery, poQuery,
         poItemQuery, deliveryQuery, deliveryItemQuery, invoiceQuery,
         invoiceItemQuery, paymentQuery, onlineOrderQuery, taxQuery,
-        machineQuery, partnerQuery, paperFormatQuery, auditQuery
+        machineQuery, partnerQuery, paperFormatQuery, auditQuery, superadminQuery
       ]) as any[];
 
       const updates: Partial<AppState> = {
         hasLoadedSupabaseData: true,
         isSupabaseLoading: false
       };
+
+      if (saRows && saRows.length > 0) {
+        updates.superadmins = saRows.map((s: any) => ({
+          id: s.id,
+          fullName: s.full_name,
+          email: s.email,
+          authUserId: s.auth_user_id,
+          createdAt: s.created_at
+        }));
+      }
 
       if (orgRows && orgRows.length > 0) {
         updates.organizations = orgRows.map((o: any) => ({
