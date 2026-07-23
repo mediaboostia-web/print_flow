@@ -345,58 +345,68 @@ export const useAppStore = create<AppState>()(
     if (isSupabaseConfigured && supabase) {
       try {
         const { data, error } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password });
-        if (data?.user && !error) {
-          let profile = get().profiles.find(p => p.authUserId === data.user!.id || p.email?.toLowerCase() === normalizedEmail);
-          if (!profile) {
-            const { data: row } = await supabase.from('profiles').select('*').eq('auth_user_id', data.user.id).maybeSingle();
-            if (row) {
-              profile = {
-                id: row.id,
-                organizationId: row.organization_id,
-                fullName: row.full_name,
-                role: row.role,
-                email: row.email,
-                phone: row.phone,
-                isActive: row.is_active,
-                authUserId: row.auth_user_id,
-                createdAt: row.created_at,
-                updatedAt: row.updated_at
-              };
-              const resolvedProfile = profile;
-              set(state => ({ profiles: [...state.profiles.filter(p => p.id !== resolvedProfile.id), resolvedProfile] }));
-            }
-          }
+        if (error || !data?.user) {
+          return { success: false, error: 'Adresse e-mail ou mot de passe incorrect.' };
+        }
 
-          if (profile) {
-            if (!profile.isActive) {
-              await supabase.auth.signOut();
-              return { success: false, error: 'Ce compte a été désactivé. Contactez votre administrateur.' };
-            }
-            const org = get().organizations.find(o => o.id === profile!.organizationId);
-            if (org && org.isActive === false) {
-              await supabase.auth.signOut();
-              return { success: false, error: 'Cette organisation est suspendue par le Super Administrateur.' };
-            }
-
-            if (typeof document !== 'undefined') document.cookie = 'printflow_session=true; path=/; max-age=86400';
-            set({
-              isAuthenticated: true,
-              isSuperAdmin: false,
-              currentProfileId: profile.id,
-              currentOrgId: profile.organizationId,
-            });
-            return { success: true };
+        let profile = get().profiles.find(p => p.authUserId === data.user!.id || p.email?.toLowerCase() === normalizedEmail);
+        if (!profile) {
+          const { data: row } = await supabase.from('profiles').select('*').eq('auth_user_id', data.user.id).maybeSingle();
+          if (row) {
+            profile = {
+              id: row.id,
+              organizationId: row.organization_id,
+              fullName: row.full_name,
+              role: row.role,
+              email: row.email,
+              phone: row.phone,
+              isActive: row.is_active,
+              authUserId: row.auth_user_id,
+              createdAt: row.created_at,
+              updatedAt: row.updated_at
+            };
+            const resolvedProfile = profile;
+            set(state => ({ profiles: [...state.profiles.filter(p => p.id !== resolvedProfile.id), resolvedProfile] }));
           }
         }
+
+        if (profile) {
+          if (!profile.isActive) {
+            await supabase.auth.signOut();
+            return { success: false, error: 'Ce compte a été désactivé. Contactez votre administrateur.' };
+          }
+          const org = get().organizations.find(o => o.id === profile!.organizationId);
+          if (org && org.isActive === false) {
+            await supabase.auth.signOut();
+            return { success: false, error: 'Cette organisation est suspendue par le Super Administrateur.' };
+          }
+
+          if (typeof document !== 'undefined') document.cookie = 'printflow_session=true; path=/; max-age=86400';
+          set({
+            isAuthenticated: true,
+            isSuperAdmin: false,
+            currentProfileId: profile.id,
+            currentOrgId: profile.organizationId,
+          });
+          return { success: true };
+        }
+
+        return { success: false, error: 'Profil non trouvé dans votre organisation.' };
       } catch (e: any) {
-        console.warn("Supabase signIn attempt error, falling back to local profile:", e);
+        return { success: false, error: 'Erreur d\'authentification Supabase.' };
       }
     }
 
-    // Local fallback when Supabase is not configured or user is a demo account
+    // Local offline fallback (ONLY active when Supabase env vars are missing)
     const localProfile = get().profiles.find(p => p.email?.toLowerCase() === normalizedEmail);
 
     if (localProfile) {
+      // Enforce strict password validation for offline demo mode
+      const validPasswords = ['sudprint2026', 'sahel2026', localProfile.password].filter(Boolean);
+      if (!validPasswords.includes(password)) {
+        return { success: false, error: 'Adresse e-mail ou mot de passe incorrect.' };
+      }
+
       if (!localProfile.isActive) {
         return { success: false, error: 'Ce compte a été désactivé. Contactez votre administrateur.' };
       }
@@ -424,30 +434,42 @@ export const useAppStore = create<AppState>()(
     if (isSupabaseConfigured && supabase) {
       try {
         const { data, error } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password });
-        if (data?.user && !error) {
-          let sa = get().superadmins.find(s => s.authUserId === data.user!.id || s.email.toLowerCase() === normalizedEmail);
-          if (!sa) {
-            const { data: row } = await supabase.from('superadmins').select('*').eq('auth_user_id', data.user.id).maybeSingle();
-            if (row) {
-              sa = { id: row.id, fullName: row.full_name, email: row.email, authUserId: row.auth_user_id, createdAt: row.created_at };
-              const resolvedSa = sa;
-              set(state => ({ superadmins: [...state.superadmins.filter(s => s.id !== resolvedSa.id), resolvedSa] }));
-            }
-          }
+        if (error || !data?.user) {
+          return { success: false, error: 'Identifiants SuperAdmin incorrects.' };
+        }
 
-          if (sa) {
-            if (typeof document !== 'undefined') document.cookie = 'printflow_session=true; path=/; max-age=86400';
-            set({ isAuthenticated: true, isSuperAdmin: true });
-            return { success: true };
+        // Verify user is in superadmins table in Supabase
+        let sa = get().superadmins.find(s => s.authUserId === data.user!.id || s.email.toLowerCase() === normalizedEmail);
+        if (!sa) {
+          const { data: row } = await supabase.from('superadmins').select('*').eq('auth_user_id', data.user.id).maybeSingle();
+          if (row) {
+            sa = { id: row.id, fullName: row.full_name, email: row.email, authUserId: row.auth_user_id, createdAt: row.created_at };
+            const resolvedSa = sa;
+            set(state => ({ superadmins: [...state.superadmins.filter(s => s.id !== resolvedSa.id), resolvedSa] }));
           }
         }
+
+        if (sa) {
+          if (typeof document !== 'undefined') document.cookie = 'printflow_session=true; path=/; max-age=86400';
+          set({ isAuthenticated: true, isSuperAdmin: true });
+          return { success: true };
+        }
+
+        await supabase.auth.signOut();
+        return { success: false, error: 'Accès refusé : vous n\'avez pas les privilèges Super Admin.' };
       } catch (e: any) {
-        console.warn("Supabase superAdminLogin attempt error, falling back to local:", e);
+        return { success: false, error: 'Erreur d\'authentification SuperAdmin.' };
       }
     }
 
+    // Local offline fallback (ONLY active when Supabase env vars are missing)
     const saAccount = get().superadmins.find(s => s.email.toLowerCase() === normalizedEmail);
     if (saAccount) {
+      const validSaPasswords = ['RootAccess#2026', saAccount.password].filter(Boolean);
+      if (!validSaPasswords.includes(password)) {
+        return { success: false, error: 'Identifiants SuperAdmin incorrects.' };
+      }
+
       if (typeof document !== 'undefined') document.cookie = 'printflow_session=true; path=/; max-age=86400';
       set({ isAuthenticated: true, isSuperAdmin: true });
       return { success: true };
