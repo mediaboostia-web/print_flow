@@ -9,17 +9,19 @@ import {
   Receipt,
   Wallet,
   Clock,
-  Activity
+  Activity,
+  Download
 } from 'lucide-react';
 import { useAppStore } from '@/lib/state/store';
+import { downloadCsv } from '@/lib/utils/csv';
 
 type HistoryFilter = 'all' | 'quotes' | 'bat' | 'invoices' | 'payments';
 
-const filterMeta: Record<Exclude<HistoryFilter, 'all'>, { label: string; icon: typeof FileText; classes: string }> = {
-  quotes: { label: 'Devis', icon: FileText, classes: 'bg-cyan-500/10 text-cyan-600 border-cyan-500/20' },
-  bat: { label: 'BAT', icon: ClipboardCheck, classes: 'bg-violet-500/10 text-violet-600 border-violet-500/20' },
-  invoices: { label: 'Factures', icon: Receipt, classes: 'bg-brand-primary/10 text-brand-primary border-brand-primary/20' },
-  payments: { label: 'Paiements', icon: Wallet, classes: 'bg-amber-500/10 text-amber-600 border-amber-500/20' },
+const filterMeta: Record<Exclude<HistoryFilter, 'all'>, { label: string; kpiLabel: string; icon: typeof FileText; classes: string }> = {
+  quotes: { label: 'Devis', kpiLabel: 'Devis livrés', icon: FileText, classes: 'bg-cyan-500/10 text-cyan-600 border-cyan-500/20' },
+  bat: { label: 'BAT', kpiLabel: 'BAT livrés', icon: ClipboardCheck, classes: 'bg-violet-500/10 text-violet-600 border-violet-500/20' },
+  invoices: { label: 'Factures', kpiLabel: 'Factures livrées', icon: Receipt, classes: 'bg-brand-primary/10 text-brand-primary border-brand-primary/20' },
+  payments: { label: 'Paiements', kpiLabel: 'Paiements', icon: Wallet, classes: 'bg-amber-500/10 text-amber-600 border-amber-500/20' },
 };
 
 export default function HistoriquePage() {
@@ -30,6 +32,8 @@ export default function HistoriquePage() {
   const storeInvoices = useAppStore((state) => state.invoices || []);
   const storePayments = useAppStore((state) => state.payments || []);
   const storeClients = useAppStore((state) => state.clients || []);
+  const storePOs = useAppStore((state) => state.pos || []);
+  const storeDeliveries = useAppStore((state) => state.deliveries || []);
 
   const [filter, setFilter] = useState<HistoryFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -120,11 +124,52 @@ export default function HistoriquePage() {
   const countByType = (type: Exclude<HistoryFilter, 'all'>) =>
     combinedItems.filter(item => item.entityType === type).length;
 
+  // KPI cards: only devis/BAT/factures whose linked commande a été déclarée
+  // livrée sont comptabilisés — et chaque devis ne compte qu'une fois, même
+  // modifié/validé plusieurs fois (contrairement à countByType ci-dessus, qui
+  // reflète le flux d'événements brut affiché dans la timeline/les onglets).
+  const deliveredQuoteIds = new Set(
+    storePOs
+      .filter(po => po.organizationId === currentOrgId)
+      .filter(po => storeDeliveries.some(d => d.purchaseOrderId === po.id && d.status === 'livre'))
+      .map(po => po.quoteId)
+  );
+
+  const kpiCounts: Record<Exclude<HistoryFilter, 'all'>, number> = {
+    quotes: storeQuotes.filter(q => q.organizationId === currentOrgId && deliveredQuoteIds.has(q.id)).length,
+    bat: storeBATs.filter(b => b.organizationId === currentOrgId && deliveredQuoteIds.has(b.quoteId)).length,
+    invoices: storeInvoices.filter(i => i.organizationId === currentOrgId && deliveredQuoteIds.has(i.quoteId)).length,
+    payments: storePayments.filter(p => storeInvoices.some(i => i.id === p.invoiceId && i.organizationId === currentOrgId)).length,
+  };
+
+  const handleExportCsv = () => {
+    downloadCsv(
+      `historique-print-flow-${new Date().toISOString().slice(0, 10)}.csv`,
+      ['Type', 'Description', 'Détails', 'Date'],
+      filteredTimeline.map(item => [
+        filterMeta[item.entityType]?.label || item.entityType,
+        item.action,
+        item.details || '',
+        new Date(item.occurredAt).toLocaleString('fr-FR'),
+      ])
+    );
+  };
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-text-main tracking-tight">Historique</h1>
-        <p className="text-text-secondary text-sm mt-0.5">Traçabilité complète des devis, BAT, factures et paiements de votre organisation.</p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-text-main tracking-tight">Historique</h1>
+          <p className="text-text-secondary text-sm mt-0.5">Traçabilité complète des devis, BAT, factures et paiements de votre organisation.</p>
+        </div>
+        <button
+          onClick={handleExportCsv}
+          disabled={filteredTimeline.length === 0}
+          className="flex items-center justify-center gap-2 text-xs font-bold bg-bg-card border border-border-subtle hover:border-brand-primary/40 text-text-main px-4 py-2.5 rounded-full shadow-premium transition shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <Download className="w-4 h-4" />
+          <span>Exporter en CSV</span>
+        </button>
       </div>
 
       {/* KPI row */}
@@ -137,8 +182,8 @@ export default function HistoriquePage() {
               <div className={`w-9 h-9 rounded-xl border flex items-center justify-center ${meta.classes}`}>
                 <Icon className="w-4.5 h-4.5" />
               </div>
-              <p className="text-2xl font-bold text-text-main truncate">{countByType(type)}</p>
-              <p className="text-xs text-text-secondary truncate">{meta.label}</p>
+              <p className="text-2xl font-bold text-text-main truncate">{kpiCounts[type]}</p>
+              <p className="text-xs text-text-secondary truncate">{meta.kpiLabel}</p>
             </div>
           );
         })}

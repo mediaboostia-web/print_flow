@@ -186,18 +186,18 @@ export default function Dashboard() {
   const formattedUnpaid = formatFCFA(totalUnpaid);
 
   // 4. Dynamic Time-Filtering for Recent Transactions
-  const mockCurrentDate = new Date('2026-07-19T17:00:00Z');
+  const currentDate = new Date();
   
   const getFilteredQuotes = () => {
     return quotes.filter(quote => {
       const quoteDate = new Date(quote.createdAt);
-      const diffTime = Math.abs(mockCurrentDate.getTime() - quoteDate.getTime());
+      const diffTime = currentDate.getTime() - quoteDate.getTime();
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
       
       if (tableFilter === 'week') {
-        return diffDays <= 7;
+        return diffDays <= 7 && diffDays >= 0;
       } else if (tableFilter === 'month') {
-        return diffDays <= 30;
+        return diffDays <= 30 && diffDays >= 0;
       }
       return true; // Year
     });

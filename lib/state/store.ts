@@ -154,6 +154,8 @@ interface AppState {
 
   // 4. POs
   addPO: (po: PurchaseOrder) => void;
+  editPO: (po: PurchaseOrder) => void;
+  deletePO: (poId: string) => void;
   updatePOStatus: (poId: string, status: PurchaseOrder['status']) => void;
 
   // 5. Deliveries
@@ -733,6 +735,86 @@ export const useAppStore = create<AppState>()(
         }));
       }
 
+      // Ensure all validated quotes have a corresponding invoice in state & DB
+      const currentQuotes = updates.quotes || get().quotes;
+      const currentInvoices = updates.invoices || get().invoices;
+      const validatedNeedingInvoice = currentQuotes.filter(q =>
+        q.status === 'valide' && !currentInvoices.some(inv => inv.quoteId === q.id && !inv.isDeleted)
+      );
+
+      if (validatedNeedingInvoice.length > 0) {
+        const autoInvoices: Invoice[] = [];
+        validatedNeedingInvoice.forEach((quote, idx) => {
+          const invId = `inv-auto-${Date.now()}-${idx}`;
+          const newInv: Invoice = {
+            id: invId,
+            organizationId: quote.organizationId,
+            invoiceNumber: `FAC-2026-0${currentInvoices.length + autoInvoices.length + 1}`,
+            quoteId: quote.id,
+            batId: 'direct-po',
+            clientId: quote.clientId,
+            status: 'en_attente_acompte',
+            subtotalFcfa: quote.subtotalFcfa,
+            vatAmountFcfa: quote.vatAmountFcfa,
+            totalFcfa: quote.totalFcfa,
+            amountPaidFcfa: 0,
+            isDeleted: false,
+            createdBy: quote.createdBy || 'Système',
+            createdAt: quote.validatedAt || quote.createdAt || new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            items: (quote.items || []).map((item, itemIdx) => ({
+              id: `invi-${Date.now()}-${idx}-${itemIdx}`,
+              invoiceId: invId,
+              quoteItemId: item.id,
+              description: item.descriptionSnapshot,
+              quantity: item.quantity,
+              unitPriceFcfa: item.unitPriceFcfa,
+              vatRate: item.vatRate,
+              lineTotalFcfa: item.lineTotalFcfa
+            }))
+          };
+          autoInvoices.push(newInv);
+
+          if (isSupabaseConfigured && supabase) {
+            supabase.from('invoices').insert([{
+              id: newInv.id,
+              organization_id: newInv.organizationId,
+              invoice_number: newInv.invoiceNumber,
+              quote_id: newInv.quoteId,
+              bat_id: newInv.batId,
+              client_id: newInv.clientId,
+              status: newInv.status,
+              subtotal_fcfa: newInv.subtotalFcfa,
+              vat_amount_fcfa: newInv.vatAmountFcfa,
+              total_fcfa: newInv.totalFcfa,
+              amount_paid_fcfa: newInv.amountPaidFcfa,
+              is_deleted: false,
+              created_by: newInv.createdBy,
+              created_at: newInv.createdAt,
+              updated_at: newInv.updatedAt
+            }]).then(({ error }: any) => {
+              if (error) {
+                console.error("Error inserting auto invoice to Supabase:", error);
+              } else if (newInv.items && newInv.items.length > 0) {
+                supabase.from('invoice_items').insert(newInv.items.map(item => ({
+                  id: item.id,
+                  invoice_id: item.invoiceId,
+                  quote_item_id: item.quoteItemId,
+                  description: item.description,
+                  quantity: item.quantity,
+                  unit_price_fcfa: item.unitPriceFcfa,
+                  vat_rate: item.vatRate,
+                  line_total_fcfa: item.lineTotalFcfa
+                }))).then(({ error: itemsError }: any) => {
+                  if (itemsError) console.error("Error inserting auto invoice items:", itemsError);
+                });
+              }
+            });
+          }
+        });
+        updates.invoices = [...autoInvoices, ...currentInvoices];
+      }
+
       set(updates);
     } catch (e) {
       console.error("Error in loadSupabaseData:", e);
@@ -1056,9 +1138,85 @@ export const useAppStore = create<AppState>()(
 
   updateQuoteStatus: (quoteId, status) => {
     const targetQuote = get().quotes.find(q => q.id === quoteId);
-    set(state => ({
-      quotes: state.quotes.map(q => q.id === quoteId ? { ...q, status, updatedAt: new Date().toISOString() } : q)
-    }));
+    set(state => {
+      const updatedQuotes = state.quotes.map(q => q.id === quoteId ? { ...q, status, updatedAt: new Date().toISOString() } : q);
+      let updatedInvoices = state.invoices;
+
+      if (status === 'valide' && targetQuote) {
+        const invoiceExists = state.invoices.some(inv => inv.quoteId === quoteId && !inv.isDeleted);
+        if (!invoiceExists) {
+          const invId = `inv-${Date.now()}`;
+          const newInvoice: Invoice = {
+            id: invId,
+            organizationId: targetQuote.organizationId,
+            invoiceNumber: `FAC-2026-0${state.invoices.length + 1}`,
+            quoteId: targetQuote.id,
+            batId: 'direct-po',
+            clientId: targetQuote.clientId,
+            status: 'en_attente_acompte',
+            subtotalFcfa: targetQuote.subtotalFcfa,
+            vatAmountFcfa: targetQuote.vatAmountFcfa,
+            totalFcfa: targetQuote.totalFcfa,
+            amountPaidFcfa: 0,
+            isDeleted: false,
+            createdBy: targetQuote.createdBy || 'Système',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            items: (targetQuote.items || []).map((item, idx) => ({
+              id: `invi-${Date.now()}-${idx}`,
+              invoiceId: invId,
+              quoteItemId: item.id,
+              description: item.descriptionSnapshot,
+              quantity: item.quantity,
+              unitPriceFcfa: item.unitPriceFcfa,
+              vatRate: item.vatRate,
+              lineTotalFcfa: item.lineTotalFcfa
+            }))
+          };
+          updatedInvoices = [newInvoice, ...state.invoices];
+
+          if (isSupabaseConfigured && supabase) {
+            supabase.from('invoices').insert([{
+              id: newInvoice.id,
+              organization_id: newInvoice.organizationId,
+              invoice_number: newInvoice.invoiceNumber,
+              quote_id: newInvoice.quoteId,
+              bat_id: newInvoice.batId,
+              client_id: newInvoice.clientId,
+              status: newInvoice.status,
+              subtotal_fcfa: newInvoice.subtotalFcfa,
+              vat_amount_fcfa: newInvoice.vatAmountFcfa,
+              total_fcfa: newInvoice.totalFcfa,
+              amount_paid_fcfa: newInvoice.amountPaidFcfa,
+              is_deleted: false,
+              created_by: newInvoice.createdBy,
+              created_at: newInvoice.createdAt,
+              updated_at: newInvoice.updatedAt
+            }]).then(({ error }: any) => {
+              if (error) {
+                console.error("Error inserting invoice into Supabase:", error);
+              } else if (newInvoice.items && newInvoice.items.length > 0) {
+                supabase.from('invoice_items').insert(newInvoice.items.map(item => ({
+                  id: item.id,
+                  invoice_id: item.invoiceId,
+                  quote_item_id: item.quoteItemId,
+                  description: item.description,
+                  quantity: item.quantity,
+                  unit_price_fcfa: item.unitPriceFcfa,
+                  vat_rate: item.vatRate,
+                  line_total_fcfa: item.lineTotalFcfa
+                }))).then(({ error: itemsError }: any) => {
+                  if (itemsError) console.error("Error inserting invoice items:", itemsError);
+                });
+              }
+            });
+          }
+        }
+      }
+
+      return { quotes: updatedQuotes, invoices: updatedInvoices };
+    });
+
     if (targetQuote) {
       const statusLabel = status === 'valide' ? 'validé' : status === 'refuse' ? 'refusé' : 'remis en attente';
       get().addAuditLog(`Devis ${targetQuote.quoteNumber} ${statusLabel}`, { entityType: 'quotes', entityId: quoteId }, targetQuote.organizationId);
@@ -1092,6 +1250,29 @@ export const useAppStore = create<AppState>()(
         return b;
       })
     }));
+
+    if (isSupabaseConfigured && supabase) {
+      supabase.from('bat_versions').insert([{
+        id: version.id,
+        bat_id: version.batId,
+        version_number: version.versionNumber,
+        file_path: version.filePath,
+        file_type: version.fileType,
+        comment: version.comment,
+        uploaded_by: version.uploadedBy,
+        uploaded_at: version.uploadedAt
+      }]).then(({ error }: any) => {
+        if (error) console.error("Error adding BAT version to Supabase:", error);
+      });
+
+      supabase.from('bats').update({
+        current_version_id: version.id,
+        status: 'soumis',
+        updated_at: new Date().toISOString()
+      }).eq('id', batId).then(({ error }: any) => {
+        if (error) console.error("Error updating BAT in Supabase:", error);
+      });
+    }
   },
 
   validateBAT: (batId, validatedBy) => {
@@ -1111,20 +1292,115 @@ export const useAppStore = create<AppState>()(
 
       // Find the quote associated with this BAT and automatically validate it as well
       const targetBAT = state.bats.find(b => b.id === batId);
-      const updatedQuotes = targetBAT 
-        ? state.quotes.map(q => q.id === targetBAT.quoteId ? { ...q, status: 'valide' as const, updatedAt: new Date().toISOString() } : q)
+      const targetQuote = targetBAT ? state.quotes.find(q => q.id === targetBAT.quoteId) : null;
+      const updatedQuotes = targetQuote
+        ? state.quotes.map(q => q.id === targetQuote.id ? { ...q, status: 'valide' as const, updatedAt: new Date().toISOString() } : q)
         : state.quotes;
 
-      return { bats: updatedBats, quotes: updatedQuotes };
+      let updatedInvoices = state.invoices;
+
+      if (targetQuote) {
+        const invoiceExists = state.invoices.some(inv => inv.quoteId === targetQuote.id && !inv.isDeleted);
+        if (!invoiceExists) {
+          const invId = `inv-${Date.now()}`;
+          const newInvoice: Invoice = {
+            id: invId,
+            organizationId: targetQuote.organizationId,
+            invoiceNumber: `FAC-2026-0${state.invoices.length + 1}`,
+            quoteId: targetQuote.id,
+            batId: batId,
+            clientId: targetQuote.clientId,
+            status: 'en_attente_acompte',
+            subtotalFcfa: targetQuote.subtotalFcfa,
+            vatAmountFcfa: targetQuote.vatAmountFcfa,
+            totalFcfa: targetQuote.totalFcfa,
+            amountPaidFcfa: 0,
+            isDeleted: false,
+            createdBy: targetQuote.createdBy || 'Système',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            items: (targetQuote.items || []).map((item, idx) => ({
+              id: `invi-${Date.now()}-${idx}`,
+              invoiceId: invId,
+              quoteItemId: item.id,
+              description: item.descriptionSnapshot,
+              quantity: item.quantity,
+              unitPriceFcfa: item.unitPriceFcfa,
+              vatRate: item.vatRate,
+              lineTotalFcfa: item.lineTotalFcfa
+            }))
+          };
+          updatedInvoices = [newInvoice, ...state.invoices];
+
+          if (isSupabaseConfigured && supabase) {
+            supabase.from('invoices').insert([{
+              id: newInvoice.id,
+              organization_id: newInvoice.organizationId,
+              invoice_number: newInvoice.invoiceNumber,
+              quote_id: newInvoice.quoteId,
+              bat_id: newInvoice.batId,
+              client_id: newInvoice.clientId,
+              status: newInvoice.status,
+              subtotal_fcfa: newInvoice.subtotalFcfa,
+              vat_amount_fcfa: newInvoice.vatAmountFcfa,
+              total_fcfa: newInvoice.totalFcfa,
+              amount_paid_fcfa: newInvoice.amountPaidFcfa,
+              is_deleted: false,
+              created_by: newInvoice.createdBy,
+              created_at: newInvoice.createdAt,
+              updated_at: newInvoice.updatedAt
+            }]).then(({ error }: any) => {
+              if (error) {
+                console.error("Error inserting invoice into Supabase:", error);
+              } else if (newInvoice.items && newInvoice.items.length > 0) {
+                supabase.from('invoice_items').insert(newInvoice.items.map(item => ({
+                  id: item.id,
+                  invoice_id: item.invoiceId,
+                  quote_item_id: item.quoteItemId,
+                  description: item.description,
+                  quantity: item.quantity,
+                  unit_price_fcfa: item.unitPriceFcfa,
+                  vat_rate: item.vatRate,
+                  line_total_fcfa: item.lineTotalFcfa
+                }))).then(({ error: itemsError }: any) => {
+                  if (itemsError) console.error("Error inserting invoice items:", itemsError);
+                });
+              }
+            });
+          }
+        }
+      }
+
+      return { bats: updatedBats, quotes: updatedQuotes, invoices: updatedInvoices };
     });
 
     const targetBAT = get().bats.find(b => b.id === batId);
     if (targetBAT) {
       get().addAuditLog(`BAT validé par ${validatedBy}`, { entityType: 'bat', entityId: batId }, targetBAT.organizationId);
     }
+
+    if (isSupabaseConfigured && supabase) {
+      const validatedAt = new Date().toISOString();
+      supabase.from('bats').update({
+        status: 'valide',
+        validated_by: validatedBy,
+        validated_at: validatedAt,
+        updated_at: validatedAt
+      }).eq('id', batId).then(({ error }: any) => {
+        if (error) console.error("Error validating BAT in Supabase:", error);
+      });
+
+      if (targetBAT) {
+        supabase.from('quotes').update({ status: 'valide', updated_at: validatedAt }).eq('id', targetBAT.quoteId).then(({ error }: any) => {
+          if (error) console.error("Error auto-validating quote in Supabase:", error);
+        });
+      }
+    }
   },
 
   refuseBAT: (batId, reason) => {
+    let updatedComment: string | undefined;
+
     set(state => ({
       bats: state.bats.map(b => {
         if (b.id === batId) {
@@ -1132,6 +1408,7 @@ export const useAppStore = create<AppState>()(
           const lastVersion = versions[versions.length - 1];
           if (lastVersion) {
             lastVersion.comment = `🔴 CORRECTION DEMANDÉE: ${reason} (Original: ${lastVersion.comment || ''})`;
+            updatedComment = lastVersion.comment;
           }
           return {
             ...b,
@@ -1143,6 +1420,21 @@ export const useAppStore = create<AppState>()(
       })
     }));
 
+    if (isSupabaseConfigured && supabase) {
+      const updatedAt = new Date().toISOString();
+      supabase.from('bats').update({ status: 'refuse', updated_at: updatedAt }).eq('id', batId).then(({ error }: any) => {
+        if (error) console.error("Error refusing BAT in Supabase:", error);
+      });
+
+      const targetBAT = get().bats.find(b => b.id === batId);
+      const lastVersion = targetBAT?.versions?.[targetBAT.versions.length - 1];
+      if (lastVersion && updatedComment) {
+        supabase.from('bat_versions').update({ comment: updatedComment }).eq('id', lastVersion.id).then(({ error }: any) => {
+          if (error) console.error("Error updating BAT version comment in Supabase:", error);
+        });
+      }
+    }
+
     const targetBAT = get().bats.find(b => b.id === batId);
     if (targetBAT) {
       get().addAuditLog(`BAT refusé : ${reason}`, { entityType: 'bat', entityId: batId }, targetBAT.organizationId);
@@ -1151,13 +1443,108 @@ export const useAppStore = create<AppState>()(
 
   // POs (Orders) Actions
   addPO: (newPO) => {
-    set(state => ({ pos: [newPO, ...state.pos] }));
+    set(state => {
+      let updatedInvoices = state.invoices;
+
+      if (newPO.depositAmountFcfa && newPO.depositAmountFcfa > 0) {
+        const linkedInvoice = state.invoices.find(inv => inv.quoteId === newPO.quoteId && !inv.isDeleted);
+        if (linkedInvoice) {
+          const newAmountPaid = Math.min(linkedInvoice.totalFcfa, (linkedInvoice.amountPaidFcfa || 0) + newPO.depositAmountFcfa);
+          const newStatus: InvoiceStatus = newAmountPaid >= linkedInvoice.totalFcfa ? 'soldee' : 'partiellement_payee';
+          updatedInvoices = state.invoices.map(inv => inv.id === linkedInvoice.id ? {
+            ...inv,
+            amountPaidFcfa: newAmountPaid,
+            status: newStatus,
+            updatedAt: new Date().toISOString()
+          } : inv);
+
+          if (isSupabaseConfigured && supabase) {
+            supabase.from('invoices').update({
+              amount_paid_fcfa: newAmountPaid,
+              status: newStatus,
+              updated_at: new Date().toISOString()
+            }).eq('id', linkedInvoice.id).then(({ error }: any) => {
+              if (error) console.error("Error updating invoice deposit in Supabase:", error);
+            });
+          }
+        }
+      }
+
+      return { pos: [newPO, ...state.pos], invoices: updatedInvoices };
+    });
+
+    if (isSupabaseConfigured && supabase) {
+      supabase.from('purchase_orders').insert([{
+        id: newPO.id,
+        organization_id: newPO.organizationId,
+        order_number: newPO.orderNumber,
+        quote_id: newPO.quoteId,
+        bat_id: newPO.batId,
+        status: newPO.status,
+        machine_setup: newPO.machineSetup,
+        deposit_amount_fcfa: newPO.depositAmountFcfa,
+        created_by: newPO.createdBy,
+        created_at: newPO.createdAt,
+        updated_at: newPO.updatedAt
+      }]).then(({ error }: any) => {
+        if (error) {
+          console.error("Error adding purchase order to Supabase:", error);
+          return;
+        }
+        if (newPO.items && newPO.items.length > 0) {
+          supabase.from('purchase_order_items').insert(newPO.items.map(item => ({
+            id: item.id,
+            purchase_order_id: item.purchaseOrderId,
+            quote_item_id: item.quoteItemId,
+            description: item.description,
+            finishing: item.finishing,
+            quantity: item.quantity,
+            sort_order: item.sortOrder
+          }))).then(({ error: itemsError }: any) => {
+            if (itemsError) console.error("Error adding purchase order items to Supabase:", itemsError);
+          });
+        }
+      });
+    }
+  },
+
+  editPO: (updatedPO) => {
+    set(state => ({
+      pos: state.pos.map(p => p.id === updatedPO.id ? { ...updatedPO, updatedAt: new Date().toISOString() } : p)
+    }));
+
+    if (isSupabaseConfigured && supabase) {
+      supabase.from('purchase_orders').update({
+        status: updatedPO.status,
+        machine_setup: updatedPO.machineSetup,
+        deposit_amount_fcfa: updatedPO.depositAmountFcfa,
+        updated_at: new Date().toISOString()
+      }).eq('id', updatedPO.id).then(({ error }: any) => {
+        if (error) console.error("Error editing purchase order in Supabase:", error);
+      });
+    }
+  },
+
+  deletePO: (poId) => {
+    set(state => ({ pos: state.pos.filter(p => p.id !== poId) }));
+
+    if (isSupabaseConfigured && supabase) {
+      supabase.from('purchase_orders').delete().eq('id', poId).then(({ error }: any) => {
+        if (error) console.error("Error deleting purchase order in Supabase:", error);
+      });
+    }
   },
 
   updatePOStatus: (poId, status) => {
     set(state => ({
       pos: state.pos.map(p => p.id === poId ? { ...p, status, updatedAt: new Date().toISOString() } : p)
     }));
+
+    if (isSupabaseConfigured && supabase) {
+      supabase.from('purchase_orders').update({ status, updated_at: new Date().toISOString() }).eq('id', poId).then(({ error }: any) => {
+        if (error) console.error("Error updating purchase order status in Supabase:", error);
+      });
+    }
   },
 
   // Deliveries Actions
@@ -1165,7 +1552,7 @@ export const useAppStore = create<AppState>()(
     set(state => {
       // Find the linked PO and update status to complete if not already
       const linkedPO = state.pos.find(p => p.id === newDelivery.purchaseOrderId);
-      const updatedPOs = linkedPO 
+      const updatedPOs = linkedPO
         ? state.pos.map(p => p.id === linkedPO.id ? { ...p, status: 'termine' as const, updatedAt: new Date().toISOString() } : p)
         : state.pos;
 
@@ -1174,24 +1561,60 @@ export const useAppStore = create<AppState>()(
         pos: updatedPOs
       };
     });
+
+    if (isSupabaseConfigured && supabase) {
+      supabase.from('delivery_notes').insert([{
+        id: newDelivery.id,
+        organization_id: newDelivery.organizationId,
+        delivery_number: newDelivery.deliveryNumber,
+        purchase_order_id: newDelivery.purchaseOrderId,
+        status: newDelivery.status,
+        delivered_to: newDelivery.deliveredTo,
+        signature_url: newDelivery.signatureUrl,
+        delivered_at: newDelivery.deliveredAt,
+        created_by: newDelivery.createdBy,
+        created_at: newDelivery.createdAt
+      }]).then(({ error }: any) => {
+        if (error) {
+          console.error("Error adding delivery note to Supabase:", error);
+          return;
+        }
+        if (newDelivery.items && newDelivery.items.length > 0) {
+          supabase.from('delivery_note_items').insert(newDelivery.items.map(item => ({
+            id: item.id,
+            delivery_note_id: item.deliveryNoteId,
+            description: item.description,
+            quantity_ready: item.quantityReady
+          }))).then(({ error: itemsError }: any) => {
+            if (itemsError) console.error("Error adding delivery note items to Supabase:", itemsError);
+          });
+        }
+      });
+
+      const linkedPO = get().pos.find(p => p.id === newDelivery.purchaseOrderId);
+      if (linkedPO) {
+        supabase.from('purchase_orders').update({ status: 'termine', updated_at: new Date().toISOString() }).eq('id', linkedPO.id).then(({ error }: any) => {
+          if (error) console.error("Error completing purchase order in Supabase:", error);
+        });
+      }
+    }
   },
 
   updateDeliveryStatus: (deliveryId, status) => {
+    let generatedInvoice: Invoice | null = null;
+
     set(state => {
-      const updatedDeliveries = state.deliveries.map(d => 
-        d.id === deliveryId 
-          ? { 
-              ...d, 
-              status, 
-              deliveredAt: status === 'livre' ? new Date().toISOString() : undefined 
-            } 
+      const deliveredAt = status === 'livre' ? new Date().toISOString() : undefined;
+      const updatedDeliveries = state.deliveries.map(d =>
+        d.id === deliveryId
+          ? { ...d, status, deliveredAt }
           : d
       );
 
       // Dynamically auto-generate an invoice if status turns to "livre"
       const targetDelivery = state.deliveries.find(d => d.id === deliveryId);
-      const invoiceExists = targetDelivery 
-        ? state.invoices.some(inv => inv.quoteId === targetDelivery.purchaseOrderId) 
+      const invoiceExists = targetDelivery
+        ? state.invoices.some(inv => inv.quoteId === targetDelivery.purchaseOrderId)
         : false;
 
       let updatedInvoices = state.invoices;
@@ -1203,14 +1626,15 @@ export const useAppStore = create<AppState>()(
 
         if (linkedQuote) {
           const deposit = linkedPO?.depositAmountFcfa || 0;
-          const initialStatus: InvoiceStatus = deposit >= linkedQuote.totalFcfa 
-            ? 'soldee' 
-            : deposit > 0 
-              ? 'partiellement_payee' 
+          const initialStatus: InvoiceStatus = deposit >= linkedQuote.totalFcfa
+            ? 'soldee'
+            : deposit > 0
+              ? 'partiellement_payee'
               : 'en_attente_acompte';
 
+          const newInvoiceId = `inv-${Date.now()}`;
           const newInvoice: Invoice = {
-            id: `inv-${Date.now()}`,
+            id: newInvoiceId,
             organizationId: get().currentOrgId,
             invoiceNumber: `FAC-2026-0${state.invoices.length + 1}`,
             quoteId: linkedQuote.id,
@@ -1227,7 +1651,7 @@ export const useAppStore = create<AppState>()(
             updatedAt: new Date().toISOString(),
             items: (linkedQuote.items || []).map(item => ({
               id: `invi-${Date.now()}-${item.id}`,
-              invoiceId: `inv-${Date.now()}`,
+              invoiceId: newInvoiceId,
               description: item.descriptionSnapshot,
               quantity: item.quantity,
               unitPriceFcfa: item.unitPriceFcfa,
@@ -1236,6 +1660,7 @@ export const useAppStore = create<AppState>()(
             }))
           };
           updatedInvoices = [newInvoice, ...state.invoices];
+          generatedInvoice = newInvoice;
         }
       }
 
@@ -1244,6 +1669,55 @@ export const useAppStore = create<AppState>()(
         invoices: updatedInvoices
       };
     });
+
+    if (isSupabaseConfigured && supabase) {
+      supabase.from('delivery_notes').update({
+        status,
+        delivered_at: status === 'livre' ? new Date().toISOString() : null
+      }).eq('id', deliveryId).then(({ error }: any) => {
+        if (error) console.error("Error updating delivery status in Supabase:", error);
+      });
+
+      if (generatedInvoice) {
+        const invoiceToPersist = generatedInvoice as Invoice;
+        supabase.from('invoices').insert([{
+          id: invoiceToPersist.id,
+          organization_id: invoiceToPersist.organizationId,
+          invoice_number: invoiceToPersist.invoiceNumber,
+          quote_id: invoiceToPersist.quoteId,
+          bat_id: invoiceToPersist.batId,
+          client_id: invoiceToPersist.clientId,
+          status: invoiceToPersist.status,
+          subtotal_fcfa: invoiceToPersist.subtotalFcfa,
+          vat_amount_fcfa: invoiceToPersist.vatAmountFcfa,
+          total_fcfa: invoiceToPersist.totalFcfa,
+          amount_paid_fcfa: invoiceToPersist.amountPaidFcfa,
+          is_deleted: invoiceToPersist.isDeleted,
+          created_by: invoiceToPersist.createdBy,
+          created_at: invoiceToPersist.createdAt,
+          updated_at: invoiceToPersist.updatedAt
+        }]).then(({ error }: any) => {
+          if (error) {
+            console.error("Error adding auto-generated invoice to Supabase:", error);
+            return;
+          }
+          if (invoiceToPersist.items && invoiceToPersist.items.length > 0) {
+            supabase.from('invoice_items').insert(invoiceToPersist.items.map(item => ({
+              id: item.id,
+              invoice_id: item.invoiceId,
+              quote_item_id: item.quoteItemId,
+              description: item.description,
+              quantity: item.quantity,
+              unit_price_fcfa: item.unitPriceFcfa,
+              vat_rate: item.vatRate,
+              line_total_fcfa: item.lineTotalFcfa
+            }))).then(({ error: itemsError }: any) => {
+              if (itemsError) console.error("Error adding auto-generated invoice items to Supabase:", itemsError);
+            });
+          }
+        });
+      }
+    }
   },
 
   // Invoices Actions

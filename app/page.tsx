@@ -107,8 +107,8 @@ export default function LandingPage() {
 
   const faqs = [
     {
-      q: "Comment fonctionne l'essai gratuit de 7 jours ?",
-      a: "Vous bénéficiez d'un accès immédiat et complet à toutes les fonctionnalités principales de Print_Flow, sans carte bancaire, sans engagement et avec une prise en main en moins de 3 minutes."
+      q: "Comment démarrer avec Print_Flow ?",
+      a: "Réservez une démo de 15 minutes avec notre équipe : nous configurons votre espace et vous obtenez un accès complet et immédiat à toutes les fonctionnalités principales de Print_Flow, avec une prise en main en moins de 3 minutes."
     },
     {
       q: "Est-ce adapté à la monnaie locale (FCFA / XAF) et aux taxes de notre imprimerie ?",
@@ -171,22 +171,13 @@ export default function LandingPage() {
           </nav>
 
           <div className="flex items-center gap-3">
-            {isAuthenticated ? (
-              <Link
-                href="/dashboard"
-                className="px-5 py-2.5 bg-brand-primary hover:bg-brand-primary-hover text-white text-xs font-bold rounded-xl transition shadow-xs flex items-center gap-2 font-sans"
-              >
-                <span>Mon Espace</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
-            ) : (
-              <Link
-                href="/login"
-                className="px-5 py-2 bg-brand-primary hover:bg-brand-primary-hover text-white text-xs font-bold rounded-full transition shadow-xs font-sans hover:scale-[1.03]"
-              >
-                Se connecter
-              </Link>
-            )}
+            <Link
+              href={isAuthenticated ? '/dashboard' : '/login'}
+              className="px-5 py-2.5 bg-brand-primary hover:bg-brand-primary-hover text-white text-xs font-bold rounded-xl transition shadow-xs flex items-center gap-2 font-sans"
+            >
+              <span>Mon Espace</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
           </div>
         </header>
       </div>
@@ -201,7 +192,7 @@ export default function LandingPage() {
             {/* Centered Top Badge */}
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 text-xs font-bold text-emerald-800 dark:text-emerald-300 shadow-xs">
               <Sparkles className="w-3.5 h-3.5 text-brand-primary animate-pulse" />
-              <span>Essai gratuit de 7 jours pour votre imprimerie</span>
+              <span>La solution de gestion pensée pour votre imprimerie</span>
             </div>
 
             {/* Centered H1 Headline (Verbe d'action coloré + Trait de soulignement courbé) */}
@@ -217,19 +208,21 @@ export default function LandingPage() {
               </h1>
 
               <p className="text-sm sm:text-base text-text-secondary leading-relaxed max-w-xl mx-auto font-sans pt-2">
-                Le logiciel de gestion pensé pour simplifier le quotidien des imprimeurs : zéro devis égaré, acomptes sécurisés et suivi de fabrication en temps réel.
+                Logiciel privé de gestion pensé pour simplifier le quotidien des imprimeurs : zéro devis égaré, acomptes sécurisés et suivi de fabrication en temps réel.
               </p>
             </div>
 
             {/* Single Primary Action CTA (A - ACTION) */}
             <div className="flex items-center justify-center pt-2">
-              <Link
-                href="/login"
+              <a
+                href={APPOINTMENT_URL}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="px-8 py-4 bg-brand-primary hover:bg-brand-primary-hover text-white text-sm font-extrabold rounded-full transition shadow-lg flex items-center gap-2.5 font-sans hover:scale-[1.04]"
               >
-                <span>Démarrer l'essai gratuit</span>
+                <span>Réserver ma démo gratuite</span>
                 <ArrowRight className="w-4 h-4" />
-              </Link>
+              </a>
             </div>
 
             {/* SaaS Dashboard Frame Mockup (Crisp 1px Dark Border) */}
@@ -267,7 +260,7 @@ export default function LandingPage() {
               Comment ça marche
             </span>
             <h2 className="text-2xl sm:text-4xl font-black text-text-main font-sans">
-              De l'Inscription à la Rentabilité — En 4 Étapes Simples.
+              De la Prise en Main à la Rentabilité — En 4 Étapes Simples.
             </h2>
             <p className="text-xs text-text-secondary max-w-lg mx-auto">
               Un processus intuitif conçu pour mettre votre atelier en ordre de marche sans perdre une minute.
@@ -283,7 +276,7 @@ export default function LandingPage() {
                 <div className="rounded-2xl overflow-hidden border border-border-subtle aspect-16/9 bg-slate-100 dark:bg-slate-900">
                   <img
                     src="/Login.png"
-                    alt="Inscription en 3 clics"
+                    alt="Connexion rapide"
                     className="w-full h-full object-cover"
                   />
                 </div>
@@ -291,10 +284,10 @@ export default function LandingPage() {
                   <div className="w-9 h-9 rounded-xl bg-brand-primary/10 text-brand-primary flex items-center justify-center shrink-0 font-bold">
                     01
                   </div>
-                  <h3 className="text-base font-bold text-text-main font-sans">Inscription en 3 clics</h3>
+                  <h3 className="text-base font-bold text-text-main font-sans">Connexion rapide</h3>
                 </div>
                 <p className="text-xs text-text-secondary leading-relaxed font-sans">
-                  Créez votre compte en quelques secondes et accédez directement à votre atelier sans carte bancaire.
+                  Accédez directement à votre atelier en toute sécurité, en quelques secondes.
                 </p>
               </div>
             </div>
@@ -419,7 +412,7 @@ export default function LandingPage() {
                   href="/login"
                   className="px-6 py-3 bg-brand-primary hover:bg-brand-primary-hover text-white text-xs font-bold rounded-full transition shadow-md inline-flex items-center gap-2 font-sans hover:scale-[1.03]"
                 >
-                  <span>Démarrer l'essai gratuit</span>
+                  <span>Se connecter à mon espace</span>
                   <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
@@ -625,37 +618,53 @@ export default function LandingPage() {
 
         {/* SECTION 5: TARIFS (PLACÉE APRÈS LES TÉMOIGNAGES) */}
         <section id="tarifs" className="py-10 space-y-8 text-center bg-slate-100/60 dark:bg-slate-900/40 border border-border-subtle rounded-3xl p-6 sm:p-10 shadow-xs" aria-label="Tarifs et Abonnements">
-          
+
           <div className="space-y-2 max-w-2xl mx-auto">
-            <span className="text-xs font-extrabold uppercase tracking-wider text-brand-primary font-sans">Transparence Tarifaire</span>
-            <h2 className="text-2xl sm:text-4xl font-black text-text-main font-sans">Des Tarifs Clairs et Sans Surprise.</h2>
+            <span className="text-xs font-extrabold uppercase tracking-wider text-brand-primary font-sans">Offre de Lancement</span>
+            <h2 className="text-2xl sm:text-4xl font-black text-text-main font-sans">Choisissez Votre Formule. Sans Risque.</h2>
             <p className="text-xs text-text-secondary">
-              Choisissez le forfait adapté à la taille de votre atelier. Changez d'offre à tout moment.
+              Un tarif bloqué dès aujourd'hui, une mise en place accompagnée par notre équipe, aucun engagement forcé.
             </p>
           </div>
 
+          {/* Free-trial risk-reversal banner */}
+          <div className="max-w-3xl mx-auto bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-3xl p-5 sm:p-6 text-left flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <div className="w-11 h-11 rounded-2xl bg-brand-primary/15 text-brand-primary flex items-center justify-center shrink-0">
+              <Clock className="w-5 h-5" />
+            </div>
+            <div className="space-y-1.5">
+              <p className="text-sm font-black text-text-main font-sans">Essai gratuit de 7 jours — sans carte bancaire, sans engagement</p>
+              <p className="text-xs text-text-secondary leading-relaxed">
+                Toutes les fonctionnalités débloquées dès le premier jour : Devis, Facturation, Impression Devis & Factures, Commandes en ligne, Boutique, Collaborateurs et Gestion du flux complet. Vous testez en conditions réelles avant de vous engager sur une formule.
+              </p>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch max-w-5xl mx-auto text-left pt-4">
-            
-            {/* Card 1: DÉMARRAGE */}
+
+            {/* Card 1: ESSENTIEL */}
             <div className="bg-bg-card border border-border-subtle rounded-3xl p-6 flex flex-col justify-between space-y-6 shadow-xs hover:scale-[1.01] transition">
               <div className="space-y-4">
-                <div className="text-xs font-black text-text-secondary uppercase tracking-wider">DÉMARRAGE</div>
-                <p className="text-xs text-text-secondary">Pour tester l'outil gratuitement dans votre atelier.</p>
-                
-                <div className="flex items-baseline gap-1">
-                  <span className="text-4xl font-black text-text-main font-sans">0</span>
-                  <span className="text-xs text-text-secondary">/ 7 jours</span>
-                </div>
+                <div className="text-xs font-black text-text-secondary uppercase tracking-wider">ESSENTIEL</div>
+                <p className="text-xs text-text-secondary">Idéal pour démarrer seul, sans rien perdre de vos devis.</p>
 
-                <Link
-                  href="/login"
+                <div className="flex items-baseline gap-1">
+                  <span className="text-4xl font-black text-text-main font-sans">{formatFCFA(9900)}</span>
+                  <span className="text-xs text-text-secondary">/ mois</span>
+                </div>
+                <p className="text-[10px] text-text-secondary">Tarif fondateur bloqué à vie pour les premiers ateliers inscrits.</p>
+
+                <a
+                  href={APPOINTMENT_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition text-center block font-sans"
                 >
-                  DÉMARRER L'ESSAI GRATUIT
-                </Link>
+                  DÉMARRER MON ESSAI GRATUIT
+                </a>
 
                 <div className="space-y-2 text-xs text-text-secondary pt-4 border-t border-border-subtle">
-                  <p className="font-extrabold text-[10px] uppercase text-text-secondary">INCLUS DANS L'ESSAI :</p>
+                  <p className="font-extrabold text-[10px] uppercase text-text-secondary">FONCTIONNALITÉS INCLUSES :</p>
                   <li className="flex items-center gap-2">
                     <Check className="w-4 h-4 text-brand-primary shrink-0" />
                     <span>1 utilisateur unique</span>
@@ -680,27 +689,30 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* Card 2: FORMULE PRO */}
+            {/* Card 2: FORMULE PRO — decoy central, mis en avant */}
             <div className="bg-slate-950 text-white border-2 border-brand-primary rounded-3xl p-6 flex flex-col justify-between space-y-6 shadow-xl relative hover:scale-[1.02] transition">
               <div className="absolute -top-3.5 right-6 px-3 py-1 bg-brand-primary text-white text-[10px] font-black uppercase rounded-full tracking-wider">
-                LE PLUS POPULAIRE
+                Choix recommandé
               </div>
 
               <div className="space-y-4">
                 <div className="text-xs font-black text-brand-primary uppercase tracking-wider">FORMULE PRO</div>
-                <p className="text-xs text-slate-400">Pour les imprimeries souhaitant une traçabilité totale.</p>
-                
+                <p className="text-xs text-slate-400">Pour ne plus jamais perdre une commande ni un client à cause d'un devis égaré.</p>
+
                 <div className="flex items-baseline gap-1">
                   <span className="text-4xl font-black text-white font-sans">{formatFCFA(14900)}</span>
                   <span className="text-xs text-slate-400">/ mois</span>
                 </div>
+                <p className="text-[10px] text-emerald-400 font-bold">Seulement {formatFCFA(5000)}/mois de plus que l'Essentiel, pour 3x plus de fonctionnalités.</p>
 
-                <Link
-                  href="/login"
+                <a
+                  href={APPOINTMENT_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="w-full py-3 bg-brand-primary hover:bg-brand-primary-hover text-white text-xs font-bold rounded-xl transition text-center block shadow-md font-sans"
                 >
-                  SOUSCRIRE À LA FORMULE PRO
-                </Link>
+                  DÉMARRER MON ESSAI GRATUIT
+                </a>
 
                 <div className="space-y-2 text-xs text-slate-300 pt-4 border-t border-slate-800">
                   <p className="font-extrabold text-[10px] uppercase text-brand-primary">TOUT CE QUI EST INCLUS :</p>
@@ -731,12 +743,13 @@ export default function LandingPage() {
             {/* Card 3: MULTI-ATELIERS */}
             <div className="bg-bg-card border border-border-subtle rounded-3xl p-6 flex flex-col justify-between space-y-6 shadow-xs hover:scale-[1.01] transition">
               <div className="space-y-4">
-                <div className="text-xs font-black text-text-secondary uppercase tracking-wider">MULTI-ATELIERS</div>
+                <div className="text-xs font-black text-text-secondary uppercase tracking-wider">ENTREPRISE</div>
                 <p className="text-xs text-text-secondary">Pour les réseaux d'imprimeries et groupes régionaux.</p>
-                
+
                 <div className="flex items-baseline gap-1">
                   <span className="text-3xl font-black text-text-main font-sans">Sur Devis</span>
                 </div>
+                <p className="text-[10px] text-text-secondary">Accompagnement dédié, adapté à votre organisation.</p>
 
                 <a
                   href={APPOINTMENT_URL}
@@ -744,14 +757,14 @@ export default function LandingPage() {
                   rel="noopener noreferrer"
                   className="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition text-center block font-sans"
                 >
-                  RÉSERVER UNE DÉMO
+                  RÉSERVER UN ÉCHANGE
                 </a>
 
                 <div className="space-y-2 text-xs text-text-secondary pt-4 border-t border-border-subtle">
                   <p className="font-extrabold text-[10px] uppercase text-text-secondary">SERVICES SUR MESURE :</p>
                   <li className="flex items-center gap-2">
                     <Check className="w-4 h-4 text-brand-primary shrink-0" />
-                    <span>Multi-imprimeries & RLS dédié</span>
+                    <span>Multi-imprimeries & isolation des données dédiée</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <Check className="w-4 h-4 text-brand-primary shrink-0" />
@@ -766,6 +779,10 @@ export default function LandingPage() {
             </div>
 
           </div>
+
+          <p className="text-[11px] text-text-secondary max-w-lg mx-auto pt-2">
+            Paiement toujours manuel et sécurisé (Mobile Money, virement) — aucune carte bancaire n'est jamais demandée sur cette page.
+          </p>
 
         </section>
 

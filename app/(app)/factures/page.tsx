@@ -228,7 +228,7 @@ export default function FacturesPage() {
           </div>
 
           {/* Invoices List */}
-          <div className="bg-bg-card border border-border-subtle rounded-3xl shadow-premium overflow-hidden">
+          <div className="hidden sm:block bg-bg-card border border-border-subtle rounded-3xl shadow-premium overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full border-collapse text-left text-sm text-text-main">
                 <thead className="bg-slate-50 dark:bg-slate-800/30 border-b border-border-subtle text-text-secondary text-xs font-semibold uppercase tracking-wider whitespace-nowrap">
@@ -285,6 +285,44 @@ export default function FacturesPage() {
                 </tbody>
               </table>
             </div>
+          </div>
+
+          {/* Mobile card list (below sm breakpoint) */}
+          <div className="sm:hidden space-y-3">
+            {filteredInvoices.length > 0 ? (
+              filteredInvoices.map((inv) => {
+                const client = storeClients.find(c => c.id === inv.clientId);
+                const isSelected = activeInvoice?.id === inv.id;
+                return (
+                  <button
+                    type="button"
+                    key={inv.id}
+                    onClick={() => setSelectedInvoice(inv)}
+                    className={`w-full text-left rounded-2xl shadow-premium p-4 space-y-2 border transition ${
+                      isSelected
+                        ? 'border-brand-primary bg-brand-primary/10'
+                        : 'border-border-subtle bg-bg-card hover:bg-slate-50/50 dark:hover:bg-slate-800/20'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 font-bold text-text-main min-w-0">
+                        <Receipt className="w-4 h-4 text-slate-400 shrink-0" />
+                        <span className="truncate">{inv.invoiceNumber}</span>
+                      </div>
+                      <span className={`px-2.5 py-0.5 rounded-full border text-[10px] font-bold uppercase shrink-0 ${getStatusBadge(inv.status)}`}>
+                        {getStatusLabel(inv.status)}
+                      </span>
+                    </div>
+                    <p className="text-sm font-semibold text-text-main truncate">{client?.companyName || 'Inconnu'}</p>
+                    <p className="text-right font-extrabold text-brand-primary">{formatFCFA(inv.totalFcfa)}</p>
+                  </button>
+                );
+              })
+            ) : (
+              <div className="bg-bg-card border border-border-subtle rounded-2xl shadow-premium px-6 py-12 text-center text-text-secondary font-medium">
+                Aucune facture émise.
+              </div>
+            )}
           </div>
 
         </div>

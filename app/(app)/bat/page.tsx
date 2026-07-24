@@ -308,8 +308,9 @@ export default function BATPage() {
 
         </div>
       ) : (
-        /* Standard Table List View representing access controls */
-        <div className="bg-bg-card border border-border-subtle rounded-3xl shadow-premium overflow-hidden animate-fade-in">
+        <>
+        {/* Standard Table List View representing access controls */}
+        <div className="hidden sm:block bg-bg-card border border-border-subtle rounded-3xl shadow-premium overflow-hidden animate-fade-in">
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-left text-sm text-text-main">
               <thead className="bg-slate-50 dark:bg-slate-800/30 border-b border-border-subtle text-text-secondary text-xs font-semibold uppercase tracking-wider whitespace-nowrap">
@@ -397,6 +398,72 @@ export default function BATPage() {
             </table>
           </div>
         </div>
+
+        {/* Mobile card list (below sm breakpoint) */}
+        <div className="sm:hidden space-y-3 animate-fade-in">
+          {orgQuotes.length > 0 ? (
+            orgQuotes.map((q) => {
+              const client = storeClients.find(c => c.id === q.clientId);
+              const bat = getBATForQuote(q.id);
+              return (
+                <div key={q.id} className="bg-bg-card border border-border-subtle rounded-2xl shadow-premium p-4 space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-bold text-text-main truncate">{q.quoteNumber}</span>
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase shrink-0 ${
+                      bat
+                        ? 'bg-violet-50 dark:bg-violet-950/20 text-violet-700 dark:text-violet-400 border border-violet-100 dark:border-violet-900/30'
+                        : 'bg-slate-100 dark:bg-slate-800 text-text-secondary'
+                    }`}>
+                      {bat ? 'Exige un BAT' : 'Sans BAT'}
+                    </span>
+                  </div>
+                  <p className="text-sm font-semibold text-text-main truncate">{client?.companyName || 'Client Inconnu'}</p>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className={`text-xs font-bold ${q.status === 'valide' ? 'text-emerald-500' : q.status === 'refuse' ? 'text-rose-500' : 'text-amber-500'}`}>
+                      {q.status === 'valide' ? 'Validé (Signé)' : q.status === 'refuse' ? 'Refusé' : 'En attente'}
+                    </span>
+                    {bat ? (
+                      <span className={`px-2.5 py-0.5 rounded-full border text-[10px] font-bold uppercase ${getBATBadge(bat.status)}`}>
+                        {getBATLabel(bat.status)}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-text-secondary italic">Exemption</span>
+                    )}
+                  </div>
+                  <div className="pt-2 border-t border-border-subtle flex justify-center">
+                    {(() => {
+                      if (!bat) {
+                        return <span className="text-xs text-emerald-500 font-semibold flex items-center justify-center gap-1"><FileCheck className="w-3.5 h-3.5" /> Prêt production</span>;
+                      }
+                      if (q.status !== 'valide') {
+                        return (
+                          <span className="text-xs text-text-secondary flex items-center justify-center gap-1.5 opacity-60">
+                            <AlertCircle className="w-3.5 h-3.5" />
+                            Verrou Devis
+                          </span>
+                        );
+                      }
+                      return (
+                        <button
+                          onClick={() => setSelectedBAT(bat)}
+                          className="inline-flex items-center gap-1 text-xs font-bold text-white bg-brand-primary hover:bg-brand-primary-hover px-4 py-1.5 rounded-full transition shadow-sm"
+                        >
+                          <span>Gérer le BAT</span>
+                          <ChevronRight className="w-3.5 h-3.5" />
+                        </button>
+                      );
+                    })()}
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+            <div className="bg-bg-card border border-border-subtle rounded-2xl shadow-premium px-6 py-12 text-center text-text-secondary font-medium">
+              Aucun devis enregistré.
+            </div>
+          )}
+        </div>
+        </>
       )}
 
       {/* Refuse Reason Dialog Modal */}

@@ -36,6 +36,8 @@ export default function CommandesPage() {
   const storeMachines = useAppStore((state) => state.machines);
   
   const addPOStore = useAppStore((state) => state.addPO);
+  const editPOStore = useAppStore((state) => state.editPO);
+  const deletePOStore = useAppStore((state) => state.deletePO);
   const updatePOStatusStore = useAppStore((state) => state.updatePOStatus);
 
   // States
@@ -66,8 +68,14 @@ export default function CommandesPage() {
     }
   }, [storeMachines, machineSetup]);
 
-  // Filter quotes belonging to this org that are validated
-  const validatedQuotes = storeQuotes.filter(q => q.organizationId === currentOrgId && q.status === 'valide');
+  // Filter quotes belonging to this org that are validated and not already
+  // attached to a bon de production (a devis can only be used once, to avoid
+  // launching two production runs from the same quote by mistake).
+  const validatedQuotes = storeQuotes.filter(q =>
+    q.organizationId === currentOrgId &&
+    q.status === 'valide' &&
+    !storePOs.some(po => po.quoteId === q.id)
+  );
 
   // Filter PO list
   const filteredPOs = storePOs
@@ -148,20 +156,14 @@ export default function CommandesPage() {
       const linkedBAT = storeBATs.find(b => b.quoteId === selectedQuoteId);
 
       if (selectedPO) {
-        // Edit PO: update status, machine, notes in store
-        const updatedPOs = storePOs.map(p => {
-          if (p.id === selectedPO.id) {
-            return {
-              ...p,
-              status,
-              machineSetup,
-              depositAmountFcfa,
-              updatedAt: new Date().toISOString()
-            };
-          }
-          return p;
+        // Edit PO: update status, machine, notes and persist to Supabase
+        editPOStore({
+          ...selectedPO,
+          status,
+          machineSetup,
+          depositAmountFcfa,
+          updatedAt: new Date().toISOString()
         });
-        useAppStore.setState({ pos: updatedPOs });
       } else {
         // Create PO
         const newPO: PurchaseOrder = {
@@ -205,8 +207,7 @@ export default function CommandesPage() {
     setIsDeleteConfirmOpen(false);
 
     setTimeout(() => {
-      const filtered = storePOs.filter(p => p.id !== selectedPO.id);
-      useAppStore.setState({ pos: filtered });
+      deletePOStore(selectedPO.id);
       setSelectedPO(null);
       setLoading(false);
     }, 450);
@@ -444,7 +445,7 @@ export default function CommandesPage() {
                       disabled
                       className="w-full px-4 py-2.5 bg-slate-100 dark:bg-slate-800 border border-border-subtle rounded-xl text-sm text-text-secondary cursor-not-allowed"
                     />
-                  ) : (
+                  ) : validatedQuotes.length > 0 ? (
                     <Dropdown
                       options={validatedQuotes.map(q => {
                         const hasBAT = storeBATs.find(b => b.quoteId === q.id);
@@ -461,6 +462,10 @@ export default function CommandesPage() {
                       onChange={(val) => setSelectedQuoteId(val)}
                       placeholder="Sélectionner un Devis..."
                     />
+                  ) : (
+                    <div className="p-3.5 border rounded-xl bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-900/50 text-amber-700 dark:text-amber-400 text-xs font-semibold">
+                      Aucun devis validé non traité disponible. Tous vos devis validés ont déjà été transformés en bon de production ou sont en attente de validation client.
+                    </div>
                   )}
                 </div>
 
@@ -535,9 +540,9 @@ export default function CommandesPage() {
                 </button>
                 <button
                   type="submit"
-                  disabled={batLockActive}
+                  disabled={batLockActive || (!selectedPO && (validatedQuotes.length === 0 || !selectedQuoteId))}
                   className={`px-5 py-2 rounded-full text-xs font-bold transition shadow-sm ${
-                    batLockActive 
+                    batLockActive || (!selectedPO && (validatedQuotes.length === 0 || !selectedQuoteId))
                       ? 'bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed border border-border-subtle' 
                       : 'bg-brand-primary hover:bg-brand-primary-hover text-white'
                   }`}

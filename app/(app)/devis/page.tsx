@@ -641,7 +641,7 @@ export default function DevisPage() {
                 </div>
               </div>
 
-              <div className="bg-bg-card border border-border-subtle rounded-3xl shadow-premium overflow-hidden">
+              <div className="hidden sm:block bg-bg-card border border-border-subtle rounded-3xl shadow-premium overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full border-collapse text-left text-sm text-text-main">
                     <thead className="bg-slate-50 dark:bg-slate-800/30 border-b border-border-subtle text-text-secondary text-xs font-semibold uppercase tracking-wider whitespace-nowrap">
@@ -739,6 +739,77 @@ export default function DevisPage() {
                     </tbody>
                   </table>
                 </div>
+              </div>
+
+              {/* Mobile card list (below sm breakpoint) */}
+              <div className="sm:hidden space-y-3">
+                {filteredQuotes.length > 0 ? (
+                  filteredQuotes.map((q) => {
+                    const client = storeClients.find(c => c.id === q.clientId);
+                    const needsBAT = hasBATLinked(q.id);
+                    return (
+                      <div key={q.id} className="bg-bg-card border border-border-subtle rounded-2xl shadow-premium p-4 space-y-3">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 font-bold text-text-main min-w-0">
+                            <FileText className="w-4 h-4 text-slate-400 shrink-0" />
+                            <span className="truncate">{q.quoteNumber}</span>
+                          </div>
+                          <span className={`px-3 py-1 rounded-full border text-xs font-bold shrink-0 ${getStatusBadge(q.status)}`}>
+                            {q.status === 'valide' ? 'Accepté' : q.status === 'refuse' ? 'Refusé' : 'En attente'}
+                          </span>
+                        </div>
+                        <p className="text-sm font-semibold text-text-main truncate">{client?.companyName || 'Client Inconnu'}</p>
+                        <div className="flex items-center justify-between gap-2 text-xs">
+                          <span className="text-text-secondary">{new Date(q.createdAt).toLocaleDateString('fr-FR')}</span>
+                          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
+                            needsBAT
+                              ? 'bg-violet-50 dark:bg-violet-950/20 text-violet-700 dark:text-violet-400 border-violet-100 dark:border-violet-900/30'
+                              : 'bg-slate-100 dark:bg-slate-800 text-text-secondary border-border-subtle'
+                          }`}>
+                            {needsBAT ? 'Nécessite BAT' : 'Sans BAT'}
+                          </span>
+                        </div>
+                        <p className="text-right font-extrabold text-brand-primary">{formatFCFA(q.totalFcfa)}</p>
+                        <div className="flex items-center justify-end gap-1.5 pt-2 border-t border-border-subtle">
+                          <button
+                            onClick={() => openPreview(q.id)}
+                            title="Aperçu / Imprimer / Télécharger"
+                            className="p-1.5 rounded-lg text-text-secondary hover:text-brand-primary hover:bg-brand-primary/10 transition"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+                          {q.status === 'en_attente' && (
+                            <>
+                              <button
+                                onClick={() => openEditQuote(q)}
+                                title="Modifier le devis"
+                                className="p-1.5 rounded-lg text-text-secondary hover:text-brand-primary hover:bg-brand-primary/10 transition"
+                              >
+                                <Edit2 className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => updateQuoteStatusStore(q.id, 'valide')}
+                                className="text-xs px-2.5 py-1 rounded-full bg-emerald-500/10 hover:bg-emerald-500 text-emerald-600 dark:text-emerald-400 hover:text-white font-bold transition border border-emerald-500/20"
+                              >
+                                Accepter
+                              </button>
+                              <button
+                                onClick={() => updateQuoteStatusStore(q.id, 'refuse')}
+                                className="text-xs px-2.5 py-1 rounded-full bg-rose-500/10 hover:bg-rose-500 text-rose-600 dark:text-rose-450 hover:text-white font-bold transition border border-rose-500/20"
+                              >
+                                Refuser
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="bg-bg-card border border-border-subtle rounded-2xl shadow-premium px-6 py-12 text-center text-text-secondary font-medium">
+                    Aucun devis enregistré.
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -992,7 +1063,7 @@ export default function DevisPage() {
                 </button>
               </div>
 
-              <div className="bg-bg-card border border-border-subtle rounded-3xl shadow-premium overflow-hidden">
+              <div className="hidden sm:block bg-bg-card border border-border-subtle rounded-3xl shadow-premium overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full border-collapse text-left text-sm text-text-main">
                     <thead className="bg-slate-50 dark:bg-slate-800/30 border-b border-border-subtle text-text-secondary text-xs font-semibold uppercase tracking-wider whitespace-nowrap">
@@ -1055,6 +1126,44 @@ export default function DevisPage() {
                     </tbody>
                   </table>
                 </div>
+              </div>
+
+              {/* Mobile card list (below sm breakpoint) */}
+              <div className="sm:hidden space-y-3">
+                {filteredClients.length > 0 ? (
+                  filteredClients.map((c) => (
+                    <div key={c.id} className="bg-bg-card border border-border-subtle rounded-2xl shadow-premium p-4 space-y-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 font-bold text-text-main min-w-0">
+                          <Building className="w-4 h-4 text-slate-400 shrink-0" />
+                          <span className="truncate">{c.companyName}</span>
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <button
+                            onClick={() => openClientModal(c)}
+                            className="p-1.5 rounded-lg text-text-secondary hover:text-brand-primary hover:bg-brand-primary/10 transition"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => { setSelectedClient(c); setIsDeleteClientOpen(true); }}
+                            className="p-1.5 rounded-lg text-text-secondary hover:text-rose-600 hover:bg-rose-500/10 transition"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                      <p className="text-xs text-text-main font-medium">{c.contactName || '-'}</p>
+                      <p className="text-xs text-brand-primary font-semibold">{c.phone || '-'}</p>
+                      <p className="text-xs text-text-secondary">{c.address || '-'}</p>
+                      <p className="text-xs text-text-secondary">{c.email || '-'}</p>
+                    </div>
+                  ))
+                ) : (
+                  <div className="bg-bg-card border border-border-subtle rounded-2xl shadow-premium px-6 py-12 text-center text-text-secondary font-medium">
+                    Aucun client enregistré.
+                  </div>
+                )}
               </div>
             </div>
           )}

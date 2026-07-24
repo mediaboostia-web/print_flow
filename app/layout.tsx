@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import InstallPrompt from "@/components/ui/InstallPrompt";
 
 export const metadata: Metadata = {
   title: "Print_Flow — Logiciel de Gestion & Facturation pour Imprimeries",
-  description: "Solution SaaS spécialisée pour imprimeries et ateliers de reprographie en Afrique francophone (FCFA / XAF). Devis personnalisables, BAT, Bons de commande, Factures et Acomptes.",
+  description: "Logiciel privé de gestion spécialisé pour imprimeries et ateliers de reprographie en Afrique francophone (FCFA / XAF). Devis personnalisables, BAT, Bons de commande, Factures et Acomptes.",
   keywords: [
     "logiciel gestion imprimerie",
     "facturation imprimeur FCFA",
@@ -78,6 +79,7 @@ export default function RootLayout({
       </head>
       <body className="min-h-full flex flex-col bg-bg-base text-text-main">
         {children}
+        <InstallPrompt />
       </body>
     </html>
   );
