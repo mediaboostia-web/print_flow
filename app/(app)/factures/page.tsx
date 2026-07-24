@@ -370,11 +370,11 @@ export default function FacturesPage() {
                         <div className="flex justify-between items-center pb-4 mb-5 -mx-8 -mt-8 px-8 pt-8 border-b border-slate-200 bg-slate-50">
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-full bg-slate-900 flex items-center justify-center text-white font-bold">
-                              {currentOrg.name.charAt(0)}
+                              {currentOrg?.name.charAt(0)}
                             </div>
                             <div>
-                              <h2 className="text-sm font-bold text-slate-900">{currentOrg.name}</h2>
-                              <p className="text-[9px] text-slate-500">{currentOrg.address}</p>
+                              <h2 className="text-sm font-bold text-slate-900">{currentOrg?.name}</h2>
+                              <p className="text-[9px] text-slate-500">{currentOrg?.address}</p>
                             </div>
                           </div>
                           <div className="text-right">
@@ -387,9 +387,9 @@ export default function FacturesPage() {
                           <div className="flex items-center gap-3">
                             <img src="/Logo_Print_Flow.png" alt="Print_Flow" className="h-10 w-auto object-contain shrink-0" />
                             <div className="space-y-0.5">
-                              <h2 className="text-base font-black text-slate-900 tracking-tight leading-none">{currentOrg.name}</h2>
-                              <p className="text-[9px] text-slate-500">{currentOrg.address || 'Plateau, Dakar'}</p>
-                              <p className="text-[9px] text-slate-500">Tél: {currentOrg.phone || '+221 33 800 00 00'}</p>
+                              <h2 className="text-base font-black text-slate-900 tracking-tight leading-none">{currentOrg?.name}</h2>
+                              <p className="text-[9px] text-slate-500">{currentOrg?.address || 'Plateau, Dakar'}</p>
+                              <p className="text-[9px] text-slate-500">Tél: {currentOrg?.phone || '+221 33 800 00 00'}</p>
                             </div>
                           </div>
 

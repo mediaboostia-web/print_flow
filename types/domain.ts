@@ -14,10 +14,6 @@ export interface Organization {
   phone?: string;
   email?: string;
   isActive?: boolean;
-  subscriptionPlanId?: string;
-  subscriptionStatus?: 'active' | 'suspended' | 'expired';
-  subscriptionEndDate?: string;
-  catalogueEnabled?: boolean;
   createdAt: string;
 }
 

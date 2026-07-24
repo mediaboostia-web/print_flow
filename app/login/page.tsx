@@ -2,31 +2,26 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { 
-  Mail, 
-  Lock, 
-  Eye, 
-  EyeOff, 
-  AlertCircle, 
-  Building2, 
-  User, 
-  Phone, 
-  Clock, 
-  TrendingUp, 
-  CheckCircle2, 
-  ShieldCheck 
+import {
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  AlertCircle,
 } from 'lucide-react';
 import { useAppStore } from '@/lib/state/store';
-import { formatFCFA } from '@/lib/utils/money';
 import { isValidEmail } from '@/lib/utils/email';
 
 export default function LoginPage() {
   const router = useRouter();
   const login = useAppStore((state) => state.login);
-  const registerFreeTrial = useAppStore((state) => state.registerFreeTrial);
+  const requestPasswordReset = useAppStore((state) => state.requestPasswordReset);
   const hasHydrated = useAppStore((state) => state.hasHydrated);
   const isAuthenticated = useAppStore((state) => state.isAuthenticated);
-  const isSuperAdmin = useAppStore((state) => state.isSuperAdmin);
+
+  // 'login' = normal sign-in form; 'forgot' = request a password reset email
+  const [mode, setMode] = useState<'login' | 'forgot'>('login');
+  const [resetSent, setResetSent] = useState(false);
 
   // Form input states
   const [email, setEmail] = useState('');
@@ -34,12 +29,6 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Sign up form states
-  const [isRegistering, setIsRegistering] = useState(false);
-  const [orgName, setOrgName] = useState('');
-  const [adminFullName, setAdminFullName] = useState('');
-  const [phoneInput, setPhoneInput] = useState('');
 
   // Rate Limiting states (Max 5 failed attempts -> 60s lockout)
   const [failedAttempts, setFailedAttempts] = useState(0);
@@ -56,12 +45,12 @@ export default function LoginPage() {
     return () => clearInterval(interval);
   }, [lockoutTimer]);
 
-  // Already logged in as an org user? Skip straight to the dashboard.
+  // Already logged in? Skip straight to the dashboard.
   useEffect(() => {
-    if (hasHydrated && isAuthenticated && !isSuperAdmin) {
+    if (hasHydrated && isAuthenticated) {
       router.replace('/dashboard');
     }
-  }, [hasHydrated, isAuthenticated, isSuperAdmin, router]);
+  }, [hasHydrated, isAuthenticated, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,47 +67,53 @@ export default function LoginPage() {
       return;
     }
 
-    if (isRegistering) {
-      if (!orgName.trim() || !adminFullName.trim() || !email.trim() || !password) {
-        setError('Veuillez renseigner tous les champs obligatoires (*).');
-        return;
-      }
-      setIsSubmitting(true);
-      const res = await registerFreeTrial({ orgName, adminFullName, email, phone: phoneInput, password });
-      setIsSubmitting(false);
-      if (res.success) {
-        router.push('/dashboard');
-      } else {
-        setError(res.error || "Une erreur est survenue lors de l'inscription.");
-      }
-    } else {
-      if (!email.trim() || !password) {
-        setError('Veuillez renseigner votre e-mail et votre mot de passe.');
-        return;
-      }
-
-      setIsSubmitting(true);
-      const result = await login(email, password);
-      setIsSubmitting(false);
-
-      if (!result.success) {
-        const nextAttempts = failedAttempts + 1;
-        setFailedAttempts(nextAttempts);
-
-        if (nextAttempts >= 5) {
-          setLockoutTimer(60);
-          setFailedAttempts(0);
-          setError("Nombre maximal de 5 tentatives atteint. Accès suspendu pendant 60 secondes.");
-        } else {
-          setError(`${result.error || 'Identifiants incorrects.'} (${nextAttempts}/5 tentatives)`);
-        }
-        return;
-      }
-
-      setFailedAttempts(0);
-      setLockoutTimer(0);
-      router.push('/dashboard');
+    if (!email.trim() || !password) {
+      setError('Veuillez renseigner votre e-mail et votre mot de passe.');
+      return;
     }
+
+    setIsSubmitting(true);
+    const result = await login(email, password);
+    setIsSubmitting(false);
+
+    if (!result.success) {
+      const nextAttempts = failedAttempts + 1;
+      setFailedAttempts(nextAttempts);
+
+      if (nextAttempts >= 5) {
+        setLockoutTimer(60);
+        setFailedAttempts(0);
+        setError("Nombre maximal de 5 tentatives atteint. Accès suspendu pendant 60 secondes.");
+      } else {
+        setError(`${result.error || 'Identifiants incorrects.'} (${nextAttempts}/5 tentatives)`);
+      }
+      return;
+    }
+
+    setFailedAttempts(0);
+    setLockoutTimer(0);
+    router.push('/dashboard');
+  };
+
+  const handleForgotSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+
+    if (!isValidEmail(email)) {
+      setError('Veuillez saisir une adresse e-mail valide (ex: utilisateur@domaine.com).');
+      return;
+    }
+
+    setIsSubmitting(true);
+    const result = await requestPasswordReset(email);
+    setIsSubmitting(false);
+
+    if (!result.success) {
+      setError(result.error || "Impossible d'envoyer l'e-mail de réinitialisation.");
+      return;
+    }
+
+    setResetSent(true);
   };
 
   return (
@@ -141,157 +136,157 @@ export default function LoginPage() {
           <div className="my-auto space-y-3 max-w-sm w-full mx-auto">
             <div className="space-y-0.5 text-left">
               <h1 className="text-xl sm:text-2xl font-black text-text-main tracking-tight">
-                {isRegistering ? "Créer un espace (7j Essai)" : "Bienvenue sur Print_Flow"}
+                {mode === 'login' ? 'Bienvenue sur Print_Flow' : 'Mot de passe oublié'}
               </h1>
               <p className="text-[11px] text-text-secondary">
-                {isRegistering
-                  ? "Renseignez votre imprimerie pour démarrer l'essai gratuit."
-                  : "Connectez-vous à votre espace d'impression."}
+                {mode === 'login'
+                  ? "Connectez-vous à votre espace d'impression."
+                  : 'Saisissez votre e-mail pour recevoir un lien de réinitialisation.'}
               </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-2">
-              {/* Error Alert */}
-              {error && (
-                <div className="p-2 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 rounded-xl flex items-center gap-2 text-rose-700 dark:text-rose-400 text-[11px] font-medium">
-                  <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                  <span>{error}</span>
-                </div>
-              )}
-
-              {/* Sign Up Fields in 2-column grid for compactness */}
-              {isRegistering ? (
-                <div className="space-y-2">
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="space-y-0.5">
-                      <label className="text-[10px] font-bold text-text-secondary uppercase">
-                        Imprimerie *
-                      </label>
-                      <div className="relative">
-                        <Building2 className="w-3.5 h-3.5 text-text-secondary absolute left-2.5 top-1/2 -translate-y-1/2" />
-                        <input
-                          type="text"
-                          value={orgName}
-                          onChange={(e) => setOrgName(e.target.value)}
-                          placeholder="Nom imprimerie"
-                          className="w-full pl-8 pr-2.5 py-1.5 bg-input-bg border border-border-subtle rounded-xl text-xs focus:outline-none focus:border-brand-primary text-text-main"
-                          required
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-0.5">
-                      <label className="text-[10px] font-bold text-text-secondary uppercase">
-                        Responsable *
-                      </label>
-                      <div className="relative">
-                        <User className="w-3.5 h-3.5 text-text-secondary absolute left-2.5 top-1/2 -translate-y-1/2" />
-                        <input
-                          type="text"
-                          value={adminFullName}
-                          onChange={(e) => setAdminFullName(e.target.value)}
-                          placeholder="Nom & Prénom"
-                          className="w-full pl-8 pr-2.5 py-1.5 bg-input-bg border border-border-subtle rounded-xl text-xs focus:outline-none focus:border-brand-primary text-text-main"
-                          required
-                        />
-                      </div>
-                    </div>
+            {mode === 'login' ? (
+              <form onSubmit={handleSubmit} className="space-y-2">
+                {/* Error Alert */}
+                {error && (
+                  <div className="p-2 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 rounded-xl flex items-center gap-2 text-rose-700 dark:text-rose-400 text-[11px] font-medium">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>{error}</span>
                   </div>
+                )}
 
-                  <div className="space-y-0.5">
-                    <label className="text-[10px] font-bold text-text-secondary uppercase">
-                      Téléphone
-                    </label>
-                    <div className="relative">
-                      <Phone className="w-3.5 h-3.5 text-text-secondary absolute left-2.5 top-1/2 -translate-y-1/2" />
-                      <input
-                        type="text"
-                        value={phoneInput}
-                        onChange={(e) => setPhoneInput(e.target.value)}
-                        placeholder="ex: +221 77 123 45 67"
-                        className="w-full pl-8 pr-2.5 py-1.5 bg-input-bg border border-border-subtle rounded-xl text-xs focus:outline-none focus:border-brand-primary text-text-main"
-                      />
-                    </div>
+                {/* Email */}
+                <div className="space-y-0.5">
+                  <label className="text-[10px] font-bold text-text-secondary uppercase">
+                    Adresse email *
+                  </label>
+                  <div className="relative">
+                    <Mail className="w-3.5 h-3.5 text-text-secondary absolute left-2.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="vous@imprimerie.sn"
+                      autoComplete="email"
+                      className="w-full pl-8 pr-2.5 py-1.5 bg-input-bg border border-border-subtle rounded-xl text-xs focus:outline-none focus:border-brand-primary text-text-main"
+                      required
+                    />
                   </div>
                 </div>
-              ) : null}
 
-              {/* Email */}
-              <div className="space-y-0.5">
-                <label className="text-[10px] font-bold text-text-secondary uppercase">
-                  Adresse email *
-                </label>
-                <div className="relative">
-                  <Mail className="w-3.5 h-3.5 text-text-secondary absolute left-2.5 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="vous@imprimerie.sn"
-                    autoComplete="email"
-                    className="w-full pl-8 pr-2.5 py-1.5 bg-input-bg border border-border-subtle rounded-xl text-xs focus:outline-none focus:border-brand-primary text-text-main"
-                    required
-                  />
+                {/* Password */}
+                <div className="space-y-0.5">
+                  <label className="text-[10px] font-bold text-text-secondary uppercase">
+                    Mot de passe *
+                  </label>
+                  <div className="relative">
+                    <Lock className="w-3.5 h-3.5 text-text-secondary absolute left-2.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="••••••••"
+                      autoComplete="current-password"
+                      className="w-full pl-8 pr-8 py-1.5 bg-input-bg border border-border-subtle rounded-xl text-xs focus:outline-none focus:border-brand-primary text-text-main"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-secondary hover:text-text-main"
+                    >
+                      {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
                 </div>
-              </div>
 
-              {/* Password */}
-              <div className="space-y-0.5">
-                <label className="text-[10px] font-bold text-text-secondary uppercase">
-                  Mot de passe *
-                </label>
-                <div className="relative">
-                  <Lock className="w-3.5 h-3.5 text-text-secondary absolute left-2.5 top-1/2 -translate-y-1/2" />
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    autoComplete="current-password"
-                    className="w-full pl-8 pr-8 py-1.5 bg-input-bg border border-border-subtle rounded-xl text-xs focus:outline-none focus:border-brand-primary text-text-main"
-                    required
-                  />
+                {/* Submit Button */}
+                <button
+                  type="submit"
+                  disabled={isSubmitting || lockoutTimer > 0}
+                  className="w-full py-2.5 mt-2 rounded-full bg-brand-primary hover:bg-brand-primary-hover text-white text-xs font-bold transition shadow-sm disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
+                >
+                  {isSubmitting ? (
+                    <div className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                  ) : (
+                    <span>Connexion à l'espace</span>
+                  )}
+                </button>
+
+                {/* Forgot password link */}
+                <div className="text-center pt-1">
                   <button
                     type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-secondary hover:text-text-main"
+                    onClick={() => { setMode('forgot'); setError(''); setResetSent(false); }}
+                    className="text-[11px] font-bold text-text-secondary hover:text-brand-primary transition cursor-pointer"
                   >
-                    {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                    Mot de passe oublié ?
                   </button>
                 </div>
+              </form>
+            ) : resetSent ? (
+              <div className="space-y-3">
+                <div className="p-3 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/50 rounded-xl text-emerald-700 dark:text-emerald-400 text-[11px] font-medium">
+                  E-mail envoyé ! Vérifiez votre boîte de réception ({email}) et cliquez sur le lien pour choisir un nouveau mot de passe.
+                </div>
+                <button
+                  type="button"
+                  onClick={() => { setMode('login'); setResetSent(false); setError(''); }}
+                  className="w-full py-2.5 rounded-full border border-border-subtle hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-bold text-text-main transition cursor-pointer"
+                >
+                  Retour à la connexion
+                </button>
               </div>
-
-              {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={isSubmitting || lockoutTimer > 0}
-                className="w-full py-2.5 mt-2 rounded-full bg-brand-primary hover:bg-brand-primary-hover text-white text-xs font-bold transition shadow-sm disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
-              >
-                {isSubmitting ? (
-                  <div className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
-                ) : (
-                  <span>{isRegistering ? "Activer mon essai gratuit 7 jours" : "Connexion à l'espace"}</span>
+            ) : (
+              <form onSubmit={handleForgotSubmit} className="space-y-2">
+                {error && (
+                  <div className="p-2 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 rounded-xl flex items-center gap-2 text-rose-700 dark:text-rose-400 text-[11px] font-medium">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>{error}</span>
+                  </div>
                 )}
-              </button>
-            </form>
 
-            {/* Toggle registration / login link */}
-            <div className="text-center pt-1">
-              <button
-                type="button"
-                onClick={() => {
-                  setIsRegistering(!isRegistering);
-                  setError('');
-                }}
-                className="text-[11px] font-bold text-text-secondary hover:text-brand-primary transition cursor-pointer"
-              >
-                {isRegistering ? (
-                  <span>Déjà un compte ? <strong className="text-brand-primary underline">Se connecter</strong></span>
-                ) : (
-                  <span>Pas encore de compte ? <strong className="text-brand-primary underline">S'inscrire (Essai 7j)</strong></span>
-                )}
-              </button>
-            </div>
+                <div className="space-y-0.5">
+                  <label className="text-[10px] font-bold text-text-secondary uppercase">
+                    Adresse email *
+                  </label>
+                  <div className="relative">
+                    <Mail className="w-3.5 h-3.5 text-text-secondary absolute left-2.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="vous@imprimerie.sn"
+                      autoComplete="email"
+                      className="w-full pl-8 pr-2.5 py-1.5 bg-input-bg border border-border-subtle rounded-xl text-xs focus:outline-none focus:border-brand-primary text-text-main"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full py-2.5 mt-2 rounded-full bg-brand-primary hover:bg-brand-primary-hover text-white text-xs font-bold transition shadow-sm disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
+                >
+                  {isSubmitting ? (
+                    <div className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                  ) : (
+                    <span>Envoyer le lien de réinitialisation</span>
+                  )}
+                </button>
+
+                <div className="text-center pt-1">
+                  <button
+                    type="button"
+                    onClick={() => { setMode('login'); setError(''); }}
+                    className="text-[11px] font-bold text-text-secondary hover:text-brand-primary transition cursor-pointer"
+                  >
+                    Retour à la connexion
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
 
           {/* Footer Copyright */}

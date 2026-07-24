@@ -667,9 +667,9 @@ export default function CommandesPage() {
                   <div className="flex items-center gap-3">
                     <img src="/Logo_Print_Flow.png" alt="Print_Flow" className="h-10 w-auto object-contain shrink-0" />
                     <div className="space-y-0.5">
-                      <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">{currentOrg.name}</h2>
-                      <p className="text-[10px] text-slate-500">{currentOrg.address || 'Plateau, Dakar'}</p>
-                      <p className="text-[10px] text-slate-500">Tél: {currentOrg.phone || '+221 33 800 00 00'}</p>
+                      <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">{currentOrg?.name}</h2>
+                      <p className="text-[10px] text-slate-500">{currentOrg?.address || 'Plateau, Dakar'}</p>
+                      <p className="text-[10px] text-slate-500">Tél: {currentOrg?.phone || '+221 33 800 00 00'}</p>
                     </div>
                   </div>
 

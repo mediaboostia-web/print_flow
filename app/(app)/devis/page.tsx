@@ -232,10 +232,10 @@ export default function DevisPage() {
     }
 
     setActionLoading(true);
-    setIsClientModalOpen(false);
 
-    setTimeout(() => {
-      if (selectedClient) {
+    if (selectedClient) {
+      setIsClientModalOpen(false);
+      setTimeout(() => {
         editClientStore({
           ...selectedClient,
           companyName,
@@ -245,20 +245,29 @@ export default function DevisPage() {
           address,
           updatedAt: new Date().toISOString()
         });
-      } else {
-        addClientStore({
-          companyName,
-          contactName,
-          phone,
-          email,
-          address,
-          createdBy: currentProfile?.fullName || 'Commercial'
-        });
-        setSuccessTitle('Client ajouté avec succès');
-        setSuccessMessage(`"${companyName}" a été ajouté à votre base clients.`);
-        setIsSuccessOpen(true);
-      }
+        setActionLoading(false);
+      }, 450);
+      return;
+    }
+
+    setTimeout(async () => {
+      const res = await addClientStore({
+        companyName,
+        contactName,
+        phone,
+        email,
+        address,
+        createdBy: currentProfile?.fullName || 'Commercial'
+      });
       setActionLoading(false);
+      if (!res.success) {
+        setClientFormError(res.error || "Impossible d'enregistrer le client.");
+        return;
+      }
+      setIsClientModalOpen(false);
+      setSuccessTitle('Client ajouté avec succès');
+      setSuccessMessage(`"${companyName}" a été ajouté à votre base clients.`);
+      setIsSuccessOpen(true);
     }, 450);
   };
 
@@ -1247,15 +1256,15 @@ export default function DevisPage() {
                         <img src="/Logo_Print_Flow.png" alt="Print_Flow" className="h-10 w-auto object-contain shrink-0" />
                         <div>
                           <h2 className="text-lg font-black text-slate-900 tracking-tight uppercase leading-tight">
-                            {currentOrg.name}
+                            {currentOrg?.name}
                           </h2>
                           <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Impression & Travaux Graphiques</p>
                         </div>
                       </div>
                       <div className="text-[11px] text-slate-600 space-y-0.5 pt-1 border-t border-slate-100">
-                        <p><span className="font-semibold text-slate-800">Adresse :</span> {currentOrg.address || 'Dakar, Sénégal'}</p>
-                        <p><span className="font-semibold text-slate-800">Téléphone :</span> {currentOrg.phone || '+221 33 800 00 00'}</p>
-                        {currentOrg.email && <p><span className="font-semibold text-slate-800">Email :</span> {currentOrg.email}</p>}
+                        <p><span className="font-semibold text-slate-800">Adresse :</span> {currentOrg?.address || 'Dakar, Sénégal'}</p>
+                        <p><span className="font-semibold text-slate-800">Téléphone :</span> {currentOrg?.phone || '+221 33 800 00 00'}</p>
+                        {currentOrg?.email && <p><span className="font-semibold text-slate-800">Email :</span> {currentOrg.email}</p>}
                       </div>
                     </div>
 
@@ -1379,7 +1388,7 @@ export default function DevisPage() {
 
                   {/* FOOTER */}
                   <div className="border-t border-slate-300 pt-3 text-center text-[9px] text-slate-500 space-y-0.5">
-                    <p className="font-bold text-slate-700">{currentOrg.name} — Tous travaux d'impression & d'édition</p>
+                    <p className="font-bold text-slate-700">{currentOrg?.name} — Tous travaux d'impression & d'édition</p>
                     <p>Merci pour votre confiance. En cas d'accord, merci de nous retourner ce devis daté et signé avec la mention "Bon pour accord".</p>
                   </div>
                 </div>

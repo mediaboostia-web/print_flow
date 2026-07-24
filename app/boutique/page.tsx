@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { useParams } from 'next/navigation';
 import {
   Printer,
   Phone,
@@ -51,9 +50,6 @@ function getUnitPriceFcfa(product: Product, quantity: number, format: string): n
 }
 
 export default function PublicCataloguePage() {
-  const params = useParams<{ orgId: string }>();
-  const orgId = params.orgId;
-
   const fetchPublicCatalogue = useAppStore((state) => state.fetchPublicCatalogue);
   const submitPublicOrder = useAppStore((state) => state.submitPublicOrder);
 
@@ -92,7 +88,7 @@ export default function PublicCataloguePage() {
   useEffect(() => {
     let active = true;
     setStatus('loading');
-    fetchPublicCatalogue(orgId).then(({ org: fetchedOrg, products: fetchedProducts }) => {
+    fetchPublicCatalogue().then(({ org: fetchedOrg, products: fetchedProducts }) => {
       if (!active) return;
       if (!fetchedOrg) {
         setStatus('unavailable');
@@ -109,7 +105,7 @@ export default function PublicCataloguePage() {
     });
     return () => { active = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [orgId]);
+  }, []);
 
   const presentMaterials = useMemo(() => {
     const set = new Set<ProductMaterialType>();
@@ -182,7 +178,7 @@ export default function PublicCataloguePage() {
     }
 
     setSubmitting(true);
-    const res = await submitPublicOrder(orgId, {
+    const res = await submitPublicOrder({
       companyName: companyName.trim(),
       contactName: contactName.trim() || undefined,
       phone: phone.trim(),

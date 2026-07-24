@@ -78,16 +78,15 @@ export default function ClientsPage() {
   };
 
   // Handle Form Submit (Add/Edit)
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!companyName.trim()) {
       setFormError('Le nom de l\'entreprise est obligatoire.');
       return;
     }
 
-    setIsModalOpen(false);
-
     if (selectedClient) {
+      setIsModalOpen(false);
       editClientStore({
         ...selectedClient,
         companyName,
@@ -98,7 +97,7 @@ export default function ClientsPage() {
         updatedAt: new Date().toISOString()
       });
     } else {
-      addClientStore({
+      const res = await addClientStore({
         companyName,
         contactName,
         phone,
@@ -107,6 +106,11 @@ export default function ClientsPage() {
         createdBy: currentProfile?.fullName || 'Commercial',
         source: 'interne'
       });
+      if (!res.success) {
+        setFormError(res.error || "Impossible d'enregistrer le client.");
+        return;
+      }
+      setIsModalOpen(false);
       setIsSuccessOpen(true);
     }
   };

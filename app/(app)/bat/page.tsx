@@ -1,21 +1,13 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
-import { 
-  FileText, 
-  Upload, 
-  CheckCircle, 
-  XCircle, 
-  AlertCircle, 
-  ChevronRight, 
-  Eye, 
-  Download, 
+import React, { useState } from 'react';
+import {
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+  ChevronRight,
   MessageSquare,
   FileCheck,
-  User,
-  MapPin,
-  Sparkles,
-  Info
 } from 'lucide-react';
 import { useAppStore } from '@/lib/state/store';
 import { formatFCFA } from '@/lib/utils/money';
@@ -24,7 +16,6 @@ import { Quote, BAT, BATVersion } from '@/types/domain';
 export default function BATPage() {
   const currentOrgId = useAppStore((state) => state.currentOrgId);
   const currentProfile = useAppStore((state) => state.getCurrentProfile());
-  const canImportBAT = useAppStore((state) => state.canImportBAT());
 
   // Store lists & functions
   const storeQuotes = useAppStore((state) => state.quotes);
@@ -37,17 +28,11 @@ export default function BATPage() {
 
   // States
   const [selectedBAT, setSelectedBAT] = useState<BAT | null>(null);
-  const [dragActive, setDragActive] = useState(false);
   const [versionComment, setVersionComment] = useState('');
   const [refuseReason, setRefuseReason] = useState('');
   const [isRefuseOpen, setIsRefuseOpen] = useState(false);
-  const [simulatedFileName, setSimulatedFileName] = useState('');
-  const [simulatedFileSize, setSimulatedFileSize] = useState(0);
-  const [simulatedFileBase64, setSimulatedFileBase64] = useState('');
   const [formError, setFormError] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
-
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Quotes filter
   const orgQuotes = storeQuotes.filter(q => q.organizationId === currentOrgId);
@@ -57,66 +42,10 @@ export default function BATPage() {
     return storeBATs.find(b => b.quoteId === quoteId);
   };
 
-  // Drag & drop handlers
-  const handleDrag = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setDragActive(true);
-    } else if (e.type === "dragleave") {
-      setDragActive(false);
-    }
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-    
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      processFile(e.dataTransfer.files[0]);
-    }
-  };
-
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      processFile(e.target.files[0]);
-    }
-  };
-
-  const processFile = (file: File) => {
-    if (!canImportBAT) {
-      setFormError("L'importation de documents BAT est réservée aux abonnés de la Formule PRO. Veuillez mettre à niveau.");
-      return;
-    }
-    const isZip = file.name.toLowerCase().endsWith('.zip') || file.type === 'application/zip' || file.type === 'application/x-zip-compressed';
-    if (!isZip) {
-      setFormError('Seuls les fichiers .ZIP sont acceptés pour le dossier graphique.');
-      return;
-    }
-    if (file.size > 25 * 1024 * 1024) {
-      setFormError('Le fichier ne doit pas dépasser 25 Mo.');
-      return;
-    }
-    setSimulatedFileName(file.name);
-    setSimulatedFileSize(file.size);
-    setFormError('');
-
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setSimulatedFileBase64(reader.result as string);
-    };
-    reader.readAsDataURL(file);
-  };
-
   // Add new BAT Version
   const handleAddVersion = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedBAT) return;
-    if (!simulatedFileName) {
-      setFormError("Veuillez téléverser un fichier graphique.");
-      return;
-    }
     if (!versionComment.trim()) {
       setFormError("Le commentaire de version est obligatoire.");
       return;
@@ -130,8 +59,8 @@ export default function BATPage() {
         id: `bv-${Date.now()}`,
         batId: selectedBAT.id,
         versionNumber: versions.length + 1,
-        filePath: simulatedFileBase64 || `bat/${simulatedFileName}`,
-        fileType: 'application/zip',
+        filePath: '',
+        fileType: '',
         comment: versionComment.trim(),
         uploadedBy: currentProfile.fullName,
         uploadedAt: new Date().toISOString()
@@ -140,9 +69,6 @@ export default function BATPage() {
       addBATVersionStore(selectedBAT.id, newVersion);
 
       // Reset
-      setSimulatedFileName('');
-      setSimulatedFileSize(0);
-      setSimulatedFileBase64('');
       setVersionComment('');
       setFormError('');
 
@@ -217,7 +143,7 @@ export default function BATPage() {
       <div>
         <h1 className="text-2xl font-bold text-text-main tracking-tight">Gestion des Bons à Tirer (BAT)</h1>
         <p className="text-text-secondary text-sm mt-0.5">
-          Téléversez vos épreuves graphiques PDF et faites valider les BAT par vos clients avant l'impression finale.
+          Suivez les versions et faites valider les BAT par vos clients avant l'impression finale.
         </p>
       </div>
 
@@ -225,7 +151,7 @@ export default function BATPage() {
         /* split screen BAT view */
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-fade-in">
           
-          {/* Left panel: File Upload and History */}
+          {/* Left panel: Version History */}
           <div className="lg:col-span-8 space-y-6">
             <button
               onClick={() => setSelectedBAT(null)}
@@ -234,24 +160,11 @@ export default function BATPage() {
               ← Retourner au tableau
             </button>
 
-            {/* Simulated Drag & Drop Zone */}
+            {/* New version form */}
             <div className="bg-bg-card border border-border-subtle p-6 rounded-3xl shadow-premium space-y-4">
-              <h3 className="text-base font-bold text-text-main">Téléverser une Nouvelle Version</h3>
-              
-              {!canImportBAT ? (
-                <div className="border border-border-subtle rounded-2xl p-6 bg-slate-50 dark:bg-slate-800/10 text-center space-y-4">
-                  <AlertCircle className="w-10 h-10 text-amber-500 mx-auto" />
-                  <div className="space-y-1">
-                    <h4 className="text-sm font-extrabold text-text-main">Fonctionnalité de Chargement Verrouillée</h4>
-                    <p className="text-xs text-text-secondary leading-relaxed">
-                      L'importation de fichiers graphiques (.ZIP) pour le Bon à Tirer est réservée aux abonnés de la <strong className="text-brand-primary">Formule PRO</strong>.
-                    </p>
-                  </div>
-                  <p className="text-[10px] text-text-secondary leading-relaxed">
-                    Votre formule d'abonnement actuelle ne prend pas en charge cette fonctionnalité. Veuillez mettre à niveau votre compte depuis le tableau de bord.
-                  </p>
-                </div>
-              ) : selectedBAT.status === 'valide' ? (
+              <h3 className="text-base font-bold text-text-main">Ajouter une Nouvelle Version</h3>
+
+              {selectedBAT.status === 'valide' ? (
                 <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-2xl flex items-center gap-2.5 text-xs font-bold">
                   <CheckCircle className="w-5 h-5 shrink-0" />
                   <span>Le BAT est d'ores et déjà validé. Aucune autre version n'est requise.</span>
@@ -264,50 +177,6 @@ export default function BATPage() {
                       <span>{formError}</span>
                     </div>
                   )}
-
-                  {/* Drag-drop box */}
-                  <div
-                    onDragEnter={handleDrag}
-                    onDragOver={handleDrag}
-                    onDragLeave={handleDrag}
-                    onDrop={handleDrop}
-                    onClick={() => fileInputRef.current?.click()}
-                    className={`border-2 border-dashed rounded-2xl p-8 flex flex-col items-center justify-center gap-2 transition cursor-pointer text-center ${
-                      dragActive
-                        ? 'border-brand-primary bg-brand-primary/5'
-                        : 'border-border-subtle hover:border-brand-primary bg-bg-base/30'
-                    }`}
-                  >
-                    <Upload className="w-10 h-10 text-text-secondary opacity-60" />
-                    {simulatedFileName ? (
-                      <div className="space-y-1">
-                        <p className="text-sm font-semibold text-text-main">{simulatedFileName}</p>
-                        <p className="text-[10px] text-brand-primary font-bold">
-                          Fichier chargé localement {simulatedFileSize > 0 && `(${(simulatedFileSize / (1024 * 1024)).toFixed(1)} Mo)`}
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="space-y-1">
-                        <p className="text-xs font-bold text-text-main">
-                          Glissez-déposez votre dossier graphique ici ou <span className="text-brand-primary hover:underline">parcourez vos fichiers</span>
-                        </p>
-                        <p className="text-[10px] text-text-secondary">Format accepté : .ZIP uniquement — jusqu'à 25 Mo</p>
-                      </div>
-                    )}
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept=".zip,application/zip,application/x-zip-compressed"
-                      onChange={handleFileSelect}
-                      className="hidden"
-                    />
-                  </div>
-
-                  {/* Format/size info banner */}
-                  <div className="flex items-start gap-2 text-[10px] text-text-secondary bg-slate-50 dark:bg-slate-800/30 border border-border-subtle rounded-xl p-3">
-                    <Info className="w-3.5 h-3.5 text-brand-primary shrink-0 mt-0.5" />
-                    <span>Seuls les fichiers compressés au format <strong className="text-text-main">.ZIP</strong> sont acceptés pour le dossier graphique, jusqu'à <strong className="text-text-main">25 Mo</strong>.</span>
-                  </div>
 
                   {/* Comment */}
                   <div className="space-y-1.5">
@@ -327,7 +196,6 @@ export default function BATPage() {
                     disabled={actionLoading}
                     className="w-full bg-brand-primary hover:bg-brand-primary-hover text-white text-xs font-bold py-2.5 rounded-full shadow-premium transition flex items-center justify-center gap-2"
                   >
-                    <Upload className="w-4 h-4" />
                     <span>Soumettre cette version au client</span>
                   </button>
 
@@ -341,46 +209,23 @@ export default function BATPage() {
               <div className="space-y-3">
                 {selectedBAT.versions && selectedBAT.versions.length > 0 ? (
                   selectedBAT.versions.map((ver) => (
-                    <div key={ver.id} className="p-4 rounded-2xl border border-border-subtle bg-bg-base/30 flex flex-col sm:flex-row justify-between gap-3">
-                      <div className="space-y-1.5">
-                        <div className="flex items-center gap-2">
-                          <span className="px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-[10px] font-bold text-text-main">
-                            V{ver.versionNumber}
-                          </span>
-                          <span className="text-xs text-text-secondary">
-                            Soumis par <span className="font-semibold text-text-main">{ver.uploadedBy}</span> le {new Date(ver.uploadedAt).toLocaleDateString('fr-FR')} à {new Date(ver.uploadedAt).toLocaleTimeString('fr-FR')}
-                          </span>
-                        </div>
-                        <p className="text-sm text-text-main flex items-center gap-1.5">
-                          <MessageSquare className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                          <span>{ver.comment}</span>
-                        </p>
+                    <div key={ver.id} className="p-4 rounded-2xl border border-border-subtle bg-bg-base/30 space-y-1.5">
+                      <div className="flex items-center gap-2">
+                        <span className="px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-[10px] font-bold text-text-main">
+                          V{ver.versionNumber}
+                        </span>
+                        <span className="text-xs text-text-secondary">
+                          Soumis par <span className="font-semibold text-text-main">{ver.uploadedBy}</span> le {new Date(ver.uploadedAt).toLocaleDateString('fr-FR')} à {new Date(ver.uploadedAt).toLocaleTimeString('fr-FR')}
+                        </span>
                       </div>
-                      
-                      <div className="flex items-center gap-2 self-end sm:self-center">
-                        {ver.filePath.startsWith('data:') ? (
-                          <a
-                            href={ver.filePath}
-                            download={`BAT-${selectedBAT.id}-V${ver.versionNumber}.zip`}
-                            className="flex items-center gap-1 text-[10px] font-bold text-brand-primary border border-brand-primary/20 bg-brand-primary/5 hover:bg-brand-primary/10 rounded-full px-3 py-1.5 transition"
-                          >
-                            <Download className="w-3.5 h-3.5" />
-                            <span>Télécharger</span>
-                          </a>
-                        ) : (
-                          <span
-                            title="Archive volumineuse — non conservée localement dans cette phase de démonstration"
-                            className="flex items-center gap-1 text-[10px] font-bold text-text-secondary border border-border-subtle bg-slate-100 dark:bg-slate-800 rounded-full px-3 py-1.5 cursor-not-allowed"
-                          >
-                            <Download className="w-3.5 h-3.5" />
-                            <span>Indisponible</span>
-                          </span>
-                        )}
-                      </div>
+                      <p className="text-sm text-text-main flex items-center gap-1.5">
+                        <MessageSquare className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                        <span>{ver.comment}</span>
+                      </p>
                     </div>
                   ))
                 ) : (
-                  <p className="text-xs text-text-secondary text-center py-6">Aucune maquette soumise à cette date.</p>
+                  <p className="text-xs text-text-secondary text-center py-6">Aucune version soumise à cette date.</p>
                 )}
               </div>
             </div>

@@ -3,23 +3,21 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { 
-  LayoutDashboard, 
-  FileText, 
-  ShoppingBag, 
-  CreditCard, 
-  Plus, 
-  X, 
-  Users, 
-  Store, 
-  FileCheck, 
-  Truck, 
-  ShoppingCart, 
-  History, 
-  Settings, 
-  HelpCircle, 
-  ShieldCheck,
-  Lock
+import {
+  LayoutDashboard,
+  FileText,
+  ShoppingBag,
+  CreditCard,
+  Plus,
+  X,
+  Users,
+  Store,
+  FileCheck,
+  Truck,
+  ShoppingCart,
+  History,
+  Settings,
+  HelpCircle,
 } from 'lucide-react';
 import { useAppStore } from '@/lib/state/store';
 
@@ -29,12 +27,8 @@ export default function BottomNav() {
 
   const currentProfile = useAppStore((state) => state.getCurrentProfile());
   const currentOrg = useAppStore((state) => state.getCurrentOrg());
-  const isSuperAdmin = useAppStore((state) => state.isSuperAdmin);
-  const canAccessHistory = useAppStore((state) => state.canAccessHistory());
-  const canUseOnlineOrders = useAppStore((state) => state.canUseOnlineOrders());
 
   const role = currentProfile?.role || 'commercial';
-  const planId = currentOrg?.subscriptionPlanId || 'plan-free';
 
   // Primary 4 Tabs for Bottom Bar
   const primaryTabs = [
@@ -50,20 +44,8 @@ export default function BottomNav() {
     { name: 'Catalogue', href: '/catalogue', icon: Store, roleAllowed: true },
     { name: 'BAT (Proof)', href: '/bat', icon: FileCheck, roleAllowed: true },
     { name: 'Livraisons', href: '/livraisons', icon: Truck, roleAllowed: true },
-    { 
-      name: 'Commandes en ligne', 
-      href: '/commandes-en-ligne', 
-      icon: ShoppingCart, 
-      roleAllowed: true,
-      locked: !canUseOnlineOrders
-    },
-    { 
-      name: 'Historique', 
-      href: '/historique', 
-      icon: History, 
-      roleAllowed: true,
-      locked: !canAccessHistory
-    },
+    { name: 'Commandes en ligne', href: '/commandes-en-ligne', icon: ShoppingCart, roleAllowed: true },
+    { name: 'Historique', href: '/historique', icon: History, roleAllowed: true },
     { name: 'Paramètres', href: '/parametres', icon: Settings, roleAllowed: role === 'admin' },
     { name: 'Aide & FAQ', href: '/aide', icon: HelpCircle, roleAllowed: true },
   ].filter(m => m.roleAllowed);
@@ -117,17 +99,8 @@ export default function BottomNav() {
             {/* Header */}
             <div className="flex items-center justify-between border-b border-border-subtle pb-3">
               <div>
-                <h3 className="text-sm font-extrabold text-text-main flex items-center gap-2">
-                  <span>Tous les modules</span>
-                  {planId === 'plan-pro' ? (
-                    <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold border border-emerald-500/20">
-                      Formule Pro
-                    </span>
-                  ) : (
-                    <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] font-bold border border-amber-500/20">
-                      Essai 7 Jours
-                    </span>
-                  )}
+                <h3 className="text-sm font-extrabold text-text-main">
+                  Tous les modules
                 </h3>
                 <p className="text-[11px] text-text-secondary">
                   {currentOrg?.name} • {currentProfile?.fullName || 'Utilisateur'}
@@ -166,27 +139,10 @@ export default function BottomNav() {
 
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-bold truncate leading-tight">{module.name}</p>
-                      {module.locked && (
-                        <span className="inline-flex items-center gap-1 text-[9px] text-amber-600 dark:text-amber-400 font-semibold mt-0.5">
-                          <Lock className="w-2.5 h-2.5" /> Plan Pro
-                        </span>
-                      )}
                     </div>
                   </Link>
                 );
               })}
-
-              {/* Super Admin Special Link */}
-              {isSuperAdmin && (
-                <Link
-                  href="/super-admin"
-                  onClick={() => setIsOpen(false)}
-                  className="col-span-2 flex items-center justify-center gap-2 p-3 rounded-2xl bg-purple-500/10 border border-purple-500/30 text-purple-600 dark:text-purple-400 font-bold text-xs"
-                >
-                  <ShieldCheck className="w-4 h-4" />
-                  Espace Super Admin
-                </Link>
-              )}
             </div>
           </div>
         </div>

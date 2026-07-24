@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import {
   History,
-  Lock,
   Search,
   FileText,
   ClipboardCheck,
@@ -25,7 +24,6 @@ const filterMeta: Record<Exclude<HistoryFilter, 'all'>, { label: string; icon: t
 
 export default function HistoriquePage() {
   const currentOrgId = useAppStore((state) => state.currentOrgId);
-  const canUsePublicCatalogue = useAppStore((state) => state.canUsePublicCatalogue());
   const auditLogs = useAppStore((state) => state.auditLogs || []);
   const storeQuotes = useAppStore((state) => state.quotes || []);
   const storeBATs = useAppStore((state) => state.bats || []);
@@ -35,28 +33,6 @@ export default function HistoriquePage() {
 
   const [filter, setFilter] = useState<HistoryFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
-
-  if (!canUsePublicCatalogue) {
-    return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold text-text-main tracking-tight">Historique</h1>
-          <p className="text-text-secondary text-sm mt-0.5">Traçabilité complète des devis, BAT, factures et paiements de votre organisation.</p>
-        </div>
-        <div className="bg-bg-card border border-dashed border-border-subtle rounded-3xl p-10 shadow-premium flex flex-col items-center text-center gap-4 max-w-xl mx-auto">
-          <div className="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-text-secondary">
-            <Lock className="w-7 h-7" />
-          </div>
-          <div className="space-y-1.5">
-            <h3 className="text-base font-bold text-text-main">Fonctionnalité réservée à la Formule Pro</h3>
-            <p className="text-xs text-text-secondary leading-relaxed">
-              Passez à la Formule Pro pour conserver un historique complet et consultable à tout moment des devis créés/validés, BAT, factures émises et paiements enregistrés. Contactez votre administrateur Print_Flow pour l'activer.
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   // Aggregate timeline items dynamically from domain models + audit logs
   interface CombinedTimelineItem {

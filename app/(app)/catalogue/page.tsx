@@ -16,11 +16,9 @@ import {
   Check,
   Globe,
   Copy,
-  Lock,
   ExternalLink,
   Layers,
-  Sparkles,
-  Power
+  Sparkles
 } from 'lucide-react';
 import { useAppStore } from '@/lib/state/store';
 import { formatFCFA } from '@/lib/utils/money';
@@ -39,13 +37,10 @@ const materialTypes: { value: ProductMaterialType; label: string }[] = [
 
 export default function CataloguePage() {
   const currentOrgId = useAppStore((state) => state.currentOrgId);
-  const currentOrg = useAppStore((state) => state.getCurrentOrg());
   const allProducts = useAppStore((state) => state.products);
   const addProduct = useAppStore((state) => state.addProduct);
   const editProduct = useAppStore((state) => state.editProduct);
   const deleteProduct = useAppStore((state) => state.deleteProduct);
-  const canUsePublicCatalogue = useAppStore((state) => state.canUsePublicCatalogue());
-  const toggleCatalogueEnabled = useAppStore((state) => state.toggleCatalogueEnabled);
 
   const products = allProducts.filter(p => p.organizationId === currentOrgId);
 
@@ -93,7 +88,7 @@ export default function CataloguePage() {
     setTimeout(() => setToastMessage(''), 2500);
   };
 
-  const publicUrl = `${origin}/catalogue/${currentOrgId}`;
+  const publicUrl = `${origin}/boutique`;
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(publicUrl);
@@ -175,7 +170,7 @@ export default function CataloguePage() {
   };
 
   // Handle submit Add/Edit
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
       setFormError('Le nom du produit ou service est obligatoire.');
@@ -214,17 +209,26 @@ export default function CataloguePage() {
     };
 
     setLoading(true);
-    setIsModalOpen(false);
 
-    setTimeout(() => {
-      if (selectedProduct) {
+    if (selectedProduct) {
+      setIsModalOpen(false);
+      setTimeout(() => {
         editProduct({ ...selectedProduct, ...payload });
-      } else {
-        addProduct(payload);
-        setSuccessMessage(`"${name}" a été ajouté au catalogue.`);
-        setIsSuccessOpen(true);
-      }
+        setLoading(false);
+      }, 400);
+      return;
+    }
+
+    setTimeout(async () => {
+      const res = await addProduct(payload);
       setLoading(false);
+      if (!res.success) {
+        setFormError(res.error || "Impossible d'enregistrer le produit.");
+        return;
+      }
+      setIsModalOpen(false);
+      setSuccessMessage(`"${name}" a été ajouté au catalogue.`);
+      setIsSuccessOpen(true);
     }, 400);
   };
 
@@ -274,74 +278,42 @@ export default function CataloguePage() {
         </button>
       </div>
 
-      {/* Public Catalogue Link Panel (Formule Pro) */}
-      {canUsePublicCatalogue ? (
-        <div className="bg-bg-card border border-border-subtle rounded-3xl p-6 shadow-premium space-y-4 animate-fade-in">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-brand-primary/10 border border-brand-primary/20 flex items-center justify-center text-brand-primary shrink-0">
-                <Globe className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="text-sm font-bold text-text-main">Catalogue Public en Ligne</h3>
-                <p className="text-xs text-text-secondary">Partagez ce lien pour que vos clients externes commandent directement.</p>
-              </div>
-            </div>
+      {/* Public Catalogue Link Panel */}
+      <div className="bg-bg-card border border-border-subtle rounded-3xl p-6 shadow-premium space-y-4 animate-fade-in">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-2xl bg-brand-primary/10 border border-brand-primary/20 flex items-center justify-center text-brand-primary shrink-0">
+            <Globe className="w-5 h-5" />
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-text-main">Catalogue Public en Ligne</h3>
+            <p className="text-xs text-text-secondary">Partagez ce lien pour que vos clients externes commandent directement.</p>
+          </div>
+        </div>
 
+        <div className="flex flex-col sm:flex-row gap-2">
+          <div className="flex-1 min-w-0 px-4 py-2.5 bg-input-bg border border-border-subtle rounded-xl text-xs font-mono text-text-secondary truncate">
+            {publicUrl}
+          </div>
+          <div className="flex gap-2 shrink-0">
             <button
-              type="button"
-              onClick={() => {
-                toggleCatalogueEnabled();
-                triggerToast(currentOrg?.catalogueEnabled !== false ? 'Boutique en ligne fermée.' : 'Boutique en ligne ouverte !');
-              }}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-sm border cursor-pointer shrink-0 ${
-                currentOrg?.catalogueEnabled !== false
-                  ? 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-500'
-                  : 'bg-rose-600 hover:bg-rose-700 text-white border-rose-500'
-              }`}
+              onClick={handleCopyLink}
+              className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-border-subtle text-xs font-bold text-text-main hover:bg-slate-50 dark:hover:bg-slate-800 transition"
             >
-              <Power className="w-4 h-4" />
-              <span>{currentOrg?.catalogueEnabled !== false ? 'Boutique Ouverte' : 'Boutique Fermée'}</span>
+              <Copy className="w-3.5 h-3.5" />
+              <span>Copier</span>
             </button>
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-2">
-            <div className="flex-1 min-w-0 px-4 py-2.5 bg-input-bg border border-border-subtle rounded-xl text-xs font-mono text-text-secondary truncate">
-              {publicUrl}
-            </div>
-            <div className="flex gap-2 shrink-0">
-              <button
-                onClick={handleCopyLink}
-                className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-border-subtle text-xs font-bold text-text-main hover:bg-slate-50 dark:hover:bg-slate-800 transition"
-              >
-                <Copy className="w-3.5 h-3.5" />
-                <span>Copier</span>
-              </button>
-              <a
-                href={`/catalogue/${currentOrgId}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-brand-primary/10 text-brand-primary text-xs font-bold hover:bg-brand-primary/20 transition"
-              >
-                <ExternalLink className="w-3.5 h-3.5" />
-                <span>Aperçu</span>
-              </a>
-            </div>
+            <a
+              href="/boutique"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-brand-primary/10 text-brand-primary text-xs font-bold hover:bg-brand-primary/20 transition"
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+              <span>Aperçu</span>
+            </a>
           </div>
         </div>
-      ) : (
-        <div className="bg-bg-card border border-dashed border-border-subtle rounded-3xl p-6 shadow-premium flex flex-col sm:flex-row sm:items-center gap-4">
-          <div className="w-10 h-10 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-text-secondary shrink-0">
-            <Lock className="w-5 h-5" />
-          </div>
-          <div className="flex-1">
-            <h3 className="text-sm font-bold text-text-main">Catalogue Public en Ligne — Fonctionnalité Pro</h3>
-            <p className="text-xs text-text-secondary mt-0.5">
-              Obtenez un lien public pour recevoir des commandes clients directement dans votre tableau de bord. Réservé à la Formule Pro — contactez votre administrateur Print_Flow pour l'activer.
-            </p>
-          </div>
-        </div>
-      )}
+      </div>
 
       {/* Filters, View Toggle and Search */}
       <div className="bg-bg-card border border-border-subtle p-4 rounded-2xl shadow-premium space-y-3">

@@ -12,8 +12,6 @@ import {
   allPOs,
   allInvoices,
   allPayments,
-  mockCredentials,
-  mockSuperAdmin
 } from '@/lib/mock/data';
 import {
   Profile,
@@ -35,36 +33,17 @@ import {
 import { supabase, isSupabaseConfigured } from '@/lib/supabaseClient';
 import { isValidEmail } from '@/lib/utils/email';
 
-// Creates a brand-new Supabase Auth user (e.g. a Super Admin provisioning an
-// org admin, or an admin adding a colleague) without hijacking the CALLER's
-// own active session. `supabase.auth.signUp` normally also switches the
-// client's current session to the newly created user — this snapshots the
-// caller's session first and restores it right after, which is the standard
-// anon-key-only workaround for "create a user for someone else" (the
-// alternative, `supabase.auth.admin.createUser`, needs the service_role key,
-// which this project intentionally does not have).
-async function createAuthUserPreservingSession(email: string, password: string): Promise<{ userId: string | null; error?: string }> {
-  if (!isSupabaseConfigured || !supabase) {
-    return { userId: null, error: 'Supabase non configuré.' };
-  }
-
-  const { data: sessionData } = await supabase.auth.getSession();
-  const previousSession = sessionData.session;
-
-  const { data, error } = await supabase.auth.signUp({ email: email.trim().toLowerCase(), password });
-
-  if (previousSession) {
-    await supabase.auth.setSession({
-      access_token: previousSession.access_token,
-      refresh_token: previousSession.refresh_token
-    });
-  }
-
-  if (error || !data.user) {
-    return { userId: null, error: error?.message || "Impossible de créer le compte utilisateur." };
-  }
-
-  return { userId: data.user.id };
+// Print_Flow is single-tenant: exactly one row exists in `organizations`.
+// The public storefront (no authenticated session, so no `current_org_id()`
+// to resolve from a profile) needs that row's id — resolve it once and cache
+// it in-memory rather than hardcoding an id in source.
+let cachedCompanyOrgId: string | null = null;
+async function resolveCompanyOrgId(): Promise<string | null> {
+  if (cachedCompanyOrgId) return cachedCompanyOrgId;
+  if (!isSupabaseConfigured || !supabase) return null;
+  const { data } = await supabase.from('organizations').select('id').limit(1).maybeSingle();
+  if (data?.id) cachedCompanyOrgId = data.id;
+  return cachedCompanyOrgId;
 }
 
 // Default configuration details matching parameters
@@ -117,18 +96,15 @@ interface AppState {
   // Auth — backed by real Supabase Auth (auth.users), sessions live in cookies
   // via lib/supabaseClient.ts's createBrowserClient, not just in this persisted flag.
   isAuthenticated: boolean;
-  isSuperAdmin: boolean;
   hasHydrated: boolean;
   setHasHydrated: (value: boolean) => void;
   checkSession: () => Promise<void>;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  superAdminLogin: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
 
   // Domain Lists (Reactive Mock DB)
   organizations: Organization[];
   profiles: Profile[];
-  superadmins: { id: string; fullName: string; email: string; password?: string; authUserId?: string; createdAt: string }[];
   clients: Client[];
   products: Product[];
   quotes: Quote[];
@@ -138,8 +114,6 @@ interface AppState {
   invoices: Invoice[];
   payments: Payment[];
   onlineOrders: OnlineOrder[];
-  subscriptionPlans: { id: string; name: string; priceFcfa: number; billingCycle: '7_days' | 'monthly' | '6_months' | '12_months'; description: string }[];
-  availableTemplates: { id: string; name: string }[];
   auditLogs: AuditLog[];
 
   // App Settings
@@ -149,32 +123,24 @@ interface AppState {
   paperFormats: string[];
 
   // Getters
-  getCurrentOrg: () => Organization;
+  getCurrentOrg: () => Organization | undefined;
   getCurrentProfile: () => Profile;
   getOrgProfiles: () => Profile[];
-  canImportBAT: () => boolean;
-  canAddPersonnel: () => boolean;
-  canAccessHistory: () => boolean;
-  canUseOnlineOrders: () => boolean;
-  canUsePublicCatalogue: () => boolean;
 
   // Session Actions
-  setOrg: (orgId: string) => void;
-  setProfile: (profileId: string) => void;
   toggleSidebar: () => void;
   toggleTheme: () => void;
 
   // Domain Actions (CRUD)
   // 1. Clients
-  addClient: (client: Omit<Client, 'id' | 'organizationId' | 'createdAt' | 'updatedAt'>) => Client;
+  addClient: (client: Omit<Client, 'id' | 'organizationId' | 'createdAt' | 'updatedAt'>) => Promise<{ success: boolean; error?: string; client?: Client }>;
   editClient: (client: Client) => void;
   deleteClient: (clientId: string) => void;
 
   // 1b. Products (Catalogue)
-  addProduct: (product: Omit<Product, 'id' | 'organizationId' | 'createdAt' | 'updatedAt'>) => Product;
+  addProduct: (product: Omit<Product, 'id' | 'organizationId' | 'createdAt' | 'updatedAt'>) => Promise<{ success: boolean; error?: string; product?: Product }>;
   editProduct: (product: Product) => void;
   deleteProduct: (productId: string) => void;
-  toggleCatalogueEnabled: () => void;
 
   // 2. Quotes
   addQuote: (quote: Quote) => void;
@@ -211,20 +177,12 @@ interface AppState {
   addPaperFormat: (fmt: string) => void;
   deletePaperFormat: (fmt: string) => void;
 
-  // Super Admin & Staff Management Actions
+  // Activity log
   addAuditLog: (action: string, options?: { entityType?: string; entityId?: string; metadata?: any } | null, organizationId?: string) => void;
-  addOrganizationWithAdmin: (org: { name: string; address?: string; phone?: string; email?: string; subscriptionPlanId?: string }, admin: { fullName: string; email: string; role: 'admin'; phone?: string; password?: string }) => Promise<{ success: boolean; error?: string }>;
-  toggleOrganizationActive: (orgId: string) => void;
-  updateOrganization: (org: Partial<Organization> & { id: string }) => void;
-  deleteOrganization: (orgId: string) => void;
-  updateOrganizationSubscription: (orgId: string, planId: string, status: 'active' | 'suspended' | 'expired', endDate: string) => void;
-  addSubscriptionPlan: (plan: { name: string; priceFcfa: number; billingCycle: '7_days' | 'monthly' | '6_months' | '12_months'; description: string }) => void;
-  updateSubscriptionPlan: (plan: { id: string; name: string; priceFcfa: number; billingCycle: '7_days' | 'monthly' | '6_months' | '12_months'; description: string }) => void;
-  deleteSubscriptionPlan: (planId: string) => void;
-  addInvoiceTemplate: (template: { id: string; name: string }) => void;
 
   // Collaborators/Staff CRUD Actions
   addProfile: (profile: Omit<Profile, 'id' | 'organizationId' | 'createdAt' | 'updatedAt'> & { password?: string }) => Promise<{ success: boolean; error?: string }>;
+  editProfile: (profile: { id: string; fullName: string; email?: string; phone?: string; role: 'admin' | 'commercial' | 'chef_atelier' }) => Promise<{ success: boolean; error?: string }>;
   deleteProfile: (profileId: string) => void;
   toggleProfileActive: (profileId: string) => void;
 
@@ -232,15 +190,15 @@ interface AppState {
   hasLoadedSupabaseData?: boolean;
   isSupabaseLoading?: boolean;
   loadSupabaseData: (force?: boolean) => Promise<void>;
-  registerFreeTrial: (data: { orgName: string; adminFullName: string; email: string; phone?: string; password?: string }) => Promise<{ success: boolean; error?: string }>;
   changePassword: (profileId: string, newPass: string) => Promise<{ success: boolean; error?: string }>;
-  addSuperAdmin: (superadmin: { fullName: string; email: string; password?: string }) => Promise<{ success: boolean; error?: string }>;
+  requestPasswordReset: (email: string) => Promise<{ success: boolean; error?: string }>;
+  confirmPasswordReset: (newPassword: string) => Promise<{ success: boolean; error?: string }>;
 
-  // Public Catalogue & Online Orders (Formule Pro)
+  // Public Catalogue & Online Orders
   updateOnlineOrderStatus: (orderId: string, status: OnlineOrder['status']) => void;
   convertOnlineOrderToQuote: (orderId: string) => void;
-  fetchPublicCatalogue: (orgId: string) => Promise<{ org: Organization | null; products: Product[] }>;
-  submitPublicOrder: (orgId: string, payload: {
+  fetchPublicCatalogue: () => Promise<{ org: Organization | null; products: Product[] }>;
+  submitPublicOrder: (payload: {
     companyName: string;
     contactName?: string;
     phone: string;
@@ -255,8 +213,8 @@ export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
   // Defaults
-  currentOrgId: 'org-sud-print',
-  currentProfileId: 'user-sud-admin',
+  currentOrgId: '',
+  currentProfileId: '',
   isSidebarCollapsed: false,
   theme: 'light',
   activeCurrency: 'FCFA',
@@ -272,7 +230,6 @@ export const useAppStore = create<AppState>()(
 
   // Auth
   isAuthenticated: false,
-  isSuperAdmin: false,
   hasHydrated: false,
   setHasHydrated: (value) => set({ hasHydrated: value }),
 
@@ -280,19 +237,6 @@ export const useAppStore = create<AppState>()(
     if (isSupabaseConfigured && supabase) {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        let sa = get().superadmins.find(s => s.authUserId === user.id);
-        if (!sa) {
-          const { data: saRow } = await supabase.from('superadmins').select('*').eq('auth_user_id', user.id).maybeSingle();
-          if (saRow) {
-            sa = { id: saRow.id, fullName: saRow.full_name, email: saRow.email, authUserId: saRow.auth_user_id, createdAt: saRow.created_at };
-          }
-        }
-        if (sa) {
-          if (typeof document !== 'undefined') document.cookie = 'printflow_session=true; path=/; max-age=86400';
-          set({ isAuthenticated: true, isSuperAdmin: true });
-          return;
-        }
-
         let profile = get().profiles.find(p => p.authUserId === user.id);
         if (!profile) {
           const { data: row } = await supabase.from('profiles').select('*').eq('auth_user_id', user.id).maybeSingle();
@@ -313,10 +257,8 @@ export const useAppStore = create<AppState>()(
         }
 
         if (profile && profile.isActive) {
-          if (typeof document !== 'undefined') document.cookie = 'printflow_session=true; path=/; max-age=86400';
           set({
             isAuthenticated: true,
-            isSuperAdmin: false,
             currentProfileId: profile.id,
             currentOrgId: profile.organizationId,
           });
@@ -325,19 +267,7 @@ export const useAppStore = create<AppState>()(
       }
     }
 
-    const state = get();
-    if (state.isAuthenticated) {
-      const hasCookie = typeof document !== 'undefined' && document.cookie.includes('printflow_session=true');
-      if (hasCookie || !isSupabaseConfigured) {
-        if (typeof document !== 'undefined') document.cookie = 'printflow_session=true; path=/; max-age=86400';
-        return;
-      }
-    }
-
-    if (typeof document !== 'undefined') {
-      document.cookie = 'printflow_session=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-    }
-    set({ isAuthenticated: false, isSuperAdmin: false });
+    set({ isAuthenticated: false });
   },
 
   login: async (email, password) => {
@@ -346,283 +276,79 @@ export const useAppStore = create<AppState>()(
     }
     const normalizedEmail = email.trim().toLowerCase();
 
-    const DEMO_PASSWORDS: Record<string, string> = {
-      'fatou.diop@sudprint.sn': 'sudprint2026',
-      'amadou.sow@sudprint.sn': 'sudprint2026',
-      'moustapha.ndiaye@sudprint.sn': 'sudprint2026',
-      'ousmane.keita@sahelgraphique.ml': 'sahel2026',
-      'mariam.diallo@sahelgraphique.ml': 'sahel2026',
-    };
-
-    if (isSupabaseConfigured && supabase) {
-      try {
-        const { data, error } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password });
-
-        if (data?.user && !error) {
-          let profile = get().profiles.find(p => p.authUserId === data.user!.id || p.email?.toLowerCase() === normalizedEmail);
-
-          if (!profile) {
-            const { data: row } = await supabase
-              .from('profiles')
-              .select('*')
-              .or(`auth_user_id.eq.${data.user.id},email.eq.${normalizedEmail}`)
-              .maybeSingle();
-
-            if (row) {
-              if (!row.auth_user_id) {
-                await supabase.from('profiles').update({ auth_user_id: data.user.id }).eq('id', row.id);
-              }
-              profile = {
-                id: row.id,
-                organizationId: row.organization_id,
-                fullName: row.full_name,
-                role: row.role,
-                email: row.email,
-                phone: row.phone,
-                isActive: row.is_active,
-                authUserId: data.user.id,
-                createdAt: row.created_at,
-                updatedAt: row.updated_at
-              };
-              const resolvedProfile = profile;
-              set(state => ({ profiles: [...state.profiles.filter(p => p.id !== resolvedProfile.id), resolvedProfile] }));
-            }
-          }
-
-          if (profile) {
-            if (!profile.isActive) {
-              await supabase.auth.signOut();
-              return { success: false, error: 'Ce compte a été désactivé. Contactez votre administrateur.' };
-            }
-            const org = get().organizations.find(o => o.id === profile!.organizationId);
-            if (org && org.isActive === false) {
-              await supabase.auth.signOut();
-              return { success: false, error: 'Cette organisation est suspendue par le Super Administrateur.' };
-            }
-
-            if (typeof document !== 'undefined') document.cookie = 'printflow_session=true; path=/; max-age=86400';
-            set({
-              isAuthenticated: true,
-              isSuperAdmin: false,
-              currentProfileId: profile.id,
-              currentOrgId: profile.organizationId,
-            });
-            return { success: true };
-          }
-        }
-      } catch (e: any) {
-        console.warn("Supabase signIn attempt warning:", e);
-      }
+    if (!isSupabaseConfigured || !supabase) {
+      return { success: false, error: "Supabase n'est pas configuré." };
     }
 
-    // Demo account fallback or local offline fallback
-    const demoPassword = DEMO_PASSWORDS[normalizedEmail];
-    const localProfile = get().profiles.find(p => p.email?.toLowerCase() === normalizedEmail);
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password });
 
-    if (localProfile) {
-      const validPasswords = [demoPassword, 'sudprint2026', 'sahel2026', localProfile.password].filter(Boolean);
-      if (!validPasswords.includes(password)) {
+      if (!data?.user || error) {
         return { success: false, error: 'Adresse e-mail ou mot de passe incorrect.' };
       }
 
-      if (!localProfile.isActive) {
+      let profile = get().profiles.find(p => p.authUserId === data.user!.id || p.email?.toLowerCase() === normalizedEmail);
+
+      if (!profile) {
+        const { data: row } = await supabase
+          .from('profiles')
+          .select('*')
+          .or(`auth_user_id.eq.${data.user.id},email.eq.${normalizedEmail}`)
+          .maybeSingle();
+
+        if (row) {
+          if (!row.auth_user_id) {
+            await supabase.from('profiles').update({ auth_user_id: data.user.id }).eq('id', row.id);
+          }
+          profile = {
+            id: row.id,
+            organizationId: row.organization_id,
+            fullName: row.full_name,
+            role: row.role,
+            email: row.email,
+            phone: row.phone,
+            isActive: row.is_active,
+            authUserId: data.user.id,
+            createdAt: row.created_at,
+            updatedAt: row.updated_at
+          };
+          const resolvedProfile = profile;
+          set(state => ({ profiles: [...state.profiles.filter(p => p.id !== resolvedProfile.id), resolvedProfile] }));
+        }
+      }
+
+      if (!profile) {
+        await supabase.auth.signOut();
+        return { success: false, error: 'Adresse e-mail ou mot de passe incorrect.' };
+      }
+
+      if (!profile.isActive) {
+        await supabase.auth.signOut();
         return { success: false, error: 'Ce compte a été désactivé. Contactez votre administrateur.' };
       }
-      const org = get().organizations.find(o => o.id === localProfile.organizationId);
+      const org = get().organizations.find(o => o.id === profile!.organizationId);
       if (org && org.isActive === false) {
+        await supabase.auth.signOut();
         return { success: false, error: 'Cette organisation est suspendue par le Super Administrateur.' };
       }
 
-      if (typeof document !== 'undefined') document.cookie = 'printflow_session=true; path=/; max-age=86400';
       set({
         isAuthenticated: true,
-        isSuperAdmin: false,
-        currentProfileId: localProfile.id,
-        currentOrgId: localProfile.organizationId,
+        currentProfileId: profile.id,
+        currentOrgId: profile.organizationId,
       });
       return { success: true };
+    } catch (e: any) {
+      console.error("Supabase signIn error:", e);
+      return { success: false, error: 'Adresse e-mail ou mot de passe incorrect.' };
     }
-
-    return { success: false, error: 'Adresse e-mail ou mot de passe incorrect.' };
-  },
-
-  superAdminLogin: async (email, password) => {
-    if (!isValidEmail(email)) {
-      return { success: false, error: 'Veuillez saisir une adresse e-mail valide (ex: superadmin@printflow.io).' };
-    }
-    const normalizedEmail = email.trim().toLowerCase();
-
-    if (isSupabaseConfigured && supabase) {
-      try {
-        const { data, error } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password });
-
-        if (data?.user && !error) {
-          let sa = get().superadmins.find(s => s.authUserId === data.user!.id || s.email.toLowerCase() === normalizedEmail);
-
-          if (!sa) {
-            const { data: row } = await supabase
-              .from('superadmins')
-              .select('*')
-              .or(`auth_user_id.eq.${data.user.id},email.eq.${normalizedEmail}`)
-              .maybeSingle();
-
-            if (row) {
-              if (!row.auth_user_id) {
-                await supabase.from('superadmins').update({ auth_user_id: data.user.id }).eq('id', row.id);
-              }
-              sa = { id: row.id, fullName: row.full_name, email: row.email, authUserId: data.user.id, createdAt: row.created_at };
-              const resolvedSa = sa;
-              set(state => ({ superadmins: [...state.superadmins.filter(s => s.id !== resolvedSa.id), resolvedSa] }));
-            }
-          }
-
-          if (sa) {
-            if (typeof document !== 'undefined') document.cookie = 'printflow_session=true; path=/; max-age=86400';
-            set({ isAuthenticated: true, isSuperAdmin: true });
-            return { success: true };
-          }
-
-          await supabase.auth.signOut();
-          return { success: false, error: 'Accès refusé : vous n\'avez pas les privilèges Super Admin.' };
-        }
-      } catch (e: any) {
-        console.warn("Supabase superAdminLogin warning:", e);
-      }
-    }
-
-    // Demo superadmin account fallback or local offline fallback
-    const saAccount = get().superadmins.find(s => s.email.toLowerCase() === normalizedEmail);
-    if (saAccount) {
-      const validSaPasswords = ['RootAccess#2026', saAccount.password].filter(Boolean);
-      if (!validSaPasswords.includes(password)) {
-        return { success: false, error: 'Identifiants SuperAdmin incorrects.' };
-      }
-
-      if (typeof document !== 'undefined') document.cookie = 'printflow_session=true; path=/; max-age=86400';
-      set({ isAuthenticated: true, isSuperAdmin: true });
-      return { success: true };
-    }
-
-    return { success: false, error: 'Identifiants SuperAdmin incorrects.' };
   },
 
   logout: () => {
-    if (typeof document !== 'undefined') {
-      document.cookie = 'printflow_session=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-    }
-    set({ isAuthenticated: false, isSuperAdmin: false });
+    set({ isAuthenticated: false });
     if (isSupabaseConfigured && supabase) {
       supabase.auth.signOut().catch(() => {});
     }
-  },
-
-  registerFreeTrial: async ({ orgName, adminFullName, email, phone, password }) => {
-    if (!isValidEmail(email)) {
-      return { success: false, error: 'Veuillez saisir une adresse e-mail valide (ex: admin@imprimerie.sn).' };
-    }
-    const normalizedEmail = email.trim().toLowerCase();
-    let authUserId: string | undefined = undefined;
-
-    if (isSupabaseConfigured && supabase) {
-      try {
-        const { data: authData, error: authError } = await supabase.auth.signUp({
-          email: normalizedEmail,
-          password: password || 'sudprint2026',
-        });
-
-        if (authData?.user) {
-          authUserId = authData.user.id;
-        } else if (authError?.message?.includes('already registered')) {
-          const { data: signInData } = await supabase.auth.signInWithPassword({
-            email: normalizedEmail,
-            password: password || 'sudprint2026',
-          });
-          if (signInData?.user) {
-            authUserId = signInData.user.id;
-          }
-        }
-      } catch (err) {
-        console.warn("Supabase signUp attempt warning:", err);
-      }
-    }
-
-    const orgId = `org-${Date.now()}`;
-    const endDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-    const newOrg: Organization = {
-      id: orgId,
-      name: orgName.trim(),
-      address: '',
-      phone: phone?.trim() || '',
-      email: normalizedEmail,
-      isActive: true,
-      subscriptionPlanId: 'plan-free',
-      subscriptionStatus: 'active',
-      subscriptionEndDate: endDate,
-      catalogueEnabled: false,
-      createdAt: new Date().toISOString(),
-    };
-
-    const profileId = `user-${Date.now()}`;
-    const newProfile: Profile = {
-      id: profileId,
-      organizationId: orgId,
-      fullName: adminFullName.trim(),
-      role: 'admin',
-      email: normalizedEmail,
-      phone: phone?.trim() || '',
-      isActive: true,
-      authUserId,
-      password,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    if (isSupabaseConfigured && supabase) {
-      try {
-        await supabase.from('organizations').insert([{
-          id: newOrg.id,
-          name: newOrg.name,
-          phone: newOrg.phone,
-          email: newOrg.email,
-          is_active: true,
-          subscription_plan_id: newOrg.subscriptionPlanId,
-          subscription_status: newOrg.subscriptionStatus,
-          subscription_end_date: newOrg.subscriptionEndDate,
-          catalogue_enabled: false,
-          created_at: newOrg.createdAt,
-        }]);
-
-        await supabase.from('profiles').insert([{
-          id: newProfile.id,
-          organization_id: newProfile.organizationId,
-          full_name: newProfile.fullName,
-          role: newProfile.role,
-          email: newProfile.email,
-          phone: newProfile.phone,
-          is_active: true,
-          auth_user_id: authUserId || null,
-          password: newProfile.password || null,
-          created_at: newProfile.createdAt,
-          updated_at: newProfile.updatedAt,
-        }]);
-      } catch (err) {
-        console.error('Error inserting free trial org/profile in Supabase:', err);
-      }
-    }
-
-    if (typeof document !== 'undefined') document.cookie = 'printflow_session=true; path=/; max-age=86400';
-    set(state => ({
-      organizations: [newOrg, ...state.organizations],
-      profiles: [newProfile, ...state.profiles],
-      currentOrgId: orgId,
-      currentProfileId: profileId,
-      isAuthenticated: true,
-      isSuperAdmin: false,
-    }));
-
-    get().addAuditLog(`Essai gratuit 7 jours créé pour "${orgName.trim()}" (${adminFullName.trim()})`, null, orgId);
-
-    return { success: true };
   },
 
   loadSupabaseData: async (force = false) => {
@@ -632,7 +358,6 @@ export const useAppStore = create<AppState>()(
 
     set({ isSupabaseLoading: true });
     const currentOrgId = get().currentOrgId;
-    const isSuperAdmin = get().isSuperAdmin;
 
     try {
       let orgQuery = supabase.from('organizations').select('*');
@@ -658,9 +383,7 @@ export const useAppStore = create<AppState>()(
       let paperFormatQuery = supabase.from('paper_formats').select('*');
       let auditQuery = supabase.from('audit_logs').select('*');
 
-      let superadminQuery = supabase.from('superadmins').select('*');
-
-      if (!isSuperAdmin && currentOrgId) {
+      if (currentOrgId) {
         orgQuery = orgQuery.eq('id', currentOrgId);
         profileQuery = profileQuery.eq('organization_id', currentOrgId);
         clientQuery = clientQuery.eq('organization_id', currentOrgId);
@@ -700,34 +423,19 @@ export const useAppStore = create<AppState>()(
         { data: machineRows },
         { data: partnerRows },
         { data: paperFormatRows },
-        { data: auditRows },
-        { data: saRows }
+        { data: auditRows }
       ] = await Promise.all([
         orgQuery, profileQuery, clientQuery, productQuery, tierQuery,
         quoteQuery, quoteItemQuery, batQuery, batVersionQuery, poQuery,
         poItemQuery, deliveryQuery, deliveryItemQuery, invoiceQuery,
         invoiceItemQuery, paymentQuery, onlineOrderQuery, taxQuery,
-        machineQuery, partnerQuery, paperFormatQuery, auditQuery, superadminQuery
+        machineQuery, partnerQuery, paperFormatQuery, auditQuery
       ]) as any[];
 
       const updates: Partial<AppState> = {
         hasLoadedSupabaseData: true,
         isSupabaseLoading: false
       };
-
-      if (saRows) {
-        const fetchedSa = saRows.map((s: any) => ({
-          id: s.id,
-          fullName: s.full_name,
-          email: s.email,
-          authUserId: s.auth_user_id,
-          createdAt: s.created_at
-        }));
-        updates.superadmins = [
-          ...fetchedSa,
-          ...get().superadmins.filter(s => !fetchedSa.some((fs: any) => fs.id === s.id))
-        ];
-      }
 
       if (orgRows) {
         const fetchedOrgs = orgRows.map((o: any) => ({
@@ -737,10 +445,6 @@ export const useAppStore = create<AppState>()(
           phone: o.phone || '',
           email: o.email || '',
           isActive: o.is_active !== false,
-          subscriptionPlanId: o.subscription_plan_id || 'plan-free',
-          subscriptionStatus: o.subscription_status || 'active',
-          subscriptionEndDate: o.subscription_end_date || new Date(Date.now() + 7 * 86400000).toISOString(),
-          catalogueEnabled: o.catalogue_enabled !== false,
           createdAt: o.created_at
         }));
         updates.organizations = [
@@ -1038,18 +742,11 @@ export const useAppStore = create<AppState>()(
   organizations: mockOrganizations.map(o => ({
     ...o,
     isActive: true,
-    subscriptionPlanId: o.id === 'org-sud-print' ? 'plan-pro' : 'plan-std',
-    subscriptionStatus: 'active',
-    subscriptionEndDate: o.id === 'org-sud-print' ? '2027-01-01T00:00:00Z' : '2026-12-31T23:59:59Z',
-    catalogueEnabled: true
   })),
   profiles: mockProfiles.map(p => ({
     ...p,
     password: p.id === 'user-sud-admin' ? 'sudprint2026' : p.id === 'user-sahel-admin' ? 'sahel2026' : 'collaborateur2026'
   })),
-  superadmins: [
-    { id: 'superadmin-1', fullName: 'Root Administrateur', email: 'superadmin@printflow.io', password: 'RootAccess#2026', createdAt: '2026-01-01T08:00:00Z' }
-  ],
   clients: mockClients,
   products: mockProducts,
   quotes: allQuotes,
@@ -1059,19 +756,8 @@ export const useAppStore = create<AppState>()(
   invoices: allInvoices,
   payments: allPayments,
   onlineOrders: [],
-  subscriptionPlans: [
-    { id: 'plan-free', name: 'Essai Gratuit 7 Jours', priceFcfa: 0, billingCycle: '7_days', description: "7 jours d'essai gratuit. 1 utilisateur unique. Historique et commandes en ligne verrouillés." },
-    { id: 'plan-pro', name: 'Abonnement Pro', priceFcfa: 14900, billingCycle: 'monthly', description: "Accès complet illimité : utilisateurs illimités, catalogue public, commandes en ligne et historique d'audit." }
-  ],
-  availableTemplates: [
-    { id: 'modern', name: 'Gabarit Néon Moderne' },
-    { id: 'tech', name: 'Gabarit Cyber Grid' },
-    { id: 'classic', name: 'Gabarit Classique Épuré' }
-  ],
   auditLogs: [
     { id: 'log-1', organizationId: 'system', entityType: 'system', entityId: 'sys', action: 'Initialisation de la plateforme Print_Flow', occurredAt: '2026-07-15T08:00:00Z' },
-    { id: 'log-2', organizationId: 'org-sud-print', entityType: 'subscription', entityId: 'org-sud-print', action: 'Abonnement Pro activé pour Sud Print', occurredAt: '2026-07-15T08:05:00Z' },
-    { id: 'log-3', organizationId: 'org-sahel-graphique', entityType: 'subscription', entityId: 'org-sahel-graphique', action: 'Abonnement Pro activé pour Sahel Graphique', occurredAt: '2026-07-15T08:10:00Z' }
   ],
 
   taxes: defaultTaxes,
@@ -1082,7 +768,7 @@ export const useAppStore = create<AppState>()(
   // Getters
   getCurrentOrg: () => {
     const { currentOrgId, organizations } = get();
-    return organizations.find(org => org.id === currentOrgId) || organizations[0];
+    return organizations.find(org => org.id === currentOrgId);
   },
 
   getCurrentProfile: () => {
@@ -1095,55 +781,7 @@ export const useAppStore = create<AppState>()(
     return profiles.filter(profile => profile.organizationId === currentOrgId);
   },
 
-  canImportBAT: () => {
-    const org = get().getCurrentOrg();
-    return org ? org.subscriptionPlanId === 'plan-pro' : false;
-  },
-
-  canAddPersonnel: () => {
-    const org = get().getCurrentOrg();
-    if (!org) return false;
-    if (org.subscriptionPlanId === 'plan-free') {
-      const orgProfiles = get().getOrgProfiles();
-      return orgProfiles.length < 1;
-    }
-    return true;
-  },
-
-  canAccessHistory: () => {
-    const org = get().getCurrentOrg();
-    return org ? org.subscriptionPlanId === 'plan-pro' : false;
-  },
-
-  canUseOnlineOrders: () => {
-    const org = get().getCurrentOrg();
-    return org ? org.subscriptionPlanId === 'plan-pro' : false;
-  },
-
-  canUsePublicCatalogue: () => {
-    const org = get().getCurrentOrg();
-    return org ? org.subscriptionPlanId === 'plan-pro' : false;
-  },
-
   // Actions
-  setOrg: (orgId: string) => {
-    const firstProfile = get().profiles.find(p => p.organizationId === orgId);
-    set({
-      currentOrgId: orgId,
-      currentProfileId: firstProfile ? firstProfile.id : '',
-    });
-  },
-
-  setProfile: (profileId: string) => {
-    const profile = get().profiles.find(p => p.id === profileId);
-    if (profile) {
-      set({
-        currentProfileId: profileId,
-        currentOrgId: profile.organizationId,
-      });
-    }
-  },
-
   toggleSidebar: () => {
     set((state) => ({ isSidebarCollapsed: !state.isSidebarCollapsed }));
   },
@@ -1162,7 +800,7 @@ export const useAppStore = create<AppState>()(
   },
 
   // Clients Actions
-  addClient: (clientData) => {
+  addClient: async (clientData) => {
     const newClient: Client = {
       ...clientData,
       id: `client-${Date.now()}`,
@@ -1173,7 +811,7 @@ export const useAppStore = create<AppState>()(
     set(state => ({ clients: [newClient, ...state.clients] }));
 
     if (isSupabaseConfigured && supabase) {
-      supabase.from('clients').insert([{
+      const { error } = await supabase.from('clients').insert([{
         id: newClient.id,
         organization_id: newClient.organizationId,
         company_name: newClient.companyName,
@@ -1184,12 +822,16 @@ export const useAppStore = create<AppState>()(
         created_by: newClient.createdBy,
         created_at: newClient.createdAt,
         updated_at: newClient.updatedAt
-      }]).then(({ error }: any) => {
-        if (error) console.error("Error adding client to Supabase:", error);
-      });
+      }]);
+
+      if (error) {
+        console.error("Error adding client to Supabase:", error);
+        set(state => ({ clients: state.clients.filter(c => c.id !== newClient.id) }));
+        return { success: false, error: error.message };
+      }
     }
 
-    return newClient;
+    return { success: true, client: newClient };
   },
 
   editClient: (updatedClient) => {
@@ -1224,7 +866,7 @@ export const useAppStore = create<AppState>()(
   },
 
   // Products (Catalogue) Actions
-  addProduct: (productData) => {
+  addProduct: async (productData) => {
     const newProduct: Product = {
       ...productData,
       id: `prod-${Date.now()}`,
@@ -1235,7 +877,7 @@ export const useAppStore = create<AppState>()(
     set(state => ({ products: [newProduct, ...state.products] }));
 
     if (isSupabaseConfigured && supabase) {
-      supabase.from('products').insert([{
+      const { error } = await supabase.from('products').insert([{
         id: newProduct.id,
         organization_id: newProduct.organizationId,
         name: newProduct.name,
@@ -1253,26 +895,27 @@ export const useAppStore = create<AppState>()(
         is_active: newProduct.isActive,
         created_at: newProduct.createdAt,
         updated_at: newProduct.updatedAt
-      }]).then(({ error }: any) => {
-        if (error) {
-          console.error("Error adding product to Supabase:", error);
-          return;
-        }
-        if (newProduct.priceTiers && newProduct.priceTiers.length > 0) {
-          supabase.from('product_price_tiers').insert(newProduct.priceTiers.map(t => ({
-            id: t.id,
-            product_id: newProduct.id,
-            min_quantity: t.minQuantity,
-            max_quantity: t.maxQuantity,
-            unit_price_fcfa: t.unitPriceFcfa
-          }))).then(({ error: tierError }: any) => {
-            if (tierError) console.error("Error adding price tiers to Supabase:", tierError);
-          });
-        }
-      });
+      }]);
+
+      if (error) {
+        console.error("Error adding product to Supabase:", error);
+        set(state => ({ products: state.products.filter(p => p.id !== newProduct.id) }));
+        return { success: false, error: error.message };
+      }
+
+      if (newProduct.priceTiers && newProduct.priceTiers.length > 0) {
+        const { error: tierError } = await supabase.from('product_price_tiers').insert(newProduct.priceTiers.map(t => ({
+          id: t.id,
+          product_id: newProduct.id,
+          min_quantity: t.minQuantity,
+          max_quantity: t.maxQuantity,
+          unit_price_fcfa: t.unitPriceFcfa
+        })));
+        if (tierError) console.error("Error adding price tiers to Supabase:", tierError);
+      }
     }
 
-    return newProduct;
+    return { success: true, product: newProduct };
   },
 
   editProduct: (updatedProduct) => {
@@ -1310,24 +953,6 @@ export const useAppStore = create<AppState>()(
     if (isSupabaseConfigured && supabase) {
       supabase.from('products').delete().eq('id', productId).then(({ error }: any) => {
         if (error) console.error("Error deleting product in Supabase:", error);
-      });
-    }
-  },
-
-  toggleCatalogueEnabled: () => {
-    const orgId = get().currentOrgId;
-    let nextValue = true;
-    set(state => ({
-      organizations: state.organizations.map(o => {
-        if (o.id !== orgId) return o;
-        nextValue = !(o.catalogueEnabled !== false);
-        return { ...o, catalogueEnabled: nextValue };
-      })
-    }));
-
-    if (isSupabaseConfigured && supabase) {
-      supabase.from('organizations').update({ catalogue_enabled: nextValue }).eq('id', orgId).then(({ error }: any) => {
-        if (error) console.error("Error toggling catalogue_enabled in Supabase:", error);
       });
     }
   },
@@ -1815,273 +1440,7 @@ export const useAppStore = create<AppState>()(
     }
   },
 
-  addOrganizationWithAdmin: async (org, admin) => {
-    try {
-      const res = await fetch('/api/admin/create-org', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ org, admin })
-      });
-
-      const data = await res.json();
-      if (res.ok && data.success && data.org && data.profile) {
-        set(state => ({
-          organizations: [data.org, ...state.organizations.filter(o => o.id !== data.org.id)],
-          profiles: [data.profile, ...state.profiles.filter(p => p.id !== data.profile.id)]
-        }));
-        get().addAuditLog(`Organisation "${data.org.name}" créée par le Super Admin avec l'admin "${data.profile.fullName}"`, null, 'system');
-        return { success: true };
-      }
-
-      if (data?.error && !data.error.includes('SUPABASE_SERVICE_ROLE_KEY') && !data.error.includes('configuré sur le serveur')) {
-        return { success: false, error: data.error };
-      }
-    } catch (e: any) {
-      console.warn("API route /api/admin/create-org unavailable, using client fallback:", e);
-    }
-
-    // Client fallback when API route is unreachable
-    const newOrgId = `org-${Date.now()}`;
-    const newOrg: Organization = {
-      id: newOrgId,
-      name: org.name,
-      address: org.address,
-      phone: org.phone,
-      email: org.email,
-      isActive: true,
-      subscriptionPlanId: org.subscriptionPlanId || 'plan-pro',
-      subscriptionStatus: 'active',
-      subscriptionEndDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-      catalogueEnabled: true,
-      createdAt: new Date().toISOString()
-    };
-
-    const newProfileId = `user-${Date.now()}`;
-    const newProfile: Profile = {
-      id: newProfileId,
-      organizationId: newOrgId,
-      fullName: admin.fullName,
-      role: 'admin',
-      email: admin.email.trim().toLowerCase(),
-      phone: admin.phone,
-      isActive: true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-
-    if (isSupabaseConfigured && supabase) {
-      try {
-        await supabase.from('organizations').insert([{
-          id: newOrg.id,
-          name: newOrg.name,
-          address: newOrg.address || '',
-          phone: newOrg.phone || '',
-          email: newOrg.email || '',
-          is_active: true,
-          subscription_plan_id: newOrg.subscriptionPlanId,
-          subscription_status: newOrg.subscriptionStatus,
-          subscription_end_date: newOrg.subscriptionEndDate,
-          catalogue_enabled: true,
-          created_at: newOrg.createdAt,
-        }]);
-
-        await supabase.from('profiles').insert([{
-          id: newProfile.id,
-          organization_id: newProfile.organizationId,
-          full_name: newProfile.fullName,
-          role: newProfile.role,
-          email: newProfile.email,
-          phone: newProfile.phone || '',
-          is_active: true,
-          created_at: newProfile.createdAt,
-          updated_at: newProfile.updatedAt,
-        }]);
-      } catch (err) {
-        console.error("Error persisting fallback org/profile to Supabase:", err);
-      }
-    }
-
-    set(state => ({
-      organizations: [newOrg, ...state.organizations],
-      profiles: [newProfile, ...state.profiles]
-    }));
-
-    get().addAuditLog(`Organisation "${org.name}" créée par le Super Admin`, null, 'system');
-    return { success: true };
-  },
-
-  toggleOrganizationActive: (orgId) => {
-    let isAct = false;
-    set(state => {
-      const org = state.organizations.find(o => o.id === orgId);
-      isAct = org ? !org.isActive : false;
-      
-      // Add audit log
-      const actionText = isAct 
-        ? `Organisation "${org?.name}" activée par le Super Admin`
-        : `Organisation "${org?.name}" désactivée par le Super Admin`;
-
-      return {
-        organizations: state.organizations.map(o => o.id === orgId ? { ...o, isActive: isAct } : o),
-        auditLogs: [
-          {
-            id: `log-${Date.now()}`,
-            organizationId: 'system',
-            entityType: 'organization',
-            entityId: orgId,
-            action: actionText,
-            occurredAt: new Date().toISOString()
-          },
-          ...state.auditLogs
-        ]
-      };
-    });
-
-    // Sync to Supabase
-    if (isSupabaseConfigured && supabase) {
-      supabase.from('organizations').update({ is_active: isAct }).eq('id', orgId).then(({ error }: any) => {
-        if (error) console.error("Error toggleOrganizationActive in Supabase:", error);
-      });
-    }
-  },
-
-  updateOrganization: (orgData) => {
-    set(state => {
-      const existing = state.organizations.find(o => o.id === orgData.id);
-      if (!existing) return state;
-      const updated = { ...existing, ...orgData };
-      return {
-        organizations: state.organizations.map(o => o.id === orgData.id ? updated : o),
-        auditLogs: [
-          {
-            id: `log-${Date.now()}`,
-            organizationId: 'system',
-            entityType: 'organization',
-            entityId: orgData.id,
-            action: `Organisation "${updated.name}" mise à jour par le Super Admin`,
-            occurredAt: new Date().toISOString()
-          },
-          ...state.auditLogs
-        ]
-      };
-    });
-
-    if (isSupabaseConfigured && supabase) {
-      const updates: any = {};
-      if (orgData.name !== undefined) updates.name = orgData.name;
-      if (orgData.address !== undefined) updates.address = orgData.address;
-      if (orgData.phone !== undefined) updates.phone = orgData.phone;
-      if (orgData.email !== undefined) updates.email = orgData.email;
-      if (orgData.isActive !== undefined) updates.is_active = orgData.isActive;
-      if (orgData.subscriptionPlanId !== undefined) updates.subscription_plan_id = orgData.subscriptionPlanId;
-      if (orgData.subscriptionStatus !== undefined) updates.subscription_status = orgData.subscriptionStatus;
-      if (orgData.subscriptionEndDate !== undefined) updates.subscription_end_date = orgData.subscriptionEndDate;
-
-      supabase.from('organizations').update(updates).eq('id', orgData.id).then(({ error }: any) => {
-        if (error) console.error("Error updating organization in Supabase:", error);
-      });
-    }
-  },
-
-  deleteOrganization: (orgId) => {
-    let orgName = '';
-    set(state => {
-      const org = state.organizations.find(o => o.id === orgId);
-      orgName = org ? org.name : orgId;
-      return {
-        organizations: state.organizations.filter(o => o.id !== orgId),
-        profiles: state.profiles.filter(p => p.organizationId !== orgId),
-        auditLogs: [
-          {
-            id: `log-${Date.now()}`,
-            organizationId: 'system',
-            entityType: 'organization',
-            entityId: orgId,
-            action: `Organisation "${orgName}" supprimée par le Super Admin`,
-            occurredAt: new Date().toISOString()
-          },
-          ...state.auditLogs
-        ]
-      };
-    });
-
-    if (isSupabaseConfigured && supabase) {
-      supabase.from('organizations').delete().eq('id', orgId).then(({ error }: any) => {
-        if (error) console.error("Error deleting organization in Supabase:", error);
-      });
-    }
-  },
-
-  updateOrganizationSubscription: (orgId, planId, status, endDate) => {
-    set(state => {
-      const org = state.organizations.find(o => o.id === orgId);
-      const plan = state.subscriptionPlans.find(p => p.id === planId);
-      const actionText = `Abonnement mis à jour pour "${org?.name}" vers "${plan?.name}" (Statut: ${status})`;
-      
-      return {
-        organizations: state.organizations.map(o => o.id === orgId ? { ...o, subscriptionPlanId: planId, subscriptionStatus: status, subscriptionEndDate: endDate } : o),
-        auditLogs: [
-          {
-            id: `log-${Date.now()}`,
-            organizationId: orgId,
-            entityType: 'subscription',
-            entityId: orgId,
-            action: actionText,
-            occurredAt: new Date().toISOString()
-          },
-          ...state.auditLogs
-        ]
-      };
-    });
-
-    // Sync to Supabase
-    if (isSupabaseConfigured && supabase) {
-      supabase.from('organizations').update({
-        subscription_plan_id: planId,
-        subscription_status: status,
-        subscription_end_date: endDate
-      }).eq('id', orgId).then(({ error }: any) => {
-        if (error) console.error("Error updating organization subscription in Supabase:", error);
-      });
-    }
-  },
-
-  addSubscriptionPlan: (plan) => {
-    const newPlan = { id: `plan-${Date.now()}`, ...plan };
-    set(state => ({
-      subscriptionPlans: [...state.subscriptionPlans, newPlan]
-    }));
-    get().addAuditLog(`Formule d'abonnement "${plan.name}" ajoutée par le Super Admin`, null, 'system');
-  },
-
-  updateSubscriptionPlan: (updatedPlan) => {
-    set(state => ({
-      subscriptionPlans: state.subscriptionPlans.map(p => p.id === updatedPlan.id ? updatedPlan : p)
-    }));
-    get().addAuditLog(`Formule d'abonnement "${updatedPlan.name}" mise à jour par le Super Admin`, null, 'system');
-  },
-
-  deleteSubscriptionPlan: (planId) => {
-    set(state => {
-      return {
-        subscriptionPlans: state.subscriptionPlans.filter(p => p.id !== planId)
-      };
-    });
-    get().addAuditLog(`Formule d'abonnement supprimée par le Super Admin`, null, 'system');
-  },
-
-  addInvoiceTemplate: (template) => {
-    set(state => ({
-      availableTemplates: [...state.availableTemplates, template]
-    }));
-    get().addAuditLog(`Modèle de facture "${template.name}" mis en ligne par le Super Admin`, null, 'system');
-  },
-
   addProfile: async (profile) => {
-    const currentOrg = get().getCurrentOrg();
-    if (currentOrg && currentOrg.subscriptionPlanId === 'plan-free') {
-      return { success: false, error: "L'ajout de personnel est bloqué sur le plan d'essai gratuit. Veuillez passer à un abonnement Standard ou Pro." };
-    }
     if (!profile.email) {
       return { success: false, error: "L'adresse e-mail est obligatoire." };
     }
@@ -2092,7 +1451,7 @@ export const useAppStore = create<AppState>()(
       const res = await fetch('/api/admin/create-profile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ organizationId: orgId, profile })
+        body: JSON.stringify({ profile })
       });
 
       const data = await res.json();
@@ -2107,47 +1466,57 @@ export const useAppStore = create<AppState>()(
         get().addAuditLog(`Collaborateur "${data.profile.fullName}" créé avec le rôle ${data.profile.role}`, null, orgId);
         return { success: true };
       }
-    } catch (e: any) {
-      console.warn("API route /api/admin/create-profile unavailable, using client fallback:", e);
-    }
 
-    // Client fallback
-    const newProfileId = `user-${Date.now()}`;
-    const newProfile: Profile = {
-      id: newProfileId,
-      organizationId: orgId,
-      fullName: profile.fullName,
-      role: profile.role,
-      email: profile.email.trim().toLowerCase(),
-      phone: profile.phone,
-      isActive: true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
+      return { success: false, error: "Réponse invalide du serveur." };
+    } catch (e: any) {
+      console.error("Error calling /api/admin/create-profile:", e);
+      return { success: false, error: e?.message || "Impossible de contacter le serveur." };
+    }
+  },
+
+  editProfile: async (profile) => {
+    const existing = get().profiles.find(p => p.id === profile.id);
+    if (!existing) return { success: false, error: 'Collaborateur introuvable.' };
+
+    const roleChanged = profile.role !== existing.role;
+    const updatedAt = new Date().toISOString();
 
     if (isSupabaseConfigured && supabase) {
-      try {
-        await supabase.from('profiles').insert([{
-          id: newProfile.id,
-          organization_id: newProfile.organizationId,
-          full_name: newProfile.fullName,
-          role: newProfile.role,
-          email: newProfile.email,
-          phone: newProfile.phone || '',
-          is_active: true,
-          created_at: newProfile.createdAt,
-          updated_at: newProfile.updatedAt,
-        }]);
-      } catch (err) {
-        console.error("Error persisting profile fallback to Supabase:", err);
+      const { error } = await supabase.from('profiles').update({
+        full_name: profile.fullName,
+        email: profile.email,
+        phone: profile.phone,
+        updated_at: updatedAt,
+      }).eq('id', profile.id);
+
+      if (error) {
+        console.error('Error editing profile in Supabase:', error);
+        return { success: false, error: error.message };
+      }
+
+      if (roleChanged) {
+        const { error: roleError } = await supabase.rpc('admin_update_profile_role', {
+          target_profile_id: profile.id,
+          new_role: profile.role,
+        });
+        if (roleError) {
+          console.error('Error updating profile role via RPC:', roleError);
+          return { success: false, error: roleError.message };
+        }
       }
     }
 
     set(state => ({
-      profiles: [...state.profiles, newProfile]
+      profiles: state.profiles.map(p => p.id === profile.id ? {
+        ...p,
+        fullName: profile.fullName,
+        email: profile.email,
+        phone: profile.phone,
+        role: profile.role,
+        updatedAt,
+      } : p)
     }));
-
-    get().addAuditLog(`Collaborateur "${profile.fullName}" créé avec le rôle ${profile.role}`, null, orgId);
+    get().addAuditLog(`Collaborateur "${profile.fullName}" mis à jour`, null, get().currentOrgId);
     return { success: true };
   },
 
@@ -2202,61 +1571,37 @@ export const useAppStore = create<AppState>()(
     return { success: true };
   },
 
-  addSuperAdmin: async (sa) => {
+  requestPasswordReset: async (email) => {
+    if (!isValidEmail(email)) {
+      return { success: false, error: 'Veuillez saisir une adresse e-mail valide.' };
+    }
+    if (!isSupabaseConfigured || !supabase) {
+      return { success: false, error: "Supabase n'est pas configuré." };
+    }
     try {
-      const res = await fetch('/api/admin/create-superadmin', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ superadmin: sa })
-      });
-
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        return { success: false, error: data.error || "Impossible de créer le Super Admin." };
-      }
-
-      if (data.superadmin) {
-        set(state => ({
-          superadmins: [data.superadmin, ...state.superadmins.filter(s => s.id !== data.superadmin.id)]
-        }));
-        get().addAuditLog(`Super Admin "${data.superadmin.fullName}" créé`, null, 'system');
-        return { success: true };
-      }
+      const redirectTo = typeof window !== 'undefined' ? `${window.location.origin}/reset-password` : undefined;
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), { redirectTo });
+      if (error) return { success: false, error: error.message };
+      return { success: true };
     } catch (e: any) {
-      console.warn("API route /api/admin/create-superadmin unavailable, using client fallback:", e);
+      return { success: false, error: e.message || "Impossible d'envoyer l'e-mail de réinitialisation." };
     }
-
-    // Client fallback
-    const newSaId = `superadmin-${Date.now()}`;
-    const newSa = {
-      id: newSaId,
-      fullName: sa.fullName,
-      email: sa.email.trim().toLowerCase(),
-      createdAt: new Date().toISOString()
-    };
-
-    if (isSupabaseConfigured && supabase) {
-      try {
-        await supabase.from('superadmins').insert([{
-          id: newSa.id,
-          full_name: newSa.fullName,
-          email: newSa.email,
-          created_at: newSa.createdAt,
-        }]);
-      } catch (err) {
-        console.error("Error persisting superadmin fallback to Supabase:", err);
-      }
-    }
-
-    set(state => ({
-      superadmins: [...state.superadmins, newSa]
-    }));
-
-    get().addAuditLog(`Super Admin "${sa.fullName}" créé`, null, 'system');
-    return { success: true };
   },
 
-  // Public Catalogue & Online Orders (Formule Pro)
+  confirmPasswordReset: async (newPassword) => {
+    if (!isSupabaseConfigured || !supabase) {
+      return { success: false, error: "Supabase n'est pas configuré." };
+    }
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) return { success: false, error: error.message };
+      return { success: true };
+    } catch (e: any) {
+      return { success: false, error: e.message || "Impossible de mettre à jour le mot de passe." };
+    }
+  },
+
+  // Public Catalogue & Online Orders
   updateOnlineOrderStatus: (orderId, status) => {
     set(state => ({
       onlineOrders: state.onlineOrders.map(o => o.id === orderId ? { ...o, status, updatedAt: new Date().toISOString() } : o)
@@ -2309,91 +1654,80 @@ export const useAppStore = create<AppState>()(
     get().addAuditLog(`Devis ${newQuote.quoteNumber} créé depuis la commande en ligne ${order.orderNumber}`, null, order.organizationId);
   },
 
-  fetchPublicCatalogue: async (orgId) => {
-    // 1. Try fetching real Supabase data if configured
-    if (isSupabaseConfigured && supabase) {
-      try {
-        const { data: orgRow } = await supabase.from('organizations').select('*').eq('id', orgId).maybeSingle();
+  fetchPublicCatalogue: async () => {
+    if (!isSupabaseConfigured || !supabase) return { org: null, products: [] };
 
-        if (
-          orgRow &&
-          orgRow.is_active !== false &&
-          orgRow.subscription_plan_id === 'plan-pro' &&
-          orgRow.catalogue_enabled !== false
-        ) {
-          const org: Organization = {
-            id: orgRow.id,
-            name: orgRow.name,
-            address: orgRow.address,
-            phone: orgRow.phone,
-            email: orgRow.email,
-            isActive: orgRow.is_active,
-            subscriptionPlanId: orgRow.subscription_plan_id,
-            subscriptionStatus: orgRow.subscription_status,
-            subscriptionEndDate: orgRow.subscription_end_date,
-            catalogueEnabled: orgRow.catalogue_enabled !== false,
-            createdAt: orgRow.created_at
-          };
+    try {
+      const companyOrgId = await resolveCompanyOrgId();
+      if (!companyOrgId) return { org: null, products: [] };
 
-          const [{ data: productRows }, { data: tierRows }] = await Promise.all([
-            supabase.from('products').select('*').eq('organization_id', orgId).eq('is_active', true),
-            supabase.from('product_price_tiers').select('*')
-          ]) as any[];
-
-          const products: Product[] = (productRows || []).map((p: any) => ({
-            id: p.id,
-            organizationId: p.organization_id,
-            name: p.name,
-            category: p.category,
-            description: p.description,
-            materialType: p.material_type || 'papier',
-            paperType: p.paper_type,
-            grammageG: p.grammage_g,
-            format: p.format,
-            formatOptions: p.format_options || [],
-            finishing: p.finishing,
-            photoUrl: p.photo_url,
-            unitPriceFcfa: Number(p.unit_price_fcfa),
-            vatRate: Number(p.vat_rate),
-            isActive: p.is_active,
-            priceTiers: (tierRows || [])
-              .filter((t: any) => t.product_id === p.id)
-              .map((t: any) => ({
-                id: t.id,
-                productId: t.product_id,
-                minQuantity: t.min_quantity,
-                maxQuantity: t.max_quantity ?? undefined,
-                unitPriceFcfa: Number(t.unit_price_fcfa)
-              })),
-            createdAt: p.created_at,
-            updatedAt: p.updated_at
-          }));
-
-          return { org, products };
-        }
-      } catch (e) {
-        console.error("Error fetching public catalogue from Supabase:", e);
+      const { data: orgRow } = await supabase.from('organizations').select('*').eq('id', companyOrgId).maybeSingle();
+      if (!orgRow || orgRow.is_active === false) {
+        return { org: null, products: [] };
       }
-    }
 
-    // 2. Fallback to local store data (Zustand state)
-    const localOrg = get().organizations.find(o => o.id === orgId);
-    if (
-      !localOrg ||
-      localOrg.isActive === false ||
-      localOrg.subscriptionPlanId !== 'plan-pro' ||
-      localOrg.catalogueEnabled === false
-    ) {
+      const org: Organization = {
+        id: orgRow.id,
+        name: orgRow.name,
+        address: orgRow.address,
+        phone: orgRow.phone,
+        email: orgRow.email,
+        isActive: orgRow.is_active,
+        createdAt: orgRow.created_at
+      };
+
+      const [{ data: productRows }, { data: tierRows }] = await Promise.all([
+        supabase.from('products').select('*').eq('organization_id', companyOrgId).eq('is_active', true),
+        supabase.from('product_price_tiers').select('*')
+      ]) as any[];
+
+      const products: Product[] = (productRows || []).map((p: any) => ({
+        id: p.id,
+        organizationId: p.organization_id,
+        name: p.name,
+        category: p.category,
+        description: p.description,
+        materialType: p.material_type || 'papier',
+        paperType: p.paper_type,
+        grammageG: p.grammage_g,
+        format: p.format,
+        formatOptions: p.format_options || [],
+        finishing: p.finishing,
+        photoUrl: p.photo_url,
+        unitPriceFcfa: Number(p.unit_price_fcfa),
+        vatRate: Number(p.vat_rate),
+        isActive: p.is_active,
+        priceTiers: (tierRows || [])
+          .filter((t: any) => t.product_id === p.id)
+          .map((t: any) => ({
+            id: t.id,
+            productId: t.product_id,
+            minQuantity: t.min_quantity,
+            maxQuantity: t.max_quantity ?? undefined,
+            unitPriceFcfa: Number(t.unit_price_fcfa)
+          })),
+        createdAt: p.created_at,
+        updatedAt: p.updated_at
+      }));
+
+      return { org, products };
+    } catch (e) {
+      console.error("Error fetching public catalogue from Supabase:", e);
       return { org: null, products: [] };
     }
-
-    const localProducts = get().products.filter(p => p.organizationId === orgId && p.isActive);
-    return { org: localOrg, products: localProducts };
   },
 
-  submitPublicOrder: async (orgId, payload) => {
+  submitPublicOrder: async (payload) => {
     if (!payload.items.length) {
       return { success: false, error: 'Votre commande est vide.' };
+    }
+    if (!isSupabaseConfigured || !supabase) {
+      return { success: false, error: "Supabase n'est pas configuré." };
+    }
+
+    const companyOrgId = await resolveCompanyOrgId();
+    if (!companyOrgId) {
+      return { success: false, error: "Impossible d'identifier l'entreprise." };
     }
 
     const randSuffix = Math.random().toString(36).substring(2, 7);
@@ -2401,94 +1735,61 @@ export const useAppStore = create<AppState>()(
     const orderNumber = `CMD-WEB-${Date.now().toString().slice(-4)}${Math.floor(Math.random() * 90 + 10)}`;
     const subtotal = payload.items.reduce((sum, item) => sum + item.lineTotalFcfa, 0);
 
-    if (isSupabaseConfigured && supabase) {
-      try {
-        const { data: existingClients } = await supabase
-          .from('clients')
-          .select('*')
-          .eq('organization_id', orgId)
-          .eq('phone', payload.phone)
-          .limit(1);
+    try {
+      const { data: existingClients } = await supabase
+        .from('clients')
+        .select('*')
+        .eq('organization_id', companyOrgId)
+        .eq('phone', payload.phone)
+        .limit(1);
 
-        let clientId: string;
+      let clientId: string;
 
-        if (existingClients && existingClients.length > 0) {
-          clientId = existingClients[0].id;
-        } else {
-          clientId = `client-web-${Date.now()}-${randSuffix}`;
-          const { error: clientError } = await supabase.from('clients').insert([{
-            id: clientId,
-            organization_id: orgId,
-            company_name: payload.companyName,
-            contact_name: payload.contactName,
-            phone: payload.phone,
-            email: payload.email,
-            address: payload.address,
-            source: 'catalogue_public',
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          }]);
-          if (clientError) {
-            console.error("Error creating public client in Supabase:", clientError);
-          }
-        }
-
-        const { error: orderError } = await supabase.from('online_orders').insert([{
-          id: orderId,
-          organization_id: orgId,
-          order_number: orderNumber,
-          client_id: clientId,
-          status: 'nouvelle',
-          items: payload.items,
-          subtotal_fcfa: subtotal,
-          notes: payload.notes,
+      if (existingClients && existingClients.length > 0) {
+        clientId = existingClients[0].id;
+      } else {
+        clientId = `client-web-${Date.now()}-${randSuffix}`;
+        const { error: clientError } = await supabase.from('clients').insert([{
+          id: clientId,
+          organization_id: companyOrgId,
+          company_name: payload.companyName,
+          contact_name: payload.contactName,
+          phone: payload.phone,
+          email: payload.email,
+          address: payload.address,
+          source: 'catalogue_public',
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         }]);
-
-        if (orderError) {
-          console.error("Error creating online order in Supabase:", orderError);
+        if (clientError) {
+          console.error("Error creating public client in Supabase:", clientError);
+          return { success: false, error: "Impossible d'enregistrer votre commande. Veuillez réessayer." };
         }
-      } catch (e: any) {
-        console.error("Error in submitPublicOrder Supabase sync:", e);
       }
+
+      const { error: orderError } = await supabase.from('online_orders').insert([{
+        id: orderId,
+        organization_id: companyOrgId,
+        order_number: orderNumber,
+        client_id: clientId,
+        status: 'nouvelle',
+        items: payload.items,
+        subtotal_fcfa: subtotal,
+        notes: payload.notes,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }]);
+
+      if (orderError) {
+        console.error("Error creating online order in Supabase:", orderError);
+        return { success: false, error: "Impossible d'enregistrer votre commande. Veuillez réessayer." };
+      }
+
+      return { success: true, orderNumber };
+    } catch (e: any) {
+      console.error("Error in submitPublicOrder Supabase sync:", e);
+      return { success: false, error: "Impossible d'enregistrer votre commande. Veuillez réessayer." };
     }
-
-    // Always record locally in Zustand state for instant reactive UI update
-    let localClient = get().clients.find(c => c.organizationId === orgId && c.phone === payload.phone);
-    let clientId = localClient?.id;
-    if (!clientId) {
-      clientId = `client-web-${Date.now()}-${randSuffix}`;
-      const newClient: Client = {
-        id: clientId,
-        organizationId: orgId,
-        companyName: payload.companyName,
-        contactName: payload.contactName,
-        phone: payload.phone,
-        email: payload.email,
-        address: payload.address,
-        source: 'catalogue_public',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-      set(state => ({ clients: [newClient, ...state.clients] }));
-    }
-
-    const newOrder: OnlineOrder = {
-      id: orderId,
-      organizationId: orgId,
-      orderNumber,
-      clientId,
-      status: 'nouvelle',
-      items: payload.items,
-      subtotalFcfa: subtotal,
-      notes: payload.notes,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-    set(state => ({ onlineOrders: [newOrder, ...state.onlineOrders] }));
-
-    return { success: true, orderNumber };
   }
     }),
     {
@@ -2497,7 +1798,6 @@ export const useAppStore = create<AppState>()(
         currentOrgId: state.currentOrgId,
         currentProfileId: state.currentProfileId,
         isAuthenticated: state.isAuthenticated,
-        isSuperAdmin: state.isSuperAdmin,
         theme: state.theme,
         isSidebarCollapsed: state.isSidebarCollapsed,
         orgStylePreferences: state.orgStylePreferences,

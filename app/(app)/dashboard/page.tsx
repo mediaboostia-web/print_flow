@@ -1,28 +1,19 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { 
-  TrendingUp, 
-  TrendingDown, 
-  DollarSign, 
-  Clock, 
-  CheckCircle2, 
+import dynamic from 'next/dynamic';
+import {
+  TrendingUp,
+  TrendingDown,
+  DollarSign,
+  Clock,
+  CheckCircle2,
   Briefcase,
   FileText,
   Activity,
   Eye,
-  EyeOff,
-  X
+  EyeOff
 } from 'lucide-react';
-import {
-  ResponsiveContainer,
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-} from 'recharts';
 import { useAppStore } from '@/lib/state/store';
 import {
   allQuotes,
@@ -40,16 +31,18 @@ type TableFilter = 'week' | 'month' | 'year';
 const MONTH_LABELS = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
 const QUARTER_LABELS = ['T1', 'T2', 'T3', 'T4'];
 
+const RevenueChart = dynamic(() => import('@/components/dashboard/RevenueChart'), {
+  ssr: false,
+  loading: () => <div className="w-full h-full animate-pulse rounded-xl bg-slate-100 dark:bg-slate-800/50" />,
+});
+
 export default function Dashboard() {
   const currentOrgId = useAppStore((state) => state.currentOrgId);
-  const currentOrg = useAppStore((state) => state.getCurrentOrg());
   const currentProfile = useAppStore((state) => state.getCurrentProfile());
   const role = currentProfile ? currentProfile.role : 'commercial';
-  const updateOrganizationSubscription = useAppStore((state) => state.updateOrganizationSubscription);
 
   // Interactive States
   const [hideFigures, setHideFigures] = useState<boolean>(false);
-  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
   const [chartFilter, setChartFilter] = useState<ChartFilter>('revenue');
   const [chartPeriod, setChartPeriod] = useState<ChartPeriod>('month');
   const [tableFilter, setTableFilter] = useState<TableFilter>('month');
@@ -260,158 +253,6 @@ export default function Dashboard() {
           </button>
         </div>
       </div>
-
-      {/* Subscription Banner */}
-      <div className="bg-bg-card border border-border-subtle rounded-3xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-premium relative overflow-hidden">
-        <div className="flex items-center gap-3.5 z-10 min-w-0 w-full sm:w-auto">
-          <div className={`w-11 h-11 rounded-2xl flex items-center justify-center font-bold text-xl shrink-0 ${
-            currentOrg.subscriptionPlanId === 'plan-pro'
-              ? 'bg-purple-500/10 text-purple-500 border border-purple-500/25'
-              : currentOrg.subscriptionPlanId === 'plan-std'
-              ? 'bg-emerald-500/10 text-brand-primary border border-brand-primary/20'
-              : 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
-          }`}>
-            {currentOrg.subscriptionPlanId === 'plan-pro' ? '👑' : currentOrg.subscriptionPlanId === 'plan-std' ? '⭐' : '⏳'}
-          </div>
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2">
-              <p className="text-sm font-extrabold text-text-main truncate">
-                Formule active : <span className="text-brand-primary">{
-                  currentOrg.subscriptionPlanId === 'plan-pro'
-                    ? 'Formule PRO (Premium)'
-                    : currentOrg.subscriptionPlanId === 'plan-std'
-                    ? 'Formule STANDARD'
-                    : "Essai Gratuit 7 Jours"
-                }</span>
-              </p>
-              <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase shrink-0 ${
-                currentOrg.subscriptionStatus === 'active'
-                  ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'
-                  : 'bg-rose-500/10 text-rose-600 border border-rose-500/20'
-              }`}>
-                {currentOrg.subscriptionStatus === 'active' ? 'Actif' : 'Expiré'}
-              </span>
-            </div>
-            <p className="text-xs text-text-secondary mt-0.5 font-semibold truncate">
-              Date d'échéance : {currentOrg.subscriptionEndDate ? new Date(currentOrg.subscriptionEndDate).toLocaleDateString('fr-FR') : 'Non définie'}
-            </p>
-          </div>
-        </div>
-
-        {/* Action upgrade — hidden once already on the Pro plan */}
-        {role === 'admin' && currentOrg.subscriptionPlanId !== 'plan-pro' && (
-          <button
-            onClick={() => setIsUpgradeModalOpen(true)}
-            className="text-xs font-bold text-brand-primary hover:text-white border border-brand-primary/30 hover:border-brand-primary hover:bg-brand-primary rounded-full px-5 py-2.5 transition shadow-sm shrink-0 cursor-pointer w-full sm:w-auto"
-          >
-            Changer d'abonnement / Mettre à niveau
-          </button>
-        )}
-      </div>
-
-      {/* Upgrade Modal */}
-      {isUpgradeModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/60 dark:bg-black/80 flex items-center justify-center z-50 p-4 backdrop-blur-xs animate-fade-in text-text-main">
-          <div className="bg-bg-card border border-border-subtle rounded-3xl w-full max-w-xl shadow-premium overflow-hidden">
-            {/* Header */}
-            <div className="px-6 py-4 border-b border-border-subtle flex items-center justify-between bg-slate-50 dark:bg-slate-800/10">
-              <h3 className="text-base font-extrabold text-text-main">
-                Formules d'Abonnement Print_Flow
-              </h3>
-              <button 
-                onClick={() => setIsUpgradeModalOpen(false)}
-                className="p-1.5 rounded-xl text-text-secondary hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Modal Body */}
-            <div className="p-6 space-y-6">
-              <p className="text-xs text-text-secondary leading-relaxed">
-                Faites évoluer votre imprimerie en choisissant la formule adaptée à vos besoins. Pour finaliser ou modifier votre abonnement, vous pouvez soit changer directement ci-dessous, soit contacter notre support commercial.
-              </p>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Plan Standard */}
-                <div className={`p-5 rounded-2xl border flex flex-col justify-between space-y-4 ${
-                  currentOrg.subscriptionPlanId === 'plan-std'
-                    ? 'border-brand-primary bg-brand-primary/5'
-                    : 'border-border-subtle bg-bg-card'
-                }`}>
-                  <div className="space-y-1.5">
-                    <span className="text-[9px] font-black uppercase text-brand-primary">Formule Standard</span>
-                    <h4 className="text-base font-black text-text-main">15 000 XAF <span className="text-xs font-normal text-text-secondary">/ mois</span></h4>
-                    <ul className="text-[10px] text-text-secondary space-y-1 pt-2 list-disc list-inside">
-                      <li>Devis, Factures, Commande</li>
-                      <li>Gestion des clients</li>
-                      <li>Ajout du personnel au choix</li>
-                      <li className="text-rose-500 font-semibold">Pas d'import de document BAT</li>
-                    </ul>
-                  </div>
-                  <button
-                    onClick={() => {
-                      updateOrganizationSubscription(currentOrg.id, 'plan-std', 'active', new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString());
-                      setIsUpgradeModalOpen(false);
-                      alert("Votre organisation a été migrée avec succès vers la Formule Standard !");
-                    }}
-                    className="w-full py-2 rounded-full border border-brand-primary/45 hover:bg-brand-primary hover:text-white text-xs font-bold text-brand-primary transition cursor-pointer"
-                  >
-                    Activer Standard (15K)
-                  </button>
-                </div>
-
-                {/* Plan Pro */}
-                <div className={`p-5 rounded-2xl border flex flex-col justify-between space-y-4 ${
-                  currentOrg.subscriptionPlanId === 'plan-pro'
-                    ? 'border-purple-500 bg-purple-500/5'
-                    : 'border-border-subtle bg-bg-card'
-                }`}>
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[9px] font-black uppercase text-purple-500">Formule PRO</span>
-                      <span className="text-[8px] bg-purple-500/15 text-purple-600 px-1.5 py-0.5 rounded font-black">RECOMMANDÉ</span>
-                    </div>
-                    <h4 className="text-base font-black text-text-main">65 000 XAF <span className="text-xs font-normal text-text-secondary">/ mois</span></h4>
-                    <ul className="text-[10px] text-text-secondary space-y-1 pt-2 list-disc list-inside">
-                      <li>Toutes les fonctionnalités incluses</li>
-                      <li>Ajout de personnel ILLIMITÉ</li>
-                      <li className="text-emerald-500 font-bold">Import de fichiers BAT inclus</li>
-                      <li>Accès complet sans restrictions</li>
-                    </ul>
-                  </div>
-                  <button
-                    onClick={() => {
-                      updateOrganizationSubscription(currentOrg.id, 'plan-pro', 'active', new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString());
-                      setIsUpgradeModalOpen(false);
-                      alert("Félicitations ! Votre organisation a été migrée vers la Formule Pro !");
-                    }}
-                    className="w-full py-2 rounded-full bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold transition cursor-pointer"
-                  >
-                    Activer PRO (65K)
-                  </button>
-                </div>
-              </div>
-
-              {/* WhatsApp Redirect */}
-              <div className="bg-slate-105 dark:bg-slate-800/40 border border-border-subtle rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-                <div className="text-center sm:text-left">
-                  <p className="text-xs font-bold text-text-main">Besoin d'assistance pour le paiement ?</p>
-                  <p className="text-[10px] text-text-secondary mt-0.5">Contactez notre support commercial par WhatsApp pour valider votre compte.</p>
-                </div>
-                <a
-                  href="https://wa.me/24162451522"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-full transition shadow-sm whitespace-nowrap"
-                >
-                  Contacter Support (+241 62 45 15 22)
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* KPI Cards Grid with pointer-based glow and color effects */}
       {role !== 'chef_atelier' ? (
@@ -659,53 +500,14 @@ export default function Dashboard() {
 
             {/* Recharts AreaChart — real, dynamic, driven by chartData/chartFilter/chartPeriod */}
             <div className="w-full h-[220px] md:h-[280px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData} margin={{ top: 10, right: 12, left: 0, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#00B060" stopOpacity="0.28" />
-                      <stop offset="100%" stopColor="#00B060" stopOpacity="0" />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="4 4" vertical={false} className="stroke-slate-100 dark:stroke-slate-800/50" />
-                  <XAxis
-                    dataKey="label"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fontSize: 10, fill: 'currentColor' }}
-                    className="text-text-secondary"
-                    padding={{ left: 12, right: 12 }}
-                  />
-                  <YAxis
-                    axisLine={false}
-                    tickLine={false}
-                    width={44}
-                    tick={{ fontSize: 9, fill: 'currentColor' }}
-                    className="text-text-secondary"
-                    tickFormatter={(v: number) => (hideFigures ? '••' : chartFilter === 'bat' ? `${v}%` : chartFilter === 'revenue' ? `${Math.round(v / 1000)}k` : `${v}`)}
-                  />
-                  <Tooltip
-                    content={({ active, payload, label }) => {
-                      if (!active || !payload || !payload.length) return null;
-                      const value = payload[0].value as number;
-                      return (
-                        <div className="rounded-xl bg-slate-900 dark:bg-slate-800 px-3.5 py-2.5 shadow-premium-lg">
-                          <p className="text-[9px] font-medium text-slate-400">{label} — {chartMetricLabel}</p>
-                          <p className="text-[11px] font-bold text-white">{displayValue(formatChartValue(value))}</p>
-                        </div>
-                      );
-                    }}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey={chartFilter}
-                    stroke="#00B060"
-                    strokeWidth={3}
-                    fill="url(#chartGradient)"
-                    activeDot={{ r: 6, fill: '#00B060', stroke: '#FFFFFF', strokeWidth: 2 }}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
+              <RevenueChart
+                chartData={chartData}
+                chartFilter={chartFilter}
+                hideFigures={hideFigures}
+                chartMetricLabel={chartMetricLabel}
+                displayValue={displayValue}
+                formatChartValue={formatChartValue}
+              />
             </div>
           </div>
         )}

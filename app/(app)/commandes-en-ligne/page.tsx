@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Globe,
-  Lock,
   Clock,
   CheckCircle2,
   XCircle,
@@ -32,7 +31,6 @@ const statusMeta: Record<OnlineOrder['status'], { label: string; classes: string
 export default function CommandesEnLignePage() {
   const router = useRouter();
   const currentOrgId = useAppStore((state) => state.currentOrgId);
-  const canUsePublicCatalogue = useAppStore((state) => state.canUsePublicCatalogue());
   const onlineOrders = useAppStore((state) => state.onlineOrders);
   const clients = useAppStore((state) => state.clients);
   const updateOnlineOrderStatus = useAppStore((state) => state.updateOnlineOrderStatus);
@@ -73,28 +71,6 @@ export default function CommandesEnLignePage() {
     triggerToast(`Commande ${order.orderNumber} marquée en traitement.`);
     setSelectedOrder(prev => (prev && prev.id === order.id ? { ...prev, status: 'en_traitement' } : prev));
   };
-
-  if (!canUsePublicCatalogue) {
-    return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold text-text-main tracking-tight">Commandes en ligne</h1>
-          <p className="text-text-secondary text-sm mt-0.5">Commandes soumises par vos clients externes via le catalogue public.</p>
-        </div>
-        <div className="bg-bg-card border border-dashed border-border-subtle rounded-3xl p-10 shadow-premium flex flex-col items-center text-center gap-4 max-w-xl mx-auto">
-          <div className="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-text-secondary">
-            <Lock className="w-7 h-7" />
-          </div>
-          <div className="space-y-1.5">
-            <h3 className="text-base font-bold text-text-main">Fonctionnalité réservée à la Formule Pro</h3>
-            <p className="text-xs text-text-secondary leading-relaxed">
-              Passez à la Formule Pro pour obtenir un lien de catalogue public et recevoir automatiquement les commandes de vos clients externes ici, dans votre tableau de bord. Contactez votre administrateur Print_Flow pour l'activer.
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">

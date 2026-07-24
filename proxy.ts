@@ -5,7 +5,8 @@ import { createServerClient } from '@supabase/ssr';
 const PUBLIC_PATHS = [
   '/',
   '/login',
-  '/super-admin/login',
+  '/boutique',
+  '/reset-password',
 ];
 
 export async function proxy(request: NextRequest) {
@@ -20,18 +21,12 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // 2. Allow public storefront /catalogue/[orgId] & public auth pages
-  const isPublicStorefront = pathname.startsWith('/catalogue/') && pathname !== '/catalogue';
-  const isPublicPath = PUBLIC_PATHS.includes(pathname) || isPublicStorefront;
-
-  if (isPublicPath) {
+  // 2. Allow the public storefront & public auth pages
+  if (PUBLIC_PATHS.includes(pathname)) {
     return NextResponse.next();
   }
 
-  // 3. Check for client-side session cookie or Supabase JWT session
-  const hasSessionCookie = request.cookies.get('printflow_session')?.value === 'true';
-  const isSuperAdminArea = pathname.startsWith('/super-admin');
-
+  // 3. Check for a real Supabase JWT session
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
@@ -62,13 +57,12 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  // Determine if the user is authenticated via cookie or Supabase JWT
-  const isAuthenticated = hasSessionCookie || isSupabaseAuthenticated;
+  // Determine if the user is authenticated via a real Supabase JWT session
+  const isAuthenticated = isSupabaseAuthenticated;
 
-  // If not authenticated, redirect immediately to the relevant login page
+  // If not authenticated, redirect immediately to the login page
   if (!isAuthenticated) {
-    const loginPath = isSuperAdminArea ? '/super-admin/login' : '/login';
-    return NextResponse.redirect(new URL(loginPath, request.url));
+    return NextResponse.redirect(new URL('/login', request.url));
   }
 
   return response;

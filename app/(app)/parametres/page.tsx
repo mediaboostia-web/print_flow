@@ -58,6 +58,7 @@ export default function ParametresPage() {
   // Collaborators store hooks
   const storeProfiles = useAppStore((state) => state.profiles);
   const addProfileStore = useAppStore((state) => state.addProfile);
+  const editProfileStore = useAppStore((state) => state.editProfile);
   const deleteProfileStore = useAppStore((state) => state.deleteProfile);
   const toggleProfileActiveStore = useAppStore((state) => state.toggleProfileActive);
 
@@ -65,10 +66,10 @@ export default function ParametresPage() {
   const [activeSubTab, setActiveSubTab] = useState<'org' | 'taxes' | 'shop' | 'utilisateurs'>('org');
 
   // Org form
-  const [orgName, setOrgName] = useState(currentOrg.name);
-  const [orgAddress, setOrgAddress] = useState(currentOrg.address || '');
-  const [orgPhone, setOrgPhone] = useState(currentOrg.phone || '');
-  const [orgEmail, setOrgEmail] = useState(currentOrg.email || '');
+  const [orgName, setOrgName] = useState(currentOrg?.name || '');
+  const [orgAddress, setOrgAddress] = useState(currentOrg?.address || '');
+  const [orgPhone, setOrgPhone] = useState(currentOrg?.phone || '');
+  const [orgEmail, setOrgEmail] = useState(currentOrg?.email || '');
   const [orgLogoBase64, setOrgLogoBase64] = useState<string>('');
 
   // Style preferences states
@@ -195,17 +196,20 @@ export default function ParametresPage() {
 
     if (selectedCollab) {
       // Edit collaborator (role, name, phone, email)
-      const updated = {
-        ...selectedCollab,
+      setIsSubmittingCollab(true);
+      const res = await editProfileStore({
+        id: selectedCollab.id,
         fullName: collabName,
         email: collabEmail,
         phone: collabPhone,
         role: collabRole,
-        updatedAt: new Date().toISOString()
-      };
-      useAppStore.setState(state => ({
-        profiles: state.profiles.map(p => p.id === selectedCollab.id ? updated : p)
-      }));
+      });
+      setIsSubmittingCollab(false);
+
+      if (!res.success) {
+        setCollabFormError(res.error || 'Impossible de mettre à jour ce collaborateur.');
+        return;
+      }
       setCollabSuccessMessage(`Collaborateur "${collabName}" mis à jour avec succès.`);
     } else {
       // Create new collaborator
