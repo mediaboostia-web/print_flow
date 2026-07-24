@@ -16,7 +16,8 @@ import {
   Mail,
   Phone,
   Tag,
-  AlertCircle
+  AlertCircle,
+  Download
 } from 'lucide-react';
 import { useAppStore } from '@/lib/state/store';
 import { formatFCFA } from '@/lib/utils/money';
@@ -186,6 +187,20 @@ export default function Header() {
             className="w-32"
           />
         </div>
+
+        {/* Install App Trigger Button */}
+        <button
+          onClick={() => {
+            if (typeof window !== 'undefined') {
+              window.dispatchEvent(new CustomEvent('open-install-modal'));
+            }
+          }}
+          className="p-1.5 md:p-2 rounded-xl text-slate-500 hover:text-brand-primary hover:bg-slate-100 dark:hover:bg-slate-800 border border-border-subtle bg-bg-card transition shadow-sm flex items-center gap-1.5 text-xs font-bold"
+          title="Installer l'application sur Mobile ou Desktop (APK / PWA)"
+        >
+          <Download className="w-4 h-4 text-brand-primary shrink-0" />
+          <span className="hidden xl:inline text-text-main">App / APK</span>
+        </button>
 
         {/* Theme Toggle */}
         <button

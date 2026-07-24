@@ -163,6 +163,24 @@ export default function Sidebar() {
         </div>
       </div>
 
+      {/* Install App Quick Action */}
+      <div className="px-3 py-2 border-t border-border-subtle bg-brand-primary/5">
+        <button
+          onClick={() => {
+            if (typeof window !== 'undefined') {
+              window.dispatchEvent(new CustomEvent('open-install-modal'));
+            }
+          }}
+          className={`w-full flex items-center justify-center rounded-xl text-xs font-bold text-brand-primary border border-brand-primary/20 bg-bg-card hover:bg-brand-primary hover:text-white transition-all duration-200 py-2 ${
+            isSidebarCollapsed ? 'px-2' : 'px-3 gap-2'
+          }`}
+          title="Installer l'application sur Mobile ou Desktop (APK / PWA)"
+        >
+          <span className="shrink-0">📲</span>
+          {!isSidebarCollapsed && <span className="hidden md:inline truncate">Installer l'App (APK)</span>}
+        </button>
+      </div>
+
       {/* User Status / Quick profile info */}
       <div className="p-4 border-t border-border-subtle bg-bg-base/30">
         <div className={`flex items-center ${isSidebarCollapsed ? 'justify-center' : 'justify-center md:justify-start gap-3'}`}>
